@@ -86,5 +86,11 @@ npm run build
 
 > **Advertencias de Seguridad:** 
 > - NUNCA almacenes tu contraseña en texto plano en las variables de entorno. Usa el script generador de hash.
-> - NO subas (versiones) tus archivos `.env` (ni local, ni prod).
 > - El script `admin:bootstrap` está diseñado **exclusivamente para provisionar el primer administrador** de forma segura e idempotente, no para gestionar usuarios a futuro.
+
+## Prueba manual del Login
+
+1. Ejecuta `npm run dev`
+2. Abre tu navegador y accede a `http://localhost:3000/login`
+3. Utiliza las credenciales ADMIN configuradas por el desarrollador.
+4. Verifica el estado autenticado y comprueba que puedes cerrar sesión.

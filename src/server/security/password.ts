@@ -36,12 +36,17 @@ export async function hashPassword(password: string): Promise<string> {
   return await hash(password, ARGON2_CONFIG);
 }
 
-/**
- * Verifies a password against a hash using Argon2id.
- */
 export async function verifyPassword(hashString: string, password: string): Promise<boolean> {
   if (typeof password !== "string" || password.length === 0) {
     return false;
   }
-  return await verify(hashString, password);
+  try {
+    console.log("DEBUG verifyPassword -> hashString length:", hashString?.length);
+    console.log("DEBUG verifyPassword -> hashString:", hashString);
+    console.log("DEBUG verifyPassword -> password length:", password?.length);
+    return await verify(hashString, password);
+  } catch (error) {
+    console.error("DEBUG verifyPassword error:", error);
+    throw error;
+  }
 }

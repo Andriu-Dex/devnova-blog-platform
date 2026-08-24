@@ -89,6 +89,7 @@ async function bootstrap() {
       userId: newUser.id,
       passwordHash: passwordHash as string,
       mustChangePassword: false,
+      passwordChangedAt: new Date(),
     });
 
     // 5. Auditoría
