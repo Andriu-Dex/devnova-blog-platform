@@ -1,6 +1,8 @@
 "use server";
 
 import { authenticateWithPassword, revokeCurrentSession } from "@/server/auth/authentication-service";
+import { getSessionByToken } from "@/server/auth/session-service";
+import { setSessionCookie } from "@/server/auth/auth-cookie";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -43,6 +45,23 @@ export async function loginAction(prevState: LoginState, formData: FormData): Pr
       return { error: "No fue posible iniciar sesión en este momento. Inténtalo nuevamente." };
     }
 
+    if (!result.sessionToken || !result.expiresAt) {
+      return { error: "No fue posible iniciar sesión en este momento. Inténtalo nuevamente." };
+    }
+
+    await setSessionCookie(result.sessionToken, result.expiresAt);
+
+    // Retrieve user to check role and mustChangePassword
+    const authUser = await getSessionByToken(result.sessionToken);
+    
+    if (authUser?.mustChangePassword) {
+      redirect("/account/change-password");
+    } else if (authUser?.role === "ADMIN") {
+      redirect("/admin");
+    } else {
+      redirect("/dashboard");
+    }
+
   } catch (error) {
     // Si es un error de redirección interno de Next.js, debemos propagarlo
     if (error && typeof error === "object" && "digest" in error && (error as Record<string, unknown>).digest?.toString().startsWith("NEXT_REDIRECT")) {
@@ -51,9 +70,6 @@ export async function loginAction(prevState: LoginState, formData: FormData): Pr
     console.error("Internal login error:", error);
     return { error: "No fue posible iniciar sesión en este momento. Inténtalo nuevamente." };
   }
-
-  // Redirigir fuera del bloque try-catch para no interceptar el NEXT_REDIRECT
-  redirect("/login");
 }
 
 export async function logoutAction(): Promise<void> {

@@ -1,0 +1,63 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background-color: #121419; /* carbon */
+  color: #fffcf4; /* paper */
+  border-radius: 16px;
+  margin-bottom: 32px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brandName {
+  font-family: "Space Grotesk", Arial, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  margin: 0;
+}
+
+.roleLabel {
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background-color: #fffcf4;
+  color: #121419;
+  padding: 4px 10px;
+  border-radius: 999px; /* pill */
+}
+
+.userNav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.userName {
+  font-family: "Space Grotesk", Arial, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.logoutButton {
+  background: transparent;
+  border: 1px solid #51545a; /* carbon-muted */
+  color: #fffcf4;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logoutButton:hover {
+  background-color: #fffcf4;
+  color: #121419;
+}

@@ -1,0 +1,257 @@
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.title {
+  font-family: "Space Grotesk", Arial, sans-serif;
+  font-size: 2.25rem;
+  margin: 0;
+  color: #121419;
+}
+
+.subtitle {
+  font-family: "Space Grotesk", Arial, sans-serif;
+  color: #51545a;
+  margin-top: 8px;
+  display: inline-block;
+  text-decoration: none;
+}
+
+.createButton {
+  background-color: #155eef; /* electric-blue */
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.createButton:hover {
+  background-color: #0d46b8;
+}
+
+.tableContainer {
+  background-color: #fffcf4;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.th {
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #74777e;
+  text-transform: uppercase;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #c9c6bb;
+}
+
+.td {
+  padding: 16px 0;
+  border-bottom: 1px dashed #c9c6bb;
+  font-family: "Space Grotesk", Arial, sans-serif;
+  font-size: 0.95rem;
+  color: #121419;
+}
+
+.tdLast {
+  padding: 16px 0;
+  font-family: "Space Grotesk", Arial, sans-serif;
+  font-size: 0.95rem;
+  color: #121419;
+}
+
+.statusPill {
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.statusActive {
+  background-color: #d1fadf;
+  color: #039855;
+  border: 1px solid #039855;
+}
+
+.statusBlocked {
+  background-color: #fee4e2;
+  color: #d92d20;
+  border: 1px solid #d92d20;
+}
+
+.actionButton {
+  background: transparent;
+  border: 1px solid #c9c6bb;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  font-size: 0.72rem;
+  cursor: pointer;
+  margin-right: 8px;
+  color: #121419;
+}
+
+.actionButton:hover {
+  background-color: #f1f2f4;
+}
+
+.actionButtonDanger {
+  color: #d92d20;
+  border-color: #fee4e2;
+}
+
+.actionButtonDanger:hover {
+  background-color: #fee4e2;
+}
+
+/* Modals */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(18, 20, 25, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background-color: #fffcf4;
+  border-radius: 20px;
+  padding: 32px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.modalTitle {
+  font-family: "Space Grotesk", Arial, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: #121419;
+}
+
+.modalText {
+  font-family: "Space Grotesk", Arial, sans-serif;
+  color: #51545a;
+  margin-bottom: 24px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.label {
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #121419;
+  text-transform: uppercase;
+}
+
+.input {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  border: 1px solid #c9c6bb;
+  border-radius: 10px;
+  background-color: transparent;
+  font-family: "Space Grotesk", Arial, sans-serif;
+  font-size: 16px;
+  color: #121419;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #155eef;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.cancelButton {
+  background: transparent;
+  border: 1px solid #c9c6bb;
+  color: #121419;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submitButton {
+  background-color: #121419;
+  color: #fffcf4;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submitButtonDanger {
+  background-color: #d92d20;
+  color: #ffffff;
+}
+
+.submitButton:disabled, .submitButtonDanger:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.errorMessage {
+  background-color: #fcebeb;
+  color: #d92d20;
+  padding: 12px;
+  border-radius: 8px;
+  font-family: "Space Grotesk", Arial, sans-serif;
+  font-size: 0.85rem;
+  margin-bottom: 24px;
+}
+
+.tempPasswordBox {
+  background-color: #f0fdf4;
+  border: 1px solid #039855;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.tempPasswordText {
+  font-family: "IBM Plex Mono", Consolas, monospace;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #039855;
+  text-align: center;
+  margin: 16px 0;
+  word-break: break-all;
+}

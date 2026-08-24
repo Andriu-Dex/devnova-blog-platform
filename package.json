@@ -17,11 +17,14 @@
   },
   "dependencies": {
     "@node-rs/argon2": "^2.1.0",
+    "cloudinary": "^2.10.1",
     "drizzle-orm": "^0.45.2",
     "next": "16.3.2",
     "postgres": "^3.4.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "server-only": "^0.0.1"
   },
   "devDependencies": {
