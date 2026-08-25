@@ -20,6 +20,10 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
   title: "DevNova Blog Platform",
   description: "Plataforma de blog institucional DevNova.",
+  icons: {
+    icon: "/favicon.png",
+    shortcut: "/favicon.png",
+  },
   alternates: {
     types: {
       "application/rss+xml": "/feed.xml",

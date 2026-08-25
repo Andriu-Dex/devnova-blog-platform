@@ -12,6 +12,7 @@ import {
   IconoTerminal,
   IconoGitHub,
 } from "@/components/site/devbox-pieces";
+import { buildCloudinaryFillUrl } from "@/lib/cloudinary-url";
 
 export const dynamic = "force-dynamic";
 
@@ -130,7 +131,7 @@ export default async function NosotrosPage() {
                 <div className={styles.contribuidorRetratoWrap}>
                   {member.photoPublicId ? (
                     <Image
-                      src={`https://res.cloudinary.com/db7y9bmbw/image/upload/c_fill,w_300,h_300,g_face/v1/${member.photoPublicId}`}
+                      src={buildCloudinaryFillUrl(member.photoPublicId, 300, 300)}
                       alt={member.photoAltText || member.fullName}
                       width={96}
                       height={96}

@@ -4,6 +4,7 @@ import { db } from "@/server/db";
 import { mediaAssets } from "@/server/db/schema";
 import { isNull, desc } from "drizzle-orm";
 import { Metadata } from "next";
+import { buildCloudinaryThumbnailUrl } from "@/lib/cloudinary-url";
 
 export const metadata: Metadata = {
   title: "Nuevo Integrante | DevNova",
@@ -29,7 +30,7 @@ export default async function NewTeamMemberPage() {
     uploaderName: m.uploadedByUserId,
     createdAt: m.createdAt,
     deletedAt: m.deletedAt,
-    thumbnailUrl: `https://res.cloudinary.com/db7y9bmbw/image/upload/c_thumb,w_200,g_face/v1/${m.cloudinaryPublicId}.${m.format}`
+    thumbnailUrl: buildCloudinaryThumbnailUrl(m.cloudinaryPublicId, m.format)
   }));
 
   return (

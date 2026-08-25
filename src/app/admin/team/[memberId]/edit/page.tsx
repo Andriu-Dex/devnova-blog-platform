@@ -6,6 +6,7 @@ import { isNull, desc } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import EditTeamForm from "./edit-team-form";
 import { Metadata } from "next";
+import { buildCloudinaryThumbnailUrl } from "@/lib/cloudinary-url";
 
 export const metadata: Metadata = {
   title: "Editar Integrante | DevNova",
@@ -38,7 +39,7 @@ export default async function EditTeamMemberPage({ params }: { params: { memberI
     uploaderName: m.uploadedByUserId,
     createdAt: m.createdAt,
     deletedAt: m.deletedAt,
-    thumbnailUrl: `https://res.cloudinary.com/db7y9bmbw/image/upload/c_thumb,w_200,g_face/v1/${m.cloudinaryPublicId}.${m.format}`
+    thumbnailUrl: buildCloudinaryThumbnailUrl(m.cloudinaryPublicId, m.format)
   }));
 
   return (

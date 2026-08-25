@@ -1,4 +1,5 @@
 import { getPublicSiteProfile, getPublicSection } from "@/server/site/public-site-service";
+import { getPublicTeamMembers } from "@/server/site/public-site-service";
 import { listRecentPublishedBlogs } from "@/server/blogs/public-blog-service";
 import { getDeliveryUrl } from "@/server/media/cloudinary";
 import { PublicHeader } from "@/components/site/public-header";
@@ -28,9 +29,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const profile = await getPublicSiteProfile();
-  const homeSection = await getPublicSection("HOME");
-  const publishedBlogs = await listRecentPublishedBlogs(10);
+  const [profile, homeSection, publishedBlogs, teamMembers] = await Promise.all([
+    getPublicSiteProfile(),
+    getPublicSection("HOME"),
+    listRecentPublishedBlogs(10),
+    getPublicTeamMembers(),
+  ]);
 
   const brandName = profile?.groupName || "DevNova";
   const tagline = profile?.tagline || "Ideas que compilan, proyectos que evolucionan.";
@@ -108,11 +112,20 @@ export default async function HomePage() {
                   </>
                 ) : (
                   <div className={styles.repoFolderVacio}>
-                    <h2>Repositorio preparado</h2>
-                    <p>Añade la primera entrega para abrir este archivo.</p>
-                    <Link prefetch={false} className={`${styles.boton} ${styles.botonPapel}`} href="/blogs">
-                      <span>Ver estructura</span> <IconoFlecha />
-                    </Link>
+                    <div className={`${styles.repoFolderRuta} ${styles.meta}`}>
+                      devnova / desarrollo-asistido-por-software.md
+                    </div>
+                    <EtiquetaTipo tipo="deber" />
+                    <h2>Desarrollo asistido<br />por Software</h2>
+                    <p>Documentamos métodos, herramientas y decisiones que apoyan el análisis, diseño, construcción, prueba y evolución del software.</p>
+                    <div className={styles.repoFolderAcciones}>
+                      <Link prefetch={false} className={`${styles.boton} ${styles.botonPapel}`} href="/blogs">
+                        <span>Explorar entregas</span> <IconoFlecha />
+                      </Link>
+                      <Link prefetch={false} className={styles.enlaceTecnico} href="/nosotros">
+                        Conocer al equipo
+                      </Link>
+                    </div>
                   </div>
                 )}
               </div>
@@ -209,7 +222,6 @@ export default async function HomePage() {
           </div>
           <div className={styles.coleccionesPestanas}>
             <Link prefetch={false} href="/blogs" className={`${styles.coleccion} ${styles.coleccionProyecto}`}>
-              <span className={`${styles.coleccionCuenta} ${styles.meta}`}>00 archivos</span>
               <EtiquetaTipo tipo="proyecto" />
               <h3>Proyectos</h3>
               <p>Sistemas construidos por etapas y entregas de mayor alcance.</p>
@@ -219,7 +231,6 @@ export default async function HomePage() {
             </Link>
 
             <Link prefetch={false} href="/blogs" className={`${styles.coleccion} ${styles.coleccionTaller}`}>
-              <span className={`${styles.coleccionCuenta} ${styles.meta}`}>00 archivos</span>
               <EtiquetaTipo tipo="taller" />
               <h3>Talleres</h3>
               <p>Práctica guiada, herramientas y experimentos verificables.</p>
@@ -272,7 +283,8 @@ export default async function HomePage() {
           <div className={styles.equipoCtaTerminal}>
             <span className={styles.meta}>contributors.json</span>
             <p>
-              <span>6</span> personas,<br />
+              <span>{teamMembers.length || "—"}</span>{" "}
+              {teamMembers.length === 1 ? "persona" : "personas"},<br />
               un repositorio común.
             </p>
           </div>

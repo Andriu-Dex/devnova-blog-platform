@@ -38,9 +38,10 @@ export function PublicHeaderClient({ brandName, logoUrl, logoAlt }: PublicHeader
             <Image
               src={logoUrl}
               alt={logoAlt}
-              width={120}
-              height={32}
-              style={{ objectFit: "contain", height: "32px", width: "auto" }}
+              width={160}
+              height={50}
+              style={{ objectFit: "contain", height: "36px", width: "auto", maxWidth: "180px" }}
+              priority
             />
           ) : (
             <>
