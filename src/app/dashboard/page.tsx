@@ -13,34 +13,34 @@ export default async function DashboardPage() {
   const user = await requireAuthorOrAdmin();
 
   return (
-    <main>
+    <main className="private-page">
       <PrivateHeader displayName={user.displayName} role={user.role} />
       
-      <div style={{ marginBottom: "32px" }}>
-        <h1 style={{ fontFamily: "'Space Grotesk', Arial, sans-serif", fontSize: "2.25rem", margin: 0, color: "#121419" }}>
-          Panel de Publicaciones
-        </h1>
-        <p style={{ fontFamily: "'Space Grotesk', Arial, sans-serif", color: "#51545a", marginTop: "8px" }}>
-          Aquí podrás crear y gestionar el contenido.
-        </p>
+      <div className={styles.headerArea}>
+        <h1 className={styles.pageTitle}>Panel de Publicaciones</h1>
+        <p className={styles.pageSubtitle}>Aquí podrás crear y gestionar el contenido.</p>
       </div>
 
-      <div className={styles.emptyState} style={{ display: "flex", gap: "16px", justifyContent: "center" }}>
-        <Link href="/dashboard/blogs" className={styles.actionButton} style={{ textDecoration: "none" }}>
-          Gestión de Blogs
+      <div className={styles.grid}>
+        <Link href="/dashboard/blogs" className={styles.card}>
+          <h3 className={styles.cardTitle}>Blogs</h3>
+          <span className={styles.cardLink}>Gestionar publicaciones →</span>
         </Link>
-        <Link href="/dashboard/media" className={styles.actionButton} style={{ textDecoration: "none", backgroundColor: "#155eef" }}>
-          Multimedia
+        <Link href="/dashboard/media" className={styles.card}>
+          <h3 className={styles.cardTitle}>Multimedia</h3>
+          <span className={styles.cardLink}>Gestionar archivos →</span>
         </Link>
-      </div>
-
-      {user.role === "ADMIN" && (
-        <div style={{ textAlign: "center" }}>
-          <Link href="/admin" className={styles.adminLink}>
-            Ir al panel administrativo →
+        <Link href="/account/change-password" className={styles.card}>
+          <h3 className={styles.cardTitle}>Mi Cuenta</h3>
+          <span className={styles.cardLink}>Cambiar contraseña →</span>
+        </Link>
+        {user.role === "ADMIN" && (
+          <Link href="/admin" className={styles.card} style={{ borderColor: "var(--color-carbon)" }}>
+            <h3 className={styles.cardTitle}>Administración</h3>
+            <span className={styles.cardLink} style={{ color: "var(--color-carbon)" }}>Ir al panel global →</span>
           </Link>
-        </div>
-      )}
+        )}
+      </div>
     </main>
   );
 }

@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/server/auth/authorization";
 import { PrivateHeader } from "@/components/layout/private-header";
-import { listAdminMessages } from "@/server/contact/contact-service";
+import { listAdminMessages, countNewMessages } from "@/server/contact/contact-service";
 import Link from "next/link";
 import { Metadata } from "next";
 
@@ -16,13 +16,16 @@ export default async function AdminMessagesPage({ searchParams }: { searchParams
   const page = parseInt(params.page || "1", 10);
   const pageSize = 25;
 
-  const { rows: messages, totalCount } = await listAdminMessages(page, pageSize, statusFilter);
+  const [{ rows: messages, totalCount }, newCount] = await Promise.all([
+    listAdminMessages(page, pageSize, statusFilter),
+    countNewMessages()
+  ]);
 
   return (
     <main>
       <PrivateHeader displayName={user.displayName} role={user.role} />
       
-      <div style={{ marginBottom: "32px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div style={{ marginBottom: "32px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
           <h1 style={{ fontFamily: "'Space Grotesk', Arial, sans-serif", fontSize: "2rem", margin: 0, color: "#121419" }}>
             Mensajes de Contacto
@@ -31,11 +34,25 @@ export default async function AdminMessagesPage({ searchParams }: { searchParams
             Bandeja de entrada pública.
           </p>
         </div>
+        <a 
+          href={`/admin/messages/export${statusFilter ? `?status=${statusFilter}` : ""}`}
+          download
+          style={{ padding: "8px 16px", borderRadius: "6px", backgroundColor: "#10b981", color: "white", textDecoration: "none", fontWeight: 500 }}
+        >
+          Exportar CSV
+        </a>
       </div>
 
       <div style={{ marginBottom: "20px", display: "flex", gap: "10px" }}>
         <Link href="/admin/messages" style={{ padding: "6px 12px", borderRadius: "4px", backgroundColor: !statusFilter ? "#155eef" : "#f1f3f5", color: !statusFilter ? "white" : "black", textDecoration: "none" }}>Todos</Link>
-        <Link href="/admin/messages?status=NEW" style={{ padding: "6px 12px", borderRadius: "4px", backgroundColor: statusFilter === "NEW" ? "#155eef" : "#f1f3f5", color: statusFilter === "NEW" ? "white" : "black", textDecoration: "none" }}>Nuevos</Link>
+        <Link href="/admin/messages?status=NEW" style={{ padding: "6px 12px", borderRadius: "4px", backgroundColor: statusFilter === "NEW" ? "#155eef" : "#f1f3f5", color: statusFilter === "NEW" ? "white" : "black", textDecoration: "none", display: "flex", alignItems: "center", gap: "6px" }}>
+          Nuevos
+          {newCount > 0 && (
+            <span style={{ backgroundColor: statusFilter === "NEW" ? "white" : "#d1d5db", color: statusFilter === "NEW" ? "#155eef" : "black", padding: "2px 6px", borderRadius: "999px", fontSize: "0.75rem", fontWeight: "bold" }}>
+              {newCount}
+            </span>
+          )}
+        </Link>
         <Link href="/admin/messages?status=READ" style={{ padding: "6px 12px", borderRadius: "4px", backgroundColor: statusFilter === "READ" ? "#155eef" : "#f1f3f5", color: statusFilter === "READ" ? "white" : "black", textDecoration: "none" }}>Leídos</Link>
         <Link href="/admin/messages?status=ARCHIVED" style={{ padding: "6px 12px", borderRadius: "4px", backgroundColor: statusFilter === "ARCHIVED" ? "#155eef" : "#f1f3f5", color: statusFilter === "ARCHIVED" ? "white" : "black", textDecoration: "none" }}>Archivados</Link>
       </div>

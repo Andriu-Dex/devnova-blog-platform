@@ -57,6 +57,28 @@ export async function authenticateWithPassword(
     }
   }
 
+  // Rate Limiting: 10 fallos en 15 minutos por Username
+  const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+  const failActionSubquery = db
+    .select({ id: auditActionTypes.id })
+    .from(auditActionTypes)
+    .where(eq(auditActionTypes.code, "LOGIN_FAILED"))
+    .limit(1);
+
+  const recentFailsUserRes = await db.execute(sql`
+    SELECT COUNT(*) as count 
+    FROM ${auditEvents} ae
+    JOIN ${auditAuthEvents} aae ON ae.id = aae.audit_event_id
+    WHERE lower(aae.attempted_username) = lower(${username})
+      AND ae.action_type_id = (${failActionSubquery})
+      AND ae.occurred_at >= ${fifteenMinsAgo}
+  `);
+  
+  const recentFailsUser = Number(recentFailsUserRes[0]?.count || 0);
+  if (recentFailsUser >= 10) {
+    return { ok: false, code: "INVALID_CREDENTIALS" };
+  }
+
   // Consulta case-insensitive a la base de datos
   const userRows = await db
     .select({
@@ -65,6 +87,7 @@ export async function authenticateWithPassword(
       status: userStatuses.code,
       passwordHash: userCredentials.passwordHash,
       mustChangePassword: userCredentials.mustChangePassword,
+      passwordChangedAt: userCredentials.passwordChangedAt,
     })
     .from(users)
     .innerJoin(roles, eq(users.roleId, roles.id))
@@ -85,6 +108,15 @@ export async function authenticateWithPassword(
     // Se audita como LOGIN_FAILED
     await logFailedLogin(username, metadata);
     return { ok: false, code: "INVALID_CREDENTIALS" };
+  }
+
+  // Expiración temporal de 72 horas para contraseñas temporales
+  if (row.mustChangePassword && row.passwordChangedAt) {
+    const ageMs = Date.now() - new Date(row.passwordChangedAt).getTime();
+    if (ageMs > 72 * 60 * 60 * 1000) {
+      await logFailedLogin(username, metadata);
+      return { ok: false, code: "INVALID_CREDENTIALS" };
+    }
   }
 
   // Éxito: Crear sesión y auditar

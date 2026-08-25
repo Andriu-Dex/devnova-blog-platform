@@ -45,8 +45,17 @@ export default async function BlogsListPage() {
           <tbody>
             {blogs.length === 0 ? (
               <tr>
-                <td colSpan={4} className={styles.td} style={{ textAlign: "center", color: "#74777e" }}>
-                  No hay blogs disponibles.
+                <td colSpan={4} className={styles.td} style={{ textAlign: "center", padding: "48px 20px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+                    <div style={{ fontSize: "2.5rem", opacity: 0.5 }}>📝</div>
+                    <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: 600, color: "#1f2937" }}>Aún no hay blogs</h3>
+                    <p style={{ margin: 0, fontSize: "0.95rem", color: "#6b7280", maxWidth: "400px" }}>
+                      El espacio de publicación está vacío. Crea tu primer blog para empezar a compartir conocimiento y novedades.
+                    </p>
+                    <Link href="/dashboard/blogs/new" style={{ marginTop: "8px", display: "inline-block", padding: "8px 16px", backgroundColor: "#111827", color: "white", borderRadius: "6px", textDecoration: "none", fontSize: "0.9rem", fontWeight: 500 }}>
+                      Crear primer blog
+                    </Link>
+                  </div>
                 </td>
               </tr>
             ) : (
@@ -102,6 +111,12 @@ export default async function BlogsListPage() {
                         <Link href={`/dashboard/blogs/${blog.id}/history`} className={styles.actionButton} style={{ background: "#4a4a4a" }}>
                           Historial
                         </Link>
+                        <Link href={`/dashboard/blogs/${blog.id}/duplicate`} className={styles.actionButton} style={{ background: "#10b981", color: "white" }}>
+                          Duplicar
+                        </Link>
+                        <a href={`/dashboard/blogs/${blog.id}/export?version=latest`} download className={styles.actionButton} style={{ background: "#3b82f6", color: "white", textDecoration: "none" }}>
+                          Exportar
+                        </a>
                         {user.role === "ADMIN" && (
                           <DeleteBlogButton blogId={blog.id} onDelete={deleteBlogAction} />
                         )}

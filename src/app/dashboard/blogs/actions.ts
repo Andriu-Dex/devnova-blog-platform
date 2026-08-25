@@ -64,7 +64,7 @@ export async function createBlogAction(prevState: unknown, formData: FormData) {
   }
 
   revalidatePath("/dashboard/blogs");
-  redirect(`/dashboard/blogs/${result.blogId}/edit`);
+  return { success: true, blogId: result.blogId };
 }
 
 export async function editBlogAction(prevState: unknown, formData: FormData) {
@@ -196,3 +196,49 @@ export async function recoverBlogAction(blogId: string) {
   revalidatePath(`/admin/blogs/trash`);
   return { success: "El blog ha sido recuperado exitosamente." };
 }
+
+export async function duplicateBlogAction(prevState: unknown, formData: FormData) {
+  const user = await requireAuthorOrAdmin();
+
+  const sourceBlogId = formData.get("sourceBlogId");
+  const title = formData.get("title");
+  const slug = formData.get("slug");
+  const summary = formData.get("summary");
+
+  if (typeof sourceBlogId !== "string" || !sourceBlogId) {
+    return { error: "ID de blog origen inválido." };
+  }
+  
+  if (typeof title !== "string" || !title.trim() || title.trim().length > 200) {
+    return { error: "El título es requerido y debe tener máximo 200 caracteres." };
+  }
+  
+  if (typeof slug !== "string" || slug.trim().length > 180) {
+    return { error: "El slug no debe exceder 180 caracteres." };
+  }
+  
+  if (typeof summary !== "string" || summary.trim().length > 500) {
+    return { error: "El resumen no debe tener máximo 500 caracteres." };
+  }
+
+  // Import duplicateBlog here if needed, or rely on existing import
+  const { duplicateBlog } = await import("@/server/blogs/blog-service");
+
+  const metadata = await getMetadata();
+  const result = await duplicateBlog(
+    sourceBlogId,
+    title,
+    slug || "",
+    summary || "",
+    user.id,
+    metadata
+  );
+
+  if ("error" in result) {
+    return { error: result.error };
+  }
+
+  revalidatePath("/dashboard/blogs");
+  return { success: true, blogId: result.blogId };
+}
+

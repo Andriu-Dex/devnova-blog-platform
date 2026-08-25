@@ -1,4 +1,4 @@
-import { getPublishedBlogBySlug } from "@/server/blogs/public-blog-service";
+import { getPublishedBlogBySlug, listRelatedPublishedBlogs } from "@/server/blogs/public-blog-service";
 import { getDeliveryUrl } from "@/server/media/cloudinary";
 import { MarkdownRenderer } from "@/components/blogs/markdown-renderer";
 import { PublicHeader } from "@/components/site/public-header";
@@ -104,10 +104,58 @@ export default async function PublicBlogDetail({ params }: Props) {
           <div className={styles.articleBody}>
             <MarkdownRenderer content={blog.contentMarkdown} mediaMap={mediaMap} />
           </div>
+          
+          {/* Related */}
+          <RelatedBlogs currentBlogId={blog.id} />
         </div>
       </main>
 
       <PublicFooter />
     </div>
+  );
+}
+
+async function RelatedBlogs({ currentBlogId }: { currentBlogId: string }) {
+  const related = await listRelatedPublishedBlogs({ excludeBlogId: currentBlogId, limit: 3 });
+  
+  if (related.length === 0) return null;
+
+  return (
+    <section className={styles.relatedSection} aria-label="También te puede interesar">
+      <hr className={styles.relatedDivider} />
+      <h2 className={styles.relatedTitle}>También te puede interesar</h2>
+      <div className={styles.relatedGrid}>
+        {related.map((item) => (
+          <Link key={item.slug} href={`/blogs/${item.slug}`} className={styles.relatedCard}>
+            <div className={styles.relatedImageWrap}>
+              {item.coverMediaAssetId ? (
+                <Image
+                  src={getDeliveryUrl(item.coverMediaAssetId, 600)}
+                  alt={item.coverAltText || item.title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 360px"
+                  style={{ objectFit: "cover" }}
+                  unoptimized
+                />
+              ) : (
+                <div className={styles.relatedNoImage} aria-hidden="true">
+                  {item.title.charAt(0)}
+                </div>
+              )}
+            </div>
+            <div className={styles.relatedCardBody}>
+              <h3 className={styles.relatedCardTitle}>{item.title}</h3>
+              <p className={styles.relatedCardSummary}>{item.summary}</p>
+              <div className={styles.relatedCardMeta}>
+                <span>{item.creatorName}</span>
+                <time dateTime={new Date(item.publishedAt).toISOString()}>
+                  {new Date(item.publishedAt).toLocaleDateString("es-ES", { year: "numeric", month: "short", day: "numeric" })}
+                </time>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
   );
 }

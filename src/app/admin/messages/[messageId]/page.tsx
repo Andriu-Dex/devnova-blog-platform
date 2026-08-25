@@ -5,6 +5,7 @@ import { markMessageReadAction, archiveMessageAction } from "@/server/actions/co
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Metadata } from "next";
+import styles from "./message.module.css";
 
 export const metadata: Metadata = {
   title: "Detalle del Mensaje | DevNova",
@@ -14,7 +15,6 @@ export default async function AdminMessageDetailPage({ params }: { params: Promi
   const user = await requireAdmin();
   const { messageId } = await params;
   
-  // UUID regex validation (basica) para prevenir SQL details leaking si se manda basura
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(messageId)) {
     notFound();
   }
@@ -28,64 +28,56 @@ export default async function AdminMessageDetailPage({ params }: { params: Promi
   const isNew = currentStatus.statusCode === "NEW";
   const isRead = currentStatus.statusCode === "READ";
 
+  let statusClass = styles.statusArchived;
+  if (isNew) statusClass = styles.statusNew;
+  else if (isRead) statusClass = styles.statusRead;
+
   return (
-    <main>
+    <main className="private-page">
       <PrivateHeader displayName={user.displayName} role={user.role} />
       
-      <div style={{ marginBottom: "20px" }}>
-        <Link href="/admin/messages" style={{ color: "#51545a", textDecoration: "none", fontSize: "0.875rem" }}>
-          ← Volver a la bandeja
-        </Link>
-      </div>
+      <Link href="/admin/messages" className={styles.backLink}>
+        ← Volver a la bandeja
+      </Link>
 
-      <div style={{ display: "flex", gap: "24px", flexDirection: "column", maxWidth: "900px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div>
-            <h1 style={{ fontFamily: "'Space Grotesk', Arial, sans-serif", fontSize: "2rem", margin: 0, color: "#121419" }}>
-              {message.subject}
-            </h1>
-            <p style={{ color: "#51545a", marginTop: "8px" }}>
+      <div className={styles.layout}>
+        {/* Header */}
+        <div className={styles.header}>
+          <div className={styles.titleGroup}>
+            <h1 className={styles.subject}>{message.subject}</h1>
+            <p className={styles.sender}>
               De: <strong>{message.senderName}</strong> &lt;{message.senderEmail}&gt;
             </p>
           </div>
           
-          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-            <span style={{
-              padding: "6px 12px", 
-              borderRadius: "999px", 
-              fontSize: "0.875rem", 
-              fontWeight: 600,
-              backgroundColor: isNew ? "#fef3c7" : isRead ? "#d1fae5" : "#f3f4f6",
-              color: isNew ? "#92400e" : isRead ? "#065f46" : "#4b5563"
-            }}>
-              {currentStatus.statusName}
-            </span>
+          <div className={`${styles.statusBadge} ${statusClass}`}>
+            {currentStatus.statusName}
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: "10px", padding: "16px", backgroundColor: "#f9fafb", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
+        {/* Actions */}
+        <div className={styles.actions}>
           {isNew && (
             <form action={markMessageReadAction.bind(null, message.id)}>
-              <button type="submit" style={{ backgroundColor: "#155eef", color: "white", padding: "8px 16px", borderRadius: "6px", border: "none", cursor: "pointer", fontWeight: 500 }}>
+              <button type="submit" className={styles.btnPrimary}>
                 Marcar como leído
               </button>
             </form>
           )}
           {isRead && (
             <form action={archiveMessageAction.bind(null, message.id)}>
-              <button type="submit" style={{ backgroundColor: "#4b5563", color: "white", padding: "8px 16px", borderRadius: "6px", border: "none", cursor: "pointer", fontWeight: 500 }}>
+              <button type="submit" className={styles.btnSecondary}>
                 Archivar
               </button>
             </form>
           )}
           {(() => {
             const email = message.senderEmail?.trim() || "";
-            // Validación estricta RFC básica, longitud y sin cr/lf ni delimitadores URI peligrosos
             const isValidEmail = email.length > 3 && email.length <= 255 && /^[^\s@?#&%\r\n]+@[^\s@?#&%\r\n]+\.[^\s@?#&%\r\n]+$/.test(email);
             
             if (isValidEmail) {
               return (
-                <a href={`mailto:${email}`} style={{ padding: "8px 16px", borderRadius: "6px", border: "1px solid #d1d5db", backgroundColor: "white", color: "#374151", textDecoration: "none", fontWeight: 500, display: "inline-block" }}>
+                <a href={`mailto:${email}`} className={styles.btnOutline}>
                   Responder por correo
                 </a>
               );
@@ -94,28 +86,30 @@ export default async function AdminMessageDetailPage({ params }: { params: Promi
           })()}
         </div>
 
-        <div style={{ backgroundColor: "white", padding: "24px", borderRadius: "8px", boxShadow: "0 1px 3px rgba(0,0,0,0.1)", border: "1px solid #e5e7eb" }}>
-          <div style={{ fontSize: "0.875rem", color: "#6b7280", marginBottom: "16px" }}>
-            Recibido el {new Date(message.receivedAt).toLocaleString()}
+        {/* Message Body */}
+        <div className={styles.bodyCard}>
+          <div className={styles.receivedAt}>
+            Recibido el {new Intl.DateTimeFormat('es-ES', { dateStyle: 'long', timeStyle: 'short' }).format(new Date(message.receivedAt))}
           </div>
-          <div style={{ whiteSpace: "pre-wrap", color: "#111827", lineHeight: "1.6", fontSize: "1rem" }}>
+          <div className={styles.messageBody}>
             {message.messageBody}
           </div>
         </div>
 
-        <div style={{ marginTop: "32px" }}>
-          <h2 style={{ fontSize: "1.25rem", marginBottom: "16px", color: "#111827" }}>Historial de Estados</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        {/* History */}
+        <div className={styles.historySection}>
+          <h2 className={styles.historyTitle}>Historial de Estados</h2>
+          <div className={styles.historyList}>
             {message.history.map(item => (
-              <div key={item.id} style={{ padding: "12px 16px", backgroundColor: "#f9fafb", borderRadius: "6px", border: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <span style={{ fontWeight: 600, color: "#374151", marginRight: "8px" }}>{item.statusName}</span>
-                  <span style={{ fontSize: "0.875rem", color: "#6b7280" }}>
+              <div key={item.id} className={styles.historyItem}>
+                <div className={styles.historyItemLeft}>
+                  <span className={styles.historyStatusName}>{item.statusName}</span>
+                  <span className={styles.historyActor}>
                     por {item.actorName || "Sistema / visitante"}
                   </span>
                 </div>
-                <div style={{ fontSize: "0.875rem", color: "#6b7280" }}>
-                  {new Date(item.changedAt).toLocaleString()}
+                <div className={styles.historyDate}>
+                  {new Intl.DateTimeFormat('es-ES', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(item.changedAt))}
                 </div>
               </div>
             ))}

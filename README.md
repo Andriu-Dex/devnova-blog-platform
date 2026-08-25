@@ -79,6 +79,34 @@ Para subir este proyecto a producción en Vercel:
 4. Deshabilitar sobrescritura (Overwrite = false).
 5. Configurar nombrado único (Unique filename = true).
 
+## Borradores locales y Edición
+
+El editor de blogs guarda el contenido de forma automática en el almacenamiento local del navegador (`localStorage`) mediante una estrategia *debounce* (1 segundo tras el último cambio).
+- **Recuperación:** Si se cierra accidentalmente la pestaña o falla la conexión, los cambios editoriales se pueden restaurar desde el mismo navegador al reingresar al formulario.
+- **No sustituye Guardar versión:** El autoguardado NO crea versiones en la base de datos automáticamente. Se debe hacer clic explícitamente en "Guardar nueva versión". El borrador local **sólo se elimina** después de que el servidor confirma la creación exitosa del blog o de la versión (no se limpia ante errores de validación o conflictos).
+- **Conflictos:** El control de concurrencia a través de `baseVersionId` sigue siendo protegido en el backend (*server-side*). No se puede burlar este control usando localStorage.
+- **Duplicación:** Los blogs se pueden duplicar usando la herramienta interna (disponible para autores y admins).
+  - La duplicación crea una **nueva entidad independiente** copiando la **última versión editorial (latest)** del origen.
+  - **No** se copia el estado de publicación (el nuevo blog nace en modo borrador) ni el historial completo.
+  - Si el blog origen incluye recursos multimedia (imágenes) que posteriormente fueron archivadas/eliminadas de la plataforma, el sistema denegará la duplicación por seguridad.
+
+## Exportación e Importación de Markdown (Respaldo Editorial)
+
+Los autores y administradores pueden exportar cualquier versión de un blog a un archivo `.md` (Markdown).
+- **Exportación:** Permite descargar el contenido Markdown junto con una cabecera oculta (`devnova-export` format 1) que contiene la metadata clave del blog (título, resumen). Las referencias a imágenes (`media://UUID`) se preservan intactas. Este export NO es un archivo público y sirve estrictamente como respaldo editorial.
+- **Importación:** Al crear o editar un blog, puedes usar el botón **"Importar Markdown"**. 
+  - Si el archivo `.md` contiene la cabecera generada por DevNova, se autocompletarán los campos de título y resumen.
+  - Si es un `.md` puro (o de otra fuente), se importará únicamente el contenido.
+  - Al importar, los cambios NO se publican ni se crea una versión automáticamente en base de datos. Pasan a ser un borrador local hasta que el usuario confirme y guarde usando el botón "Guardar/Crear Blog".
+  - Ten en cuenta que si el Markdown importado hace referencia a imágenes internas de DevNova (URLs `media://`), el backend rechazará el documento si dichas imágenes no existen (ej. importación desde otra instalación).
+
+## RSS y Exportaciones Administrativas CSV
+- **RSS Público (`/feed.xml`)**: Expone exclusivamente las versiones publicadas de los blogs. Protege borradores y blogs no publicados.
+- **Exportaciones de Administrador**: Los administradores pueden exportar a formato CSV (`text/csv`) las consultas de Mensajes de Contacto y Eventos de Auditoría (rutas `/admin/messages/export` y `/admin/audit/export`).
+  - Estos CSV soportan los mismos filtros de la UI (por estado, dominio, fechas, etc.).
+  - Las celdas CSV cuentan con mitigación contra *CSV Formula Injection* (ej. celdas que empiecen por `=`, `+`, `-`, `@` son escapadas).
+  - Por privacidad, estas descargas se generan de forma directa (streaming/response string) mediante configuración `no-store` y no se guardan en el servidor.
+
 ## Limitaciones Conocidas
 
 - **Rate Limiting Distribuido / CAPTCHA**: Actualmente el límite por IP se maneja contra PostgreSQL. En caso de ataque DDoS a escala, puede saturar la BD. Se recomienda añadir protección a nivel de Edge (Vercel WAF/Cloudflare) o Turnstile/reCAPTCHA.

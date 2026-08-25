@@ -1,8 +1,11 @@
 import { getPublicSiteProfile, getPublicSection } from "@/server/site/public-site-service";
+import { listRecentPublishedBlogs } from "@/server/blogs/public-blog-service";
+import { getDeliveryUrl } from "@/server/media/cloudinary";
 import { PublicHeader } from "@/components/site/public-header";
 import { PublicFooter } from "@/components/site/public-footer";
 import { MarkdownRenderer } from "@/components/blogs/markdown-renderer";
 import Link from "next/link";
+import Image from "next/image";
 import { Metadata } from "next";
 import styles from "./home.module.css";
 
@@ -21,6 +24,7 @@ export default async function HomePage() {
   const homeSection = await getPublicSection("HOME");
   const missionSection = await getPublicSection("MISSION");
   const visionSection = await getPublicSection("VISION");
+  const recentBlogs = await listRecentPublishedBlogs(3);
 
   const brandName = profile?.groupName || "DevNova";
 
@@ -95,6 +99,47 @@ export default async function HomePage() {
             </section>
           )}
         </div>
+
+        {/* ── RECENT BLOGS ─────────────────────────────────────────── */}
+        {recentBlogs.length > 0 && (
+          <section className={styles.recentBlogs} aria-label="Publicaciones recientes">
+            <div className={styles.recentBlogsInner}>
+              <h2 className={styles.sectionTitle}>Publicaciones recientes</h2>
+              <div className={styles.recentGrid}>
+                {recentBlogs.map((blog) => (
+                  <Link key={blog.slug} href={`/blogs/${blog.slug}`} className={styles.blogCard}>
+                    <div className={styles.blogCardImageWrap}>
+                      {blog.coverMediaAssetId ? (
+                        <Image
+                          src={getDeliveryUrl(blog.coverMediaAssetId, 600)}
+                          alt={blog.coverAltText || blog.title}
+                          fill
+                          sizes="(max-width: 768px) 100vw, 360px"
+                          style={{ objectFit: "cover" }}
+                          unoptimized
+                        />
+                      ) : (
+                        <div className={styles.blogCardNoImage} aria-hidden="true">
+                          {blog.title.charAt(0)}
+                        </div>
+                      )}
+                    </div>
+                    <div className={styles.blogCardBody}>
+                      <h3 className={styles.blogCardTitle}>{blog.title}</h3>
+                      <p className={styles.blogCardSummary}>{blog.summary}</p>
+                      <div className={styles.blogCardMeta}>
+                        <span>{blog.creatorName}</span>
+                        <time dateTime={new Date(blog.publishedAt).toISOString()}>
+                          {new Intl.DateTimeFormat("es-ES", { year: "numeric", month: "short", day: "numeric" }).format(new Date(blog.publishedAt))}
+                        </time>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* ── CTA STRIP ────────────────────────────────────────────── */}
         <div className={styles.ctaStrip}>

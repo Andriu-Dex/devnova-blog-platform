@@ -1,0 +1,199 @@
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(18, 20, 25, 0.8);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modalContent {
+  background-color: var(--color-paper);
+  width: 90%;
+  maxWidth: 800px;
+  maxHeight: 90vh;
+  border-radius: var(--radius-card);
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-float);
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+}
+
+.modalHeader {
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--color-line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modalTitle {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-carbon);
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--color-carbon-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  transition: background-color 0.14s;
+}
+
+.closeButton:hover {
+  background-color: var(--color-line);
+  color: var(--color-carbon);
+}
+
+.modalBody {
+  padding: var(--space-6);
+  overflow-y: auto;
+  flex: 1;
+}
+
+.emptyState {
+  text-align: center;
+  color: var(--color-carbon-subtle);
+  font-family: var(--font-sans);
+  padding: var(--space-12) 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-4);
+}
+
+.mediaItem {
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  background-color: var(--color-canvas);
+  transition: border-color 0.14s, transform 0.14s;
+}
+
+.mediaItem:hover {
+  border-color: var(--color-line-strong);
+}
+
+.mediaItemSelected {
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(21, 94, 239, 0.15);
+}
+
+.mediaImageWrap {
+  position: relative;
+  width: 100%;
+  height: 120px;
+  background-color: var(--color-canvas);
+}
+
+.mediaLabel {
+  padding: var(--space-2);
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  color: var(--color-carbon);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background-color: var(--color-paper);
+  border-top: 1px solid var(--color-line);
+}
+
+.modalFooter {
+  padding: var(--space-4) var(--space-6);
+  border-top: 1px solid var(--color-line);
+  background-color: var(--color-canvas);
+}
+
+.error {
+  color: #d93025; /* Keep error red */
+  font-size: 0.85rem;
+  margin-bottom: var(--space-3);
+  font-family: var(--font-sans);
+  font-weight: 500;
+}
+
+.footerControls {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.inputWrap {
+  flex: 1;
+}
+
+.input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(21, 94, 239, 0.2);
+}
+
+.confirmButton {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  border: none;
+  padding: 10px 24px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.14s;
+}
+
+.confirmButton:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+}
+
+.confirmButton:disabled {
+  background-color: var(--color-line-strong);
+  cursor: not-allowed;
+}
+
+.triggerButton {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.14s;
+}
+
+.triggerButton:hover {
+  background-color: var(--color-primary-hover);
+}

@@ -7,6 +7,7 @@ const navLinks = [
   { href: "/nosotros", label: "Nosotros" },
   { href: "/blogs", label: "Blog" },
   { href: "/contacto", label: "Contacto" },
+  { href: "/feed.xml", label: "RSS" },
 ];
 
 export async function PublicFooter() {

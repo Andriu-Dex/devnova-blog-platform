@@ -275,3 +275,121 @@
     aspect-ratio: 16 / 8;
   }
 }
+.searchForm {
+  display: flex;
+  margin-top: var(--space-6);
+  max-width: 500px;
+  gap: var(--space-2);
+}
+
+.searchInput {
+  flex: 1;
+  padding: 10px 16px;
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  background-color: var(--color-paper);
+  color: var(--color-carbon);
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.searchButton {
+  padding: 10px 24px;
+  background-color: var(--color-carbon);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.searchButton:hover {
+  opacity: 0.9;
+}
+
+.searchResultsInfo {
+  margin-top: var(--space-4);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--color-carbon-subtle);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.clearSearch {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+.clearSearch:hover {
+  text-decoration: underline;
+}
+
+.pagination {
+  margin-top: var(--space-12);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.paginationBtn {
+  padding: 8px 16px;
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-paper);
+  color: var(--color-carbon);
+  text-decoration: none;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.paginationBtn:hover {
+  background-color: var(--color-canvas);
+}
+
+.paginationBtnDisabled {
+  padding: 8px 16px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  color: var(--color-line-strong);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: not-allowed;
+}
+
+.paginationInfo {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--color-carbon-muted);
+}
+
+.emptyLink {
+  display: inline-block;
+  margin-top: var(--space-4);
+  color: var(--color-primary);
+  text-decoration: none;
+  font-family: var(--font-sans);
+  font-weight: 600;
+}
+.emptyLink:hover {
+  text-decoration: underline;
+}
+

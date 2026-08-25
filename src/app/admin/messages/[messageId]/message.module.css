@@ -1,0 +1,221 @@
+.page {
+  /* Inherit standard private-page */
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-carbon-muted);
+  text-decoration: none;
+  margin-bottom: var(--space-6);
+  transition: color 0.14s;
+}
+.backLink:hover {
+  color: var(--color-carbon);
+}
+
+.layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: 900px;
+}
+
+/* Header Section */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.titleGroup {
+  flex: 1;
+  min-width: 0;
+}
+
+.subject {
+  font-family: var(--font-sans);
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--color-carbon);
+  letter-spacing: -0.04em;
+  word-wrap: break-word;
+}
+
+.sender {
+  color: var(--color-carbon-muted);
+  margin: var(--space-2) 0 0 0;
+}
+
+/* Status Badge */
+.statusBadge {
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.statusNew {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+.statusRead {
+  background-color: var(--color-cyan-soft);
+  color: var(--color-carbon);
+}
+.statusArchived {
+  background-color: var(--color-line);
+  color: var(--color-carbon-muted);
+}
+
+/* Actions Section */
+.actions {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background-color: var(--color-paper);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-line);
+  flex-wrap: wrap;
+}
+
+.btnPrimary {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.14s;
+}
+.btnPrimary:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.btnSecondary {
+  background-color: var(--color-carbon);
+  color: var(--color-white);
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.14s;
+}
+.btnSecondary:hover {
+  background-color: var(--color-carbon-muted);
+}
+
+.btnOutline {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-line-strong);
+  background-color: transparent;
+  color: var(--color-carbon);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.14s;
+}
+.btnOutline:hover {
+  background-color: var(--color-canvas);
+  border-color: var(--color-carbon);
+}
+
+/* Body Section */
+.bodyCard {
+  background-color: var(--color-paper);
+  padding: var(--space-8);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-line);
+  box-shadow: var(--shadow-card);
+}
+
+.receivedAt {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-carbon-subtle);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.messageBody {
+  white-space: pre-wrap;
+  color: var(--color-carbon);
+  line-height: 1.6;
+  font-size: 1.05rem;
+}
+
+/* History Section */
+.historySection {
+  margin-top: var(--space-6);
+}
+
+.historyTitle {
+  font-family: var(--font-sans);
+  font-size: 1.25rem;
+  margin: 0 0 var(--space-4) 0;
+  color: var(--color-carbon);
+  letter-spacing: -0.02em;
+}
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.historyItem {
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-paper);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.historyItemLeft {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.historyStatusName {
+  font-weight: 600;
+  color: var(--color-carbon);
+  font-size: 0.9rem;
+}
+
+.historyActor {
+  font-size: 0.85rem;
+  color: var(--color-carbon-muted);
+}
+
+.historyDate {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-carbon-subtle);
+}

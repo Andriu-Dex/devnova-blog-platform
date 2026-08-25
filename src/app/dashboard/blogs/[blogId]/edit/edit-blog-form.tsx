@@ -1,11 +1,13 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useRef, useState, useEffect } from "react";
 import { editBlogAction } from "../../actions";
 import styles from "../../blogs.module.css";
 import Link from "next/link";
 import { MediaPicker, MediaItem } from "@/components/media/media-picker";
 import Image from "next/image";
+import { useLocalBlogDraft } from "@/components/blogs/hooks/use-local-blog-draft";
+import { ImportMarkdownButton } from "@/components/blogs/import-markdown-button";
 
 interface EditBlogFormProps {
   blog: {
@@ -30,9 +32,32 @@ interface EditBlogFormProps {
 export function EditBlogForm({ blog, latestVersion, mediaList }: EditBlogFormProps) {
   const [state, formAction, isPending] = useActionState(editBlogAction, null);
   
+  const [title, setTitle] = useState(latestVersion.title);
+  const [summary, setSummary] = useState(latestVersion.summary);
+  const [contentMarkdown, setContentMarkdown] = useState(latestVersion.contentMarkdown);
   const [coverMediaId, setCoverMediaId] = useState<string | null>(latestVersion.coverMediaAssetId);
   const [coverAltText, setCoverAltText] = useState<string>(latestVersion.coverAltText || "");
+  const [changeSummary, setChangeSummary] = useState("");
+  
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const currentData = {
+    title,
+    summary,
+    contentMarkdown,
+    coverMediaAssetId: coverMediaId,
+    coverAltText,
+    baseVersionId: latestVersion.id, // Para detectar staleness
+  };
+
+  const draftKey = `devnova:blog-draft:${blog.id}`;
+  const draftProps = useLocalBlogDraft({ draftKey, currentData });
+
+  useEffect(() => {
+    if (state?.success) {
+      draftProps.clearDraftOnSuccess();
+    }
+  }, [state, draftProps]);
 
   const selectedCover = coverMediaId ? mediaList.find(m => m.id === coverMediaId) : null;
   const isArchivedCover = coverMediaId && !selectedCover;
@@ -48,16 +73,62 @@ export function EditBlogForm({ blog, latestVersion, mediaList }: EditBlogFormPro
       textarea.selectionEnd,
       "end"
     );
+    setContentMarkdown(textarea.value);
     textarea.focus();
   };
 
+  const insertFormatting = (prefix: string, suffix: string = prefix) => {
+    if (!textareaRef.current) return;
+    const textarea = textareaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    const selected = text.substring(start, end);
+    const insertText = `${prefix}${selected}${suffix}`;
+    
+    textarea.setRangeText(insertText, start, end, "select");
+    setContentMarkdown(textarea.value);
+    textarea.focus();
+  };
+
+  const restoreDraft = () => {
+    if (draftProps.draftData) {
+      setTitle(draftProps.draftData.title || "");
+      setSummary(draftProps.draftData.summary || "");
+      setContentMarkdown(draftProps.draftData.contentMarkdown || "");
+      setCoverMediaId(draftProps.draftData.coverMediaAssetId || null);
+      setCoverAltText(draftProps.draftData.coverAltText || "");
+      setChangeSummary(draftProps.draftData.changeSummary || "");
+    }
+  };
+
+  const handleImport = (data: { title?: string, summary?: string, contentMarkdown: string }) => {
+    if (data.title) setTitle(data.title);
+    if (data.summary) setSummary(data.summary);
+    setContentMarkdown(data.contentMarkdown);
+  };
+
+  const btnStyle = { padding: "4px 8px", fontSize: "0.85rem", border: "1px solid #d1d5db", borderRadius: "4px", backgroundColor: "#f9fafb", cursor: "pointer", color: "#374151" };
+
   return (
     <div className={styles.formContainer}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px" }}>
-        <h2 className={styles.title}>Editar versión</h2>
-        <Link href="/dashboard/blogs" className={styles.actionButton}>
-          ← Volver al listado
-        </Link>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
+        <h2 className={styles.title} style={{ marginBottom: 0 }}>Editar blog</h2>
+        <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+          <ImportMarkdownButton 
+            onImport={handleImport} 
+            hasExistingContent={true} 
+          />
+          {draftProps.saveStatus !== "idle" && (
+            <div style={{ fontSize: "0.85rem", color: "#6b7280", fontFamily: "var(--font-mono)" }} aria-live="polite">
+              {draftProps.saveStatus === "saving" ? "Guardando..." : 
+               draftProps.lastSavedAt ? `Guardado localmente a las ${new Date(draftProps.lastSavedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}` : "Guardado localmente"}
+            </div>
+          )}
+          <Link href="/dashboard/blogs" className={styles.actionButton}>
+            ← Volver al listado
+          </Link>
+        </div>
       </div>
 
       <div className={styles.metadataPanel}>
@@ -74,6 +145,23 @@ export function EditBlogForm({ blog, latestVersion, mediaList }: EditBlogFormPro
           <strong>Última edición por:</strong> {latestVersion.editorName} ({latestVersion.createdAt.toLocaleString()})
         </div>
       </div>
+      
+      {draftProps.hasDraft && (
+        <div style={{ backgroundColor: "#f0f9ff", border: "1px solid #bae6fd", padding: "16px", borderRadius: "8px", marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center" }} role="status">
+          <div>
+            <p style={{ margin: "0 0 4px 0", fontWeight: 600, color: "#0369a1", fontSize: "0.95rem" }}>Encontramos un borrador local sin guardar.</p>
+            {draftProps.isStale ? (
+              <p style={{ margin: 0, color: "#d97706", fontSize: "0.85rem", fontWeight: 500 }}>⚠️ Este borrador local fue creado sobre una versión anterior del blog.</p>
+            ) : (
+              <p style={{ margin: 0, color: "#0ea5e9", fontSize: "0.85rem" }}>Puedes restaurarlo o descartarlo para seguir con la versión de la base de datos.</p>
+            )}
+          </div>
+          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+            <button type="button" onClick={draftProps.discardDraft} style={{ background: "none", border: "none", color: "#0369a1", fontSize: "0.85rem", cursor: "pointer", textDecoration: "underline" }}>Descartar</button>
+            <button type="button" onClick={restoreDraft} style={{ backgroundColor: draftProps.isStale ? "#d97706" : "#0284c7", color: "white", border: "none", borderRadius: "4px", padding: "6px 12px", fontSize: "0.85rem", cursor: "pointer", fontWeight: 600 }}>Restaurar borrador</button>
+          </div>
+        </div>
+      )}
       
       <form action={formAction}>
         <input type="hidden" name="blogId" value={blog.id} />
@@ -143,7 +231,8 @@ export function EditBlogForm({ blog, latestVersion, mediaList }: EditBlogFormPro
             type="text"
             required
             maxLength={200}
-            defaultValue={latestVersion.title}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
             className={styles.input}
           />
         </div>
@@ -156,27 +245,38 @@ export function EditBlogForm({ blog, latestVersion, mediaList }: EditBlogFormPro
             type="text"
             required
             maxLength={500}
-            defaultValue={latestVersion.summary}
+            value={summary}
+            onChange={(e) => setSummary(e.target.value)}
             className={styles.input}
           />
         </div>
 
         <div className={styles.formGroup}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "8px", flexWrap: "wrap", gap: "8px" }}>
             <label htmlFor="contentMarkdown" className={styles.label} style={{ marginBottom: 0 }}>Contenido (Markdown) *</label>
-            <MediaPicker 
-              mediaList={mediaList} 
-              requireAltText={true} 
-              buttonLabel="Insertar imagen" 
-              onSelect={insertIntoMarkdown} 
-            />
+            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+              <button type="button" onClick={() => insertFormatting("**")} style={btnStyle}>Bold</button>
+              <button type="button" onClick={() => insertFormatting("*")} style={btnStyle}>Italic</button>
+              <button type="button" onClick={() => insertFormatting("### ", "")} style={btnStyle}>Heading</button>
+              <button type="button" onClick={() => insertFormatting("[", "](url)")} style={btnStyle}>Link</button>
+              <button type="button" onClick={() => insertFormatting("`")} style={btnStyle}>Code</button>
+              <button type="button" onClick={() => insertFormatting("> ", "")} style={btnStyle}>Quote</button>
+              <button type="button" onClick={() => insertFormatting("- ", "")} style={btnStyle}>List</button>
+              <MediaPicker 
+                mediaList={mediaList} 
+                requireAltText={true} 
+                buttonLabel="Insertar imagen" 
+                onSelect={insertIntoMarkdown} 
+              />
+            </div>
           </div>
           <textarea
             id="contentMarkdown"
             name="contentMarkdown"
             ref={textareaRef}
             required
-            defaultValue={latestVersion.contentMarkdown}
+            value={contentMarkdown}
+            onChange={(e) => setContentMarkdown(e.target.value)}
             className={styles.textarea}
             style={{ minHeight: "300px" }}
           />
@@ -193,13 +293,22 @@ export function EditBlogForm({ blog, latestVersion, mediaList }: EditBlogFormPro
             className={styles.input}
             style={{ backgroundColor: "#ffffff" }}
             placeholder="Ej: Corrección de introducción"
+            value={changeSummary}
+            onChange={(e) => setChangeSummary(e.target.value)}
           />
         </div>
+        
+        <p style={{ fontSize: "0.8rem", color: "#6b7280", marginTop: "16px", marginBottom: 0 }}>
+          Los cambios se guardan temporalmente en este navegador. Usa &quot;Guardar nueva versión&quot; para registrarlos en DevNova.
+        </p>
 
-        <div style={{ display: "flex", gap: "12px", marginTop: "32px" }}>
+        <div style={{ display: "flex", gap: "12px", marginTop: "16px", alignItems: "center" }}>
           <button type="submit" disabled={isPending} className={styles.submitButton} style={{ marginTop: 0 }}>
             {isPending ? "Guardando versión..." : "Guardar nueva versión"}
           </button>
+          <Link href={`/dashboard/blogs/${blog.id}/preview`} style={{ padding: "10px 16px", backgroundColor: "#f3f4f6", border: "1px solid #d1d5db", borderRadius: "6px", color: "#374151", textDecoration: "none", fontWeight: 500 }} target="_blank">
+            Vista Previa
+          </Link>
         </div>
       </form>
     </div>

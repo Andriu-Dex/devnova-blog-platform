@@ -7,7 +7,7 @@ import { blogPublications } from "../db/schema/blog-publications";
 import { users } from "../db/schema/users";
 import { blogVersionMedia } from "../db/schema/blog-version-media";
 import { mediaAssets } from "../db/schema/media-assets";
-import { eq, desc, isNull, and } from "drizzle-orm";
+import { eq, desc, isNull, and, ilike, or, sql, not, SQL } from "drizzle-orm";
 
 export async function listPublishedBlogs() {
   const publishedBlogs = await db
@@ -26,6 +26,28 @@ export async function listPublishedBlogs() {
     .innerJoin(users, eq(blogs.createdByUserId, users.id))
     .where(isNull(blogs.deletedAt))
     .orderBy(desc(blogPublications.publishedAt));
+
+  return publishedBlogs;
+}
+
+export async function listRecentPublishedBlogs(limit: number = 3) {
+  const publishedBlogs = await db
+    .select({
+      slug: blogs.slug,
+      title: blogVersions.title,
+      summary: blogVersions.summary,
+      coverMediaAssetId: blogVersions.coverMediaAssetId,
+      coverAltText: blogVersions.coverAltText,
+      publishedAt: blogPublications.publishedAt,
+      creatorName: users.displayName,
+    })
+    .from(blogPublications)
+    .innerJoin(blogs, eq(blogPublications.blogId, blogs.id))
+    .innerJoin(blogVersions, eq(blogPublications.blogVersionId, blogVersions.id))
+    .innerJoin(users, eq(blogs.createdByUserId, users.id))
+    .where(isNull(blogs.deletedAt))
+    .orderBy(desc(blogPublications.publishedAt))
+    .limit(limit);
 
   return publishedBlogs;
 }
@@ -97,3 +119,118 @@ export async function getPublishedBlogBySlug(slug: string) {
     mediaMap,
   };
 }
+
+export async function searchPublishedBlogs(params: {
+  query?: string;
+  page: number;
+  pageSize?: number;
+}) {
+  const pageSize = params.pageSize || 9;
+  const currentPage = Math.max(1, params.page);
+  const offset = (currentPage - 1) * pageSize;
+
+  let baseCondition: SQL<unknown> | undefined = isNull(blogs.deletedAt);
+
+  if (params.query && params.query.trim().length > 0) {
+    const term = `%${params.query.trim().slice(0, 100)}%`;
+    baseCondition = and(
+      baseCondition,
+      or(
+        ilike(blogVersions.title, term),
+        ilike(blogVersions.summary, term),
+        ilike(blogVersions.contentMarkdown, term)
+      )
+    );
+  }
+
+  // Contar total
+  const [countRes] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(blogPublications)
+    .innerJoin(blogs, eq(blogPublications.blogId, blogs.id))
+    .innerJoin(blogVersions, eq(blogPublications.blogVersionId, blogVersions.id))
+    .where(baseCondition);
+
+  const total = Number(countRes?.count || 0);
+  const totalPages = Math.ceil(total / pageSize) || 1;
+
+  // Obtener items paginados
+  const items = await db
+    .select({
+      slug: blogs.slug,
+      title: blogVersions.title,
+      summary: blogVersions.summary,
+      coverMediaAssetId: blogVersions.coverMediaAssetId,
+      coverAltText: blogVersions.coverAltText,
+      publishedAt: blogPublications.publishedAt,
+      creatorName: users.displayName,
+    })
+    .from(blogPublications)
+    .innerJoin(blogs, eq(blogPublications.blogId, blogs.id))
+    .innerJoin(blogVersions, eq(blogPublications.blogVersionId, blogVersions.id))
+    .innerJoin(users, eq(blogs.createdByUserId, users.id))
+    .where(baseCondition)
+    .orderBy(desc(blogPublications.publishedAt))
+    .limit(pageSize)
+    .offset(offset);
+
+  return {
+    items,
+    total,
+    page: currentPage,
+    totalPages,
+  };
+}
+
+export async function listRelatedPublishedBlogs(params: {
+  excludeBlogId: string;
+  limit?: number;
+}) {
+  const limit = params.limit || 3;
+  
+  const related = await db
+    .select({
+      slug: blogs.slug,
+      title: blogVersions.title,
+      summary: blogVersions.summary,
+      coverMediaAssetId: blogVersions.coverMediaAssetId,
+      coverAltText: blogVersions.coverAltText,
+      publishedAt: blogPublications.publishedAt,
+      creatorName: users.displayName,
+    })
+    .from(blogPublications)
+    .innerJoin(blogs, eq(blogPublications.blogId, blogs.id))
+    .innerJoin(blogVersions, eq(blogPublications.blogVersionId, blogVersions.id))
+    .innerJoin(users, eq(blogs.createdByUserId, users.id))
+    .where(
+      and(
+        isNull(blogs.deletedAt),
+        not(eq(blogs.id, params.excludeBlogId))
+      )
+    )
+    .orderBy(desc(blogPublications.publishedAt))
+    .limit(limit);
+
+  return related;
+}
+
+export async function listPublishedBlogsForFeed(limit: number = 30) {
+  const publishedBlogs = await db
+    .select({
+      slug: blogs.slug,
+      title: blogVersions.title,
+      summary: blogVersions.summary,
+      publishedAt: blogPublications.publishedAt,
+      creatorName: users.displayName,
+    })
+    .from(blogPublications)
+    .innerJoin(blogs, eq(blogPublications.blogId, blogs.id))
+    .innerJoin(blogVersions, eq(blogPublications.blogVersionId, blogVersions.id))
+    .innerJoin(users, eq(blogs.createdByUserId, users.id))
+    .where(isNull(blogs.deletedAt))
+    .orderBy(desc(blogPublications.publishedAt))
+    .limit(limit);
+
+  return publishedBlogs;
+}
+

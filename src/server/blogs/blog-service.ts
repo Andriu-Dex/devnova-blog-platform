@@ -317,7 +317,62 @@ export async function getBlogForEditing(blogId: string) {
   };
 }
 
-// 4. createBlogVersion
+// 4. getBlogPreview
+export async function getBlogPreview(blogId: string) {
+  const editData = await getBlogForEditing(blogId);
+  if (editData.error || !editData.blog || !editData.latestVersion) {
+    return null;
+  }
+
+  const { blog, latestVersion } = editData;
+
+  const media = await db
+    .select({
+      id: mediaAssets.id,
+      publicId: mediaAssets.cloudinaryPublicId,
+      width: mediaAssets.width,
+      height: mediaAssets.height,
+    })
+    .from(blogVersionMedia)
+    .innerJoin(mediaAssets, eq(blogVersionMedia.mediaAssetId, mediaAssets.id))
+    .where(eq(blogVersionMedia.blogVersionId, latestVersion.id));
+
+  const mediaMap = new Map<string, typeof media[0]>();
+  for (const m of media) {
+    mediaMap.set(m.id, m);
+  }
+
+  if (latestVersion.coverMediaAssetId) {
+    const coverRes = await db
+      .select({
+        id: mediaAssets.id,
+        publicId: mediaAssets.cloudinaryPublicId,
+        width: mediaAssets.width,
+        height: mediaAssets.height,
+      })
+      .from(mediaAssets)
+      .where(eq(mediaAssets.id, latestVersion.coverMediaAssetId))
+      .limit(1);
+    if (coverRes.length > 0) {
+      mediaMap.set(coverRes[0].id, coverRes[0]);
+    }
+  }
+
+  return {
+    blog: {
+      ...blog,
+      title: latestVersion.title,
+      summary: latestVersion.summary,
+      contentMarkdown: latestVersion.contentMarkdown,
+      coverMediaAssetId: latestVersion.coverMediaAssetId,
+      coverAltText: latestVersion.coverAltText,
+      publishedAt: new Date(), // Date actual como preview
+    },
+    mediaMap,
+  };
+}
+
+// 5. createBlogVersion
 export async function createBlogVersion(
   blogId: string,
   baseVersionId: string,
@@ -1006,3 +1061,155 @@ export async function listDeletedBlogs() {
     };
   });
 }
+
+// 12. duplicateBlog
+export async function duplicateBlog(
+  sourceBlogId: string,
+  newTitle: string,
+  newSlug: string,
+  newSummary: string,
+  actorId: string,
+  metadata: AuthMetadata
+) {
+  try {
+    return await db.transaction(async (tx) => {
+      // 1. Lock source blog root
+      const sourceBlog = await tx
+        .select()
+        .from(blogs)
+        .where(and(eq(blogs.id, sourceBlogId), isNull(blogs.deletedAt)))
+        .for("share")
+        .then((res) => res[0]);
+
+      if (!sourceBlog) {
+        throw new Error("NOT_FOUND");
+      }
+
+      // 2. Validate slug uniqueness
+      const existingSlug = await tx
+        .select({ id: blogs.id })
+        .from(blogs)
+        .where(eq(blogs.slug, newSlug))
+        .then((res) => res[0]);
+
+      if (existingSlug) {
+        throw new Error("SLUG_TAKEN");
+      }
+
+      // 3. Get latest version of source blog
+      const sourceLatest = await tx
+        .select()
+        .from(blogVersions)
+        .where(eq(blogVersions.blogId, sourceBlogId))
+        .orderBy(desc(blogVersions.versionNumber))
+        .limit(1)
+        .then((res) => res[0]);
+
+      if (!sourceLatest) {
+        throw new Error("NOT_FOUND");
+      }
+
+      // 4. Validate media (ensure no archived media in cover or body)
+      const mediaIds = new Set<string>();
+      if (sourceLatest.coverMediaAssetId) mediaIds.add(sourceLatest.coverMediaAssetId);
+      
+      const bodyMediaRefs = extractMediaReferences(sourceLatest.contentMarkdown);
+      bodyMediaRefs.forEach(ref => mediaIds.add(ref));
+
+      if (mediaIds.size > 0) {
+        // We lock the media assets for share to ensure they are not concurrently archived
+        const activeMedia = await tx
+          .select({ id: mediaAssets.id, deletedAt: mediaAssets.deletedAt })
+          .from(mediaAssets)
+          .where(sql`${mediaAssets.id} IN ${Array.from(mediaIds)}`)
+          .orderBy(mediaAssets.id) // Determinate order
+          .for("share");
+
+        const foundMap = new Map(activeMedia.map(m => [m.id, m]));
+        
+        for (const id of mediaIds) {
+          const m = foundMap.get(id);
+          if (!m || m.deletedAt !== null) {
+            throw new Error("ARCHIVED_MEDIA");
+          }
+        }
+      }
+
+      // 5. Insert new blog
+      const newBlog = await tx
+        .insert(blogs)
+        .values({
+          slug: newSlug,
+          createdByUserId: actorId,
+        })
+        .returning()
+        .then((res) => res[0]);
+
+      // 6. Insert new v1
+      const newVersion = await tx
+        .insert(blogVersions)
+        .values({
+          blogId: newBlog.id,
+          versionNumber: 1,
+          title: newTitle,
+          summary: newSummary,
+          contentMarkdown: sourceLatest.contentMarkdown,
+          coverMediaAssetId: sourceLatest.coverMediaAssetId,
+          coverAltText: sourceLatest.coverAltText,
+          changeSummary: "Blog duplicado desde otra publicación",
+          editedByUserId: actorId,
+        })
+        .returning()
+        .then((res) => res[0]);
+
+      // 7. Recreate blog_version_media references
+      if (bodyMediaRefs.length > 0) {
+        // We might have duplicate references in the body (e.g. same image used twice)
+        // blog_version_media PK is (blog_version_id, media_asset_id)
+        const uniqueBodyMedia = Array.from(new Set(bodyMediaRefs));
+        const mediaValues = uniqueBodyMedia.map(mediaId => ({
+          blogVersionId: newVersion.id,
+          mediaAssetId: mediaId,
+        }));
+        await tx.insert(blogVersionMedia).values(mediaValues);
+      }
+
+      // 8. Audit logs
+      const createAction = await tx
+        .select({ id: auditActionTypes.id })
+        .from(auditActionTypes)
+        .where(eq(auditActionTypes.code, "CREATE"))
+        .limit(1);
+
+      if (!createAction.length) throw new Error("Missing CREATE catalog data.");
+
+      const auditLog = await tx
+        .insert(auditEvents)
+        .values({
+          actorUserId: actorId,
+          actionTypeId: createAction[0].id,
+          ipAddress: metadata.ipAddress ?? null,
+          userAgent: metadata.userAgent ?? null,
+        })
+        .returning()
+        .then((res) => res[0]);
+
+      await tx.insert(auditBlogEvents).values({
+        auditEventId: auditLog.id,
+        blogId: newBlog.id,
+        newVersionId: newVersion.id,
+      });
+
+      return { blogId: newBlog.id };
+    });
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      if (err.message === "NOT_FOUND") return { error: "El blog de origen no existe o fue eliminado." };
+      if (err.message === "SLUG_TAKEN") return { error: "El slug especificado ya está en uso." };
+      if (err.message === "ARCHIVED_MEDIA") return { error: "El blog origen contiene archivos multimedia archivados. Reemplázalos antes de duplicarlo." };
+    }
+    console.error("duplicateBlog error:", err);
+    return { error: "No fue posible duplicar el blog." };
+  }
+}
+

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireAdmin } from "@/server/auth/authorization";
 import { listAdminTeamMembers } from "@/server/team/team-service";
 import { DeleteMemberButton } from "./delete-button";
+import { OrderForm } from "./order-form";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -46,10 +47,10 @@ export default async function AdminTeamPage() {
                 <div>
                   <h3 style={{ fontSize: "1.2rem", margin: "0 0 5px 0" }}>{member.fullName}</h3>
                   <p style={{ color: "#666", margin: "0 0 5px 0", fontSize: "0.95rem" }}>{member.roleTitle}</p>
-                  <div style={{ display: "flex", gap: "10px", fontSize: "0.85rem", color: "#888", fontFamily: "'IBM Plex Mono', Consolas, monospace" }}>
+                  <div style={{ display: "flex", gap: "10px", fontSize: "0.85rem", color: "#888", fontFamily: "'IBM Plex Mono', Consolas, monospace", alignItems: "center" }}>
                     <span>v{member.versionNumber}</span>
                     <span>•</span>
-                    <span>Orden: {member.displayOrder}</span>
+                    <OrderForm memberId={member.id} currentOrder={member.displayOrder} />
                     <span>•</span>
                     <span style={{ color: member.isVisible ? "#12b76a" : "#f79009" }}>
                       {member.isVisible ? "Visible" : "Oculto"}

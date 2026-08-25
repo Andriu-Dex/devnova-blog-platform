@@ -77,7 +77,7 @@ export default async function NosotrosPage() {
             <p className={styles.teamSubtitle}>Conoce a las personas detrás de DevNova.</p>
 
             {teamMembers.length === 0 ? (
-              <p className={styles.teamEmpty}>El equipo se publicará próximamente.</p>
+              <p className={styles.teamEmpty}>El equipo todavía no ha sido publicado.</p>
             ) : (
               <div className={styles.teamGrid}>
                 {teamMembers.map((member) => (

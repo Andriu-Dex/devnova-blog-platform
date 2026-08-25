@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
+import styles from "./media-picker.module.css";
 
 export interface MediaItem {
   id: string;
@@ -29,6 +30,7 @@ export function MediaPicker({ mediaList, onSelect, requireAltText, buttonLabel }
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [altText, setAltText] = useState("");
   const [error, setError] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleOpen = () => {
     setIsOpen(true);
@@ -49,157 +51,130 @@ export function MediaPicker({ mediaList, onSelect, requireAltText, buttonLabel }
     const cleanAlt = altText.trim();
     if (requireAltText && !cleanAlt) {
       setError("El texto alternativo es obligatorio.");
+      inputRef.current?.focus();
       return;
     }
     onSelect(selectedId, cleanAlt);
     handleClose();
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        handleClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
+
   return (
     <>
       <button
         type="button"
         onClick={handleOpen}
-        style={{
-          backgroundColor: "#1655f8",
-          color: "white",
-          border: "none",
-          padding: "8px 16px",
-          borderRadius: "6px",
-          fontFamily: "'Space Grotesk', Arial, sans-serif",
-          fontSize: "0.9rem",
-          cursor: "pointer",
-        }}
+        className={styles.triggerButton}
       >
         {buttonLabel}
       </button>
 
       {isOpen && (
         <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            backgroundColor: "rgba(0,0,0,0.5)",
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className={styles.modalOverlay}
+          onClick={handleClose}
+          role="presentation"
         >
           <div
-            style={{
-              backgroundColor: "#fcfcfa",
-              width: "90%",
-              maxWidth: "800px",
-              maxHeight: "90vh",
-              borderRadius: "12px",
-              display: "flex",
-              flexDirection: "column",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-              overflow: "hidden",
-            }}
+            className={styles.modalContent}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="media-picker-title"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ padding: "20px", borderBottom: "1px solid #c9c6bb", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h2 style={{ margin: 0, fontFamily: "'Space Grotesk', Arial, sans-serif" }}>Seleccionar Multimedia</h2>
+            <div className={styles.modalHeader}>
+              <h2 id="media-picker-title" className={styles.modalTitle}>Seleccionar Multimedia</h2>
               <button
                 type="button"
                 onClick={handleClose}
-                style={{ background: "none", border: "none", fontSize: "1.5rem", cursor: "pointer", color: "#51545a" }}
+                className={styles.closeButton}
+                aria-label="Cerrar selector de multimedia"
               >
                 &times;
               </button>
             </div>
 
-            <div style={{ padding: "20px", overflowY: "auto", flex: 1 }}>
+            <div className={styles.modalBody}>
               {mediaList.length === 0 ? (
-                <div style={{ textAlign: "center", color: "#74777e", fontFamily: "'Space Grotesk', Arial, sans-serif" }}>
-                  No hay archivos disponibles.
+                <div className={styles.emptyState}>
+                  No hay archivos disponibles. Sube archivos primero.
                 </div>
               ) : (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "16px" }}>
-                  {mediaList.map((item) => (
-                    <div
-                      key={item.id}
-                      onClick={() => setSelectedId(item.id)}
-                      style={{
-                        border: selectedId === item.id ? "3px solid #1655f8" : "1px solid #c9c6bb",
-                        borderRadius: "8px",
-                        overflow: "hidden",
-                        cursor: "pointer",
-                        position: "relative",
-                      }}
-                    >
-                      <div style={{ position: "relative", width: "100%", height: "120px", backgroundColor: "#f1f2f4" }}>
-                        <Image
-                          src={item.thumbnailUrl}
-                          alt={item.originalFilename}
-                          fill
-                          sizes="(max-width: 768px) 100vw, 180px"
-                          style={{ objectFit: "cover" }}
-                          unoptimized
-                        />
+                <div className={styles.grid}>
+                  {mediaList.map((item) => {
+                    const isSelected = selectedId === item.id;
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => setSelectedId(item.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setSelectedId(item.id);
+                          }
+                        }}
+                        className={`${styles.mediaItem} ${isSelected ? styles.mediaItemSelected : ""}`}
+                        role="radio"
+                        aria-checked={isSelected}
+                        tabIndex={0}
+                        aria-label={`Seleccionar imagen ${item.originalFilename}`}
+                      >
+                        <div className={styles.mediaImageWrap}>
+                          <Image
+                            src={item.thumbnailUrl}
+                            alt={item.originalFilename}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 180px"
+                            style={{ objectFit: "cover" }}
+                            unoptimized
+                          />
+                        </div>
+                        <div className={styles.mediaLabel}>
+                          {item.originalFilename}
+                        </div>
                       </div>
-                      <div style={{ padding: "8px", fontSize: "0.8rem", fontFamily: "'Space Grotesk', Arial, sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {item.originalFilename}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
 
-            <div style={{ padding: "20px", borderTop: "1px solid #c9c6bb", backgroundColor: "#fff" }}>
-              {error && <div style={{ color: "#d93025", fontSize: "0.9rem", marginBottom: "12px", fontFamily: "'Space Grotesk', Arial, sans-serif" }}>{error}</div>}
+            <div className={styles.modalFooter}>
+              {error && <div className={styles.error} role="alert">{error}</div>}
               
-              <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-                <div style={{ flex: 1 }}>
-                  {requireAltText && (
-                    <input
-                      type="text"
-                      placeholder="Texto alternativo (requerido)"
-                      value={altText}
-                      onChange={(e) => setAltText(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "10px",
-                        border: "1px solid #c9c6bb",
-                        borderRadius: "6px",
-                        fontFamily: "'Space Grotesk', Arial, sans-serif",
-                      }}
-                    />
-                  )}
-                  {!requireAltText && (
-                    <input
-                      type="text"
-                      placeholder="Texto alternativo (opcional)"
-                      value={altText}
-                      onChange={(e) => setAltText(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "10px",
-                        border: "1px solid #c9c6bb",
-                        borderRadius: "6px",
-                        fontFamily: "'Space Grotesk', Arial, sans-serif",
-                      }}
-                    />
-                  )}
+              <div className={styles.footerControls}>
+                <div className={styles.inputWrap}>
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    placeholder={requireAltText ? "Texto alternativo (requerido)" : "Texto alternativo (opcional)"}
+                    value={altText}
+                    onChange={(e) => setAltText(e.target.value)}
+                    className={styles.input}
+                    aria-required={requireAltText}
+                    aria-label="Texto alternativo de la imagen"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleSelect();
+                      }
+                    }}
+                  />
                 </div>
                 <button
                   type="button"
                   onClick={handleSelect}
                   disabled={!selectedId}
-                  style={{
-                    backgroundColor: selectedId ? "#1655f8" : "#a8bdfa",
-                    color: "white",
-                    border: "none",
-                    padding: "10px 24px",
-                    borderRadius: "6px",
-                    fontFamily: "'Space Grotesk', Arial, sans-serif",
-                    cursor: selectedId ? "pointer" : "not-allowed",
-                  }}
+                  className={styles.confirmButton}
                 >
                   Confirmar
                 </button>

@@ -274,3 +274,73 @@ export async function transitionMessageStatus(
     });
   });
 }
+
+export async function countNewMessages(): Promise<number> {
+  const latestSubquery = db
+    .select({
+      contactMessageId: contactMessageStatusHistory.contactMessageId,
+      maxSeq: sql<number>`max(${contactMessageStatusHistory.sequenceNumber})`.as("max_seq"),
+    })
+    .from(contactMessageStatusHistory)
+    .groupBy(contactMessageStatusHistory.contactMessageId)
+    .as("latest_seqs");
+
+  const countQuery = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(contactMessages)
+    .innerJoin(latestSubquery, eq(contactMessages.id, latestSubquery.contactMessageId))
+    .innerJoin(
+      contactMessageStatusHistory,
+      and(
+        eq(contactMessageStatusHistory.contactMessageId, latestSubquery.contactMessageId),
+        eq(contactMessageStatusHistory.sequenceNumber, latestSubquery.maxSeq)
+      )
+    )
+    .innerJoin(contactMessageStatuses, eq(contactMessageStatusHistory.statusId, contactMessageStatuses.id))
+    .where(eq(contactMessageStatuses.code, "NEW"));
+
+  return Number(countQuery[0]?.count || 0);
+}
+
+export async function exportMessagesForCsv(statusFilterCode?: string) {
+  const latestSubquery = db
+    .select({
+      contactMessageId: contactMessageStatusHistory.contactMessageId,
+      maxSeq: sql<number>`MAX(${contactMessageStatusHistory.sequenceNumber})`.as("max_seq")
+    })
+    .from(contactMessageStatusHistory)
+    .groupBy(contactMessageStatusHistory.contactMessageId)
+    .as("latest_seqs");
+
+  const baseQuery = db
+    .select({
+      receivedAt: contactMessages.receivedAt,
+      senderName: contactMessages.senderName,
+      senderEmail: contactMessages.senderEmail,
+      subject: contactMessages.subject,
+      currentStatusCode: contactMessageStatuses.code,
+    })
+    .from(contactMessages)
+    .innerJoin(latestSubquery, eq(contactMessages.id, latestSubquery.contactMessageId))
+    .innerJoin(
+      contactMessageStatusHistory,
+      and(
+        eq(contactMessageStatusHistory.contactMessageId, latestSubquery.contactMessageId),
+        eq(contactMessageStatusHistory.sequenceNumber, latestSubquery.maxSeq)
+      )
+    )
+    .innerJoin(contactMessageStatuses, eq(contactMessageStatusHistory.statusId, contactMessageStatuses.id));
+
+  const conditions = [];
+  if (statusFilterCode) {
+    conditions.push(eq(contactMessageStatuses.code, statusFilterCode));
+  }
+
+  const results = await baseQuery
+    .where(and(...conditions))
+    .orderBy(desc(contactMessages.receivedAt))
+    .limit(5000);
+    
+  return results;
+}
+

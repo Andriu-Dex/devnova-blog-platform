@@ -19,7 +19,12 @@ const ibmPlexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
   title: "DevNova Blog Platform",
-  description: "Plataforma de blog institucional DevNova."
+  description: "Plataforma de blog institucional DevNova.",
+  alternates: {
+    types: {
+      "application/rss+xml": "/feed.xml",
+    },
+  },
 };
 
 export default function RootLayout({

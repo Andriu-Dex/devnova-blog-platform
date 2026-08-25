@@ -153,16 +153,26 @@ export function HistoryClient({
               </div>
             </div>
             
-            {!v.isLatest && (
-              <button
-                onClick={() => openRestoreModal(v)}
-                disabled={isPending}
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <a
+                href={`/dashboard/blogs/${blogId}/export?version=${v.versionNumber}`}
+                download
                 className={styles.actionButton}
-                style={{ background: "#4a4a4a", opacity: isPending ? 0.7 : 1 }}
+                style={{ background: "#10b981", color: "white", textDecoration: "none", opacity: isPending ? 0.7 : 1 }}
               >
-                Restaurar como nueva versión
-              </button>
-            )}
+                Exportar .md
+              </a>
+              {!v.isLatest && (
+                <button
+                  onClick={() => openRestoreModal(v)}
+                  disabled={isPending}
+                  className={styles.actionButton}
+                  style={{ background: "#4a4a4a", opacity: isPending ? 0.7 : 1 }}
+                >
+                  Restaurar
+                </button>
+              )}
+            </div>
           </div>
         ))}
       </div>

@@ -1,0 +1,136 @@
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-8);
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.title {
+  font-family: var(--font-sans);
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-2) 0;
+  color: var(--color-carbon);
+  letter-spacing: -0.04em;
+}
+
+.subtitle {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-carbon-muted);
+  text-decoration: none;
+}
+
+.subtitle:hover {
+  color: var(--color-carbon);
+}
+
+.tableContainer {
+  margin-top: var(--space-10);
+}
+
+.sectionTitle {
+  font-family: var(--font-sans);
+  font-size: 1.25rem;
+  margin: 0 0 var(--space-6) 0;
+  color: var(--color-carbon);
+  font-weight: 600;
+}
+
+.emptyState {
+  text-align: center;
+  padding: var(--space-12) var(--space-6);
+  color: var(--color-carbon-muted);
+  font-family: var(--font-sans);
+  background-color: var(--color-paper);
+  border: 1px dashed var(--color-line-strong);
+  border-radius: var(--radius-card);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-6);
+}
+
+.mediaCard {
+  background-color: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s var(--ease-out), transform 0.2s var(--ease-out);
+}
+
+.mediaCard:hover {
+  box-shadow: var(--shadow-float);
+  transform: translateY(-2px);
+}
+
+.imageWrap {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  background-color: var(--color-canvas);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.cardBody {
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex: 1;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.filename {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  color: var(--color-carbon);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}
+
+.formatBadge {
+  background-color: var(--color-canvas);
+  color: var(--color-carbon-muted);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  padding: 2px 6px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.metaInfo {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-carbon-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cardActions {
+  margin-top: auto;
+  padding-top: var(--space-3);
+  border-top: 1px dashed var(--color-line);
+}

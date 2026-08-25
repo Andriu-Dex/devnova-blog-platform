@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { requireAdmin } from "@/server/auth/authorization";
+import { PrivateHeader } from "@/components/layout/private-header";
 
 export default async function AdminContentPage() {
-  await requireAdmin();
+  const user = await requireAdmin();
 
   const sections = [
     { key: "HOME", title: "Inicio" },
@@ -13,32 +14,41 @@ export default async function AdminContentPage() {
   ];
 
   return (
-    <main style={{ padding: "40px 20px", maxWidth: "800px", margin: "0 auto" }}>
-      <h1 style={{ fontSize: "2rem", marginBottom: "40px" }}>Gestión de Contenido Institucional</h1>
+    <main className="private-page">
+      <PrivateHeader displayName={user.displayName} role={user.role} />
+      
+      <div style={{ marginBottom: "var(--space-8)" }}>
+        <h1 style={{ fontFamily: "var(--font-sans)", fontSize: "2.25rem", margin: "0 0 var(--space-2) 0", color: "var(--color-carbon)", letterSpacing: "-0.04em", fontWeight: 600 }}>
+          Gestión de Contenido Institucional
+        </h1>
+        <p style={{ fontFamily: "var(--font-sans)", color: "var(--color-carbon-muted)", margin: 0 }}>
+          Administra las secciones estáticas y el perfil de la plataforma.
+        </p>
+      </div>
 
-      <section style={{ marginBottom: "50px" }}>
-        <h2 style={{ fontSize: "1.5rem", marginBottom: "20px", color: "#444" }}>Perfil del Sitio</h2>
-        <div style={{ padding: "20px", backgroundColor: "#fff", border: "1px solid #eaeaea", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <section style={{ marginBottom: "var(--space-12)" }}>
+        <h2 style={{ fontSize: "1.5rem", marginBottom: "var(--space-4)", color: "var(--color-carbon)", fontWeight: 600, letterSpacing: "-0.02em" }}>Perfil del Sitio</h2>
+        <div style={{ padding: "var(--space-6)", backgroundColor: "var(--color-paper)", border: "1px solid var(--color-line)", borderRadius: "var(--radius-card)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "var(--space-4)", flexWrap: "wrap" }}>
           <div>
-            <h3 style={{ fontSize: "1.2rem", margin: "0 0 5px 0" }}>Identidad y Contacto</h3>
-            <p style={{ color: "#666", margin: 0 }}>Gestiona el logo, eslogan, email y teléfono público.</p>
+            <h3 style={{ fontSize: "1.2rem", margin: "0 0 var(--space-2) 0", color: "var(--color-carbon)", fontWeight: 600 }}>Identidad y Contacto</h3>
+            <p style={{ color: "var(--color-carbon-muted)", margin: 0, fontSize: "0.95rem" }}>Gestiona el logo, eslogan, email y teléfono público.</p>
           </div>
-          <Link href="/admin/content/profile" style={{ padding: "10px 20px", backgroundColor: "#1655f8", color: "#fff", textDecoration: "none", borderRadius: "4px", fontWeight: "bold" }}>
+          <Link href="/admin/content/profile" style={{ padding: "10px 20px", backgroundColor: "var(--color-primary)", color: "var(--color-white)", textDecoration: "none", borderRadius: "var(--radius-md)", fontWeight: 600, fontFamily: "var(--font-mono)", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>
             Administrar
           </Link>
         </div>
       </section>
 
       <section>
-        <h2 style={{ fontSize: "1.5rem", marginBottom: "20px", color: "#444" }}>Secciones Públicas</h2>
-        <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+        <h2 style={{ fontSize: "1.5rem", marginBottom: "var(--space-4)", color: "var(--color-carbon)", fontWeight: 600, letterSpacing: "-0.02em" }}>Secciones Públicas</h2>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
           {sections.map((sec) => (
-            <div key={sec.key} style={{ padding: "20px", backgroundColor: "#fff", border: "1px solid #eaeaea", borderRadius: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div key={sec.key} style={{ padding: "var(--space-6)", backgroundColor: "var(--color-paper)", border: "1px solid var(--color-line)", borderRadius: "var(--radius-card)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "var(--space-4)", flexWrap: "wrap" }}>
               <div>
-                <h3 style={{ fontSize: "1.2rem", margin: "0 0 5px 0" }}>{sec.title} ({sec.key})</h3>
-                <p style={{ color: "#666", margin: 0, fontSize: "0.9rem" }}>Editar el texto y la estructura de esta sección.</p>
+                <h3 style={{ fontSize: "1.2rem", margin: "0 0 var(--space-2) 0", color: "var(--color-carbon)", fontWeight: 600 }}>{sec.title} <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.8rem", color: "var(--color-carbon-subtle)", fontWeight: 400 }}>({sec.key})</span></h3>
+                <p style={{ color: "var(--color-carbon-muted)", margin: 0, fontSize: "0.95rem" }}>Editar el texto y la estructura de esta sección.</p>
               </div>
-              <Link href={`/admin/content/sections/${sec.key}`} style={{ padding: "10px 20px", backgroundColor: "#f0f4ff", color: "#1655f8", textDecoration: "none", borderRadius: "4px", fontWeight: "bold", border: "1px solid #d0deff" }}>
+              <Link href={`/admin/content/sections/${sec.key}`} style={{ padding: "10px 20px", backgroundColor: "transparent", border: "1px solid var(--color-line-strong)", color: "var(--color-carbon)", textDecoration: "none", borderRadius: "var(--radius-md)", fontWeight: 600, fontFamily: "var(--font-mono)", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                 Editar Sección
               </Link>
             </div>
