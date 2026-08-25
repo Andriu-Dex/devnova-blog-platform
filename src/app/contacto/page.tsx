@@ -5,6 +5,7 @@ import { MarkdownRenderer } from "@/components/blogs/markdown-renderer";
 import { ContactForm } from "@/components/contact/contact-form";
 import { Metadata } from "next";
 import styles from "./contacto.module.css";
+import { IconoTerminal } from "@/components/site/devbox-pieces";
 
 export const dynamic = "force-dynamic";
 
@@ -24,18 +25,22 @@ export default async function ContactoPage() {
     <div className={styles.page}>
       <PublicHeader />
 
-      <main style={{ flex: 1 }}>
-        {/* ── PAGE HEADER ─────────────────────────────────────────── */}
-        <header className={styles.pageHeader}>
-          <div className={styles.pageHeaderInner}>
-            <span className={styles.pageEyebrow}>/contacto</span>
-            <h1 className={styles.pageTitle}>
-              {contactSection?.title || "Contacto"}
-            </h1>
+      <main>
+        {/* ── CABECERA ─────────────────────────────────────────────── */}
+        <header className={`${styles.contenedor} ${styles.cabeceraPagina}`}>
+          <h1>Contacto</h1>
+          <div>
+            <p>
+              Canal de comunicación abierto para consultas sobre el proyecto, colaboraciones y revisiones académicas.
+            </p>
+            <span className={styles.meta}>
+              <IconoTerminal /> canal público · respuesta directa
+            </span>
           </div>
         </header>
 
-        <div className={styles.content}>
+        {/* ── CONTENIDO ────────────────────────────────────────────── */}
+        <div className={`${styles.contenedor} ${styles.content}`}>
           {/* Sidebar */}
           <aside className={styles.sidebar} aria-label="Información de contacto">
             {contactSection && (
@@ -47,7 +52,7 @@ export default async function ContactoPage() {
               </div>
             )}
 
-            {(profile?.publicEmail || profile?.publicPhone) ? (
+            {profile?.publicEmail || profile?.publicPhone ? (
               <div>
                 <span className={styles.sectionLabel}>Vías directas</span>
                 <div className={styles.infoCard}>
@@ -73,7 +78,7 @@ export default async function ContactoPage() {
           </aside>
 
           {/* Form */}
-          <div>
+          <div className={styles.formContainer}>
             <ContactForm />
           </div>
         </div>

@@ -1,123 +1,159 @@
 .header {
   position: sticky;
   top: 0;
-  z-index: 50;
-  background-color: var(--color-canvas);
-  border-bottom: 1px solid var(--color-line);
+  z-index: 100;
+  background-color: var(--color-canvas, #f7f3e8);
+  border-bottom: 1px solid var(--color-line, #c9c6bb);
 }
 
 .inner {
+  max-width: var(--content-width, 1280px);
+  margin-inline: auto;
+  padding-inline: clamp(20px, 4vw, 56px);
+  min-height: 72px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
-  max-width: var(--content-width);
-  margin-inline: auto;
-  padding-inline: var(--content-padding);
-  gap: var(--space-6);
+  gap: 20px;
 }
 
-/* ── Brand ─────────────────────────────────────────────────────────── */
+/* Brand */
 .brand {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: 10px;
   text-decoration: none;
-  color: var(--color-carbon);
-  flex-shrink: 0;
+  color: var(--color-carbon, #121419);
+}
+
+.brandGlyph {
+  width: 28px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  color: var(--color-primary, #155eef);
+}
+
+.brandGlyph svg {
+  width: 100%;
+  height: 100%;
 }
 
 .brandName {
-  font-family: var(--font-sans);
-  font-size: 1.1rem;
-  font-weight: 600;
-  letter-spacing: -0.03em;
-  color: var(--color-carbon);
-  transition: color 0.14s var(--ease-out);
+  font-family: var(--font-sans, "Space Grotesk", sans-serif);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
 }
 
-.brand:hover .brandName {
-  color: var(--color-primary);
+.brandPath {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.78rem;
+  color: var(--color-carbon-muted, #51545a);
+  letter-spacing: 0.01em;
 }
 
-/* ── Nav desktop ────────────────────────────────────────────────────── */
-.nav {
+/* Nav Capsule */
+.desktopNav {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
+}
+
+.navCapsule {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--color-carbon, #121419);
+  padding: 4px;
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(18, 20, 25, 0.15);
 }
 
 .navLink {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-family: var(--font-sans, "Space Grotesk", sans-serif);
+  font-size: 0.88rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  color: #c9cbd1;
   text-decoration: none;
-  color: var(--color-carbon-muted);
-  padding: 6px var(--space-3);
-  border-radius: var(--radius-pill);
-  transition: color 0.14s var(--ease-out), background-color 0.14s var(--ease-out);
+  transition: all 160ms ease;
+  line-height: 1;
 }
 
 .navLink:hover {
-  color: var(--color-carbon);
-  background-color: rgba(21, 94, 239, 0.06);
+  color: #ffffff;
 }
 
 .navLinkActive {
-  color: var(--color-carbon);
-  background-color: var(--color-cyan-soft);
+  background-color: var(--color-cyan, #28c7e8);
+  color: var(--color-carbon, #121419) !important;
+}
+
+/* Header Right */
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.repoStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  color: var(--color-carbon-muted, #51545a);
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  background-color: var(--color-cyan, #28c7e8);
+  border-radius: 50%;
 }
 
 .loginLink {
-  margin-left: var(--space-4);
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.78rem;
+  color: var(--color-carbon, #121419);
   text-decoration: none;
-  color: var(--color-paper);
-  background-color: var(--color-carbon);
-  padding: 6px var(--space-4);
-  border-radius: var(--radius-md);
-  transition: background-color 0.14s var(--ease-out), transform 0.14s var(--ease-out);
+  font-weight: 600;
+  padding: 6px 12px;
+  border: 1px solid var(--color-line, #c9c6bb);
+  border-radius: 8px;
+  transition: all 140ms ease;
 }
 
 .loginLink:hover {
-  background-color: var(--color-primary);
-  transform: translateY(-1px);
+  background-color: var(--color-paper, #fffcf4);
+  border-color: var(--color-carbon, #121419);
 }
 
-/* ── Mobile toggle ──────────────────────────────────────────────────── */
+/* Mobile */
 .menuToggle {
   display: none;
   align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  background: transparent;
-  border: 1px solid var(--color-line);
-  border-radius: var(--radius-md);
-  color: var(--color-carbon);
+  gap: 6px;
+  padding: 8px 14px;
+  background-color: var(--color-carbon, #121419);
+  color: var(--color-paper, #fffcf4);
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.78rem;
   cursor: pointer;
-  transition: border-color 0.14s;
 }
 
-.menuToggle:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-}
-
-/* ── Mobile drawer ──────────────────────────────────────────────────── */
 .mobileNav {
   display: none;
   flex-direction: column;
-  padding: var(--space-4) var(--content-padding) var(--space-6);
-  border-top: 1px solid var(--color-line);
-  background-color: var(--color-canvas);
-  gap: var(--space-2);
+  background-color: var(--color-paper, #fffcf4);
+  border-bottom: 2px solid var(--color-carbon, #121419);
+  padding: 16px clamp(20px, 4vw, 56px) 24px;
+  gap: 12px;
 }
 
 .mobileNavOpen {
@@ -125,45 +161,43 @@
 }
 
 .mobileNavLink {
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background-color: var(--color-canvas, #f7f3e8);
+  border-radius: 10px;
+  color: var(--color-carbon, #121419);
+  font-family: var(--font-sans, "Space Grotesk", sans-serif);
+  font-size: 1rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
   text-decoration: none;
-  color: var(--color-carbon-muted);
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  transition: background-color 0.14s;
 }
 
-.mobileNavLink:hover {
-  background-color: rgba(21, 94, 239, 0.06);
-  color: var(--color-carbon);
+.mobileNavLinkActive {
+  background-color: var(--color-cyan, #28c7e8);
 }
 
-.mobileLoginLink {
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  text-decoration: none;
-  color: var(--color-paper);
-  background-color: var(--color-carbon);
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
+.mobileLoginBtn {
+  margin-top: 8px;
+  display: block;
   text-align: center;
-  margin-top: var(--space-2);
+  padding: 14px;
+  background-color: var(--color-carbon, #121419);
+  color: var(--color-paper, #fffcf4);
+  border-radius: 10px;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85rem;
+  text-decoration: none;
 }
 
-/* ── Responsive ─────────────────────────────────────────────────────── */
-@media (max-width: 768px) {
-  .nav {
+@media (max-width: 900px) {
+  .desktopNav,
+  .repoStatus,
+  .loginLink {
     display: none;
   }
-
   .menuToggle {
-    display: flex;
+    display: inline-flex;
   }
 }

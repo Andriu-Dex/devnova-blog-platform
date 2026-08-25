@@ -4,7 +4,14 @@ import { PublicFooter } from "@/components/site/public-footer";
 import { MarkdownRenderer } from "@/components/blogs/markdown-renderer";
 import { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import styles from "./nosotros.module.css";
+import {
+  IconoFlecha,
+  IconoRama,
+  IconoTerminal,
+  IconoGitHub,
+} from "@/components/site/devbox-pieces";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const profile = await getPublicSiteProfile();
   return {
     title: profile?.groupName ? `${profile.groupName} | Nosotros` : "DevNova | Nosotros",
-    description: "Conoce más sobre nuestra institución, historia y visión.",
+    description: "El equipo que construye y documenta DevNova durante el semestre.",
   };
 }
 
@@ -26,119 +33,153 @@ export default async function NosotrosPage() {
     <div className={styles.page}>
       <PublicHeader />
 
-      <main style={{ flex: 1 }}>
-        {/* ── PAGE HEADER ───────────────────────────────────────────── */}
-        <header className={styles.pageHeader}>
-          <div className={styles.pageHeaderInner}>
-            <span className={styles.pageEyebrow}>/nosotros</span>
-            <h1 className={styles.pageTitle}>Nosotros</h1>
+      <main>
+        {/* ── HERO NOSOTROS ────────────────────────────────────────── */}
+        <header className={`${styles.contenedor} ${styles.nosotrosHero}`}>
+          <div className={styles.nosotrosHeroTitulo}>
+            <h1>Nosotros</h1>
+            <p>
+              {aboutSection?.contentMarkdown ||
+                "Seis personas construyendo, probando y documentando el mismo repositorio de aprendizaje."}
+            </p>
+          </div>
+
+          <div className={styles.nosotrosHeroTerminal}>
+            <div className={styles.meta}>
+              <IconoTerminal /> team.config
+            </div>
+            <p>
+              <span>materia:</span> Desarrollo Asistido por Software
+            </p>
+            <p>
+              <span>integrantes:</span> {teamMembers.length || 6}
+            </p>
+            <p>
+              <span>principio:</span> evidencia compartida
+            </p>
+            <div className={styles.nosotrosHeroRama}>
+              <IconoRama />
+              <span>main</span>
+              <i />
+              <span>aprender</span>
+            </div>
           </div>
         </header>
 
-        <div className={styles.content}>
-          {/* ── ABOUT ───────────────────────────────────────────────── */}
-          {aboutSection ? (
-            <section aria-labelledby="about-title" className={styles.aboutSection}>
-              <span className={styles.sectionLabel}>Sobre nosotros</span>
-              {aboutSection.title && (
-                <h2 id="about-title" className={styles.aboutTitle}>{aboutSection.title}</h2>
-              )}
-              <MarkdownRenderer content={aboutSection.contentMarkdown} allowMedia={false} />
-            </section>
-          ) : (
-            <p className={styles.aboutEmpty}>El contenido de esta sección aún no ha sido publicado.</p>
-          )}
-
-          {/* ── MISSION / VISION ──────────────────────────────────── */}
-          {(missionSection || visionSection) && (
-            <section aria-label="Misión y Visión">
-              <span className={styles.sectionLabel}>Propósito</span>
-              <div className={styles.mvGrid}>
-                {missionSection && (
-                  <article className={styles.mvCard}>
-                    <h3 className={styles.mvTitle}>{missionSection.title || "Misión"}</h3>
-                    <MarkdownRenderer content={missionSection.contentMarkdown} allowMedia={false} />
-                  </article>
-                )}
-                {visionSection && (
-                  <article className={styles.mvCard}>
-                    <h3 className={styles.mvTitle}>{visionSection.title || "Visión"}</h3>
-                    <MarkdownRenderer content={visionSection.contentMarkdown} allowMedia={false} />
-                  </article>
-                )}
+        {/* ── MISIÓN Y VISIÓN (HOJAS FLOTANTES SOBRE FONDO AZUL) ──── */}
+        <section className={styles.seccionAzul} aria-label="Misión y visión">
+          <div className={`${styles.contenedor} ${styles.declaraciones}`}>
+            {/* Hoja Misión */}
+            <article className={`${styles.declaracionHoja} ${styles.declaracionHojaMision}`}>
+              <div className={`${styles.declaracionHojaBarra} ${styles.meta}`}>
+                <span>docs/mision.md</span>
+                <span>confirmado</span>
               </div>
-            </section>
-          )}
-
-          {/* ── TEAM ─────────────────────────────────────────────── */}
-          <section className={styles.teamSection} aria-labelledby="team-heading">
-            <span className={styles.sectionLabel}>Equipo</span>
-            <h2 id="team-heading" className={styles.teamTitle}>Nuestro Equipo</h2>
-            <p className={styles.teamSubtitle}>Conoce a las personas detrás de DevNova.</p>
-
-            {teamMembers.length === 0 ? (
-              <p className={styles.teamEmpty}>El equipo todavía no ha sido publicado.</p>
-            ) : (
-              <div className={styles.teamGrid}>
-                {teamMembers.map((member) => (
-                  <article key={member.id} className={styles.memberCard}>
-                    <div className={styles.memberPhoto}>
-                      {member.photoPublicId ? (
-                        <Image
-                          src={`https://res.cloudinary.com/db7y9bmbw/image/upload/c_fill,w_600,h_440,g_face/v1/${member.photoPublicId}`}
-                          alt={member.photoAltText || member.fullName}
-                          fill
-                          sizes="(max-width: 768px) 100vw, 400px"
-                          style={{ objectFit: "cover" }}
-                          unoptimized
-                        />
-                      ) : (
-                        <div className={styles.memberInitial} aria-hidden="true">
-                          {member.fullName.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                    </div>
-                    <div className={styles.memberBody}>
-                      <h3 className={styles.memberName}>{member.fullName}</h3>
-                      <p className={styles.memberRole}>{member.roleTitle || "Integrante"}</p>
-                      {member.bioMarkdown && (
-                        <div className={styles.memberBio}>
-                          <MarkdownRenderer content={member.bioMarkdown} allowMedia={false} />
-                        </div>
-                      )}
-                      {(member.githubUrl || member.linkedinUrl) && (
-                        <div className={styles.memberLinks}>
-                          {member.githubUrl && member.githubUrl.startsWith("https://") && (
-                            <a
-                              href={member.githubUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={styles.memberLink}
-                              aria-label={`GitHub de ${member.fullName}`}
-                            >
-                              GitHub ↗
-                            </a>
-                          )}
-                          {member.linkedinUrl && member.linkedinUrl.startsWith("https://") && (
-                            <a
-                              href={member.linkedinUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={styles.memberLink}
-                              aria-label={`LinkedIn de ${member.fullName}`}
-                            >
-                              LinkedIn ↗
-                            </a>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </article>
-                ))}
+              <h2>{missionSection?.title || "Misión"}</h2>
+              <div className={styles.declaracionCuerpo}>
+                <MarkdownRenderer
+                  content={
+                    missionSection?.contentMarkdown ||
+                    "Construir y documentar soluciones de software con rigor metodológico y evidencia verificable, fortaleciendo el aprendizaje colaborativo a lo largo del semestre."
+                  }
+                  allowMedia={false}
+                />
               </div>
-            )}
-          </section>
-        </div>
+            </article>
+
+            {/* Hoja Visión */}
+            <article className={`${styles.declaracionHoja} ${styles.declaracionHojaVision}`}>
+              <div className={`${styles.declaracionHojaBarra} ${styles.meta}`}>
+                <span>docs/vision.md</span>
+                <span>confirmado</span>
+              </div>
+              <h2>{visionSection?.title || "Visión"}</h2>
+              <div className={styles.declaracionCuerpo}>
+                <MarkdownRenderer
+                  content={
+                    visionSection?.contentMarkdown ||
+                    "Consolidar un repositorio académico modelo que refleje la evolución de habilidades en análisis, diseño, pruebas y despliegue continuo de software."
+                  }
+                  allowMedia={false}
+                />
+              </div>
+            </article>
+          </div>
+        </section>
+
+        {/* ── CONTRIBUIDORES / EQUIPO ──────────────────────────────── */}
+        <section className={`${styles.contenedor} ${styles.seccion} ${styles.equipoSeccion}`} aria-labelledby="titulo-equipo">
+          <div className={`${styles.seccionCabecera} ${styles.seccionCabeceraFila}`}>
+            <div>
+              <h2 id="titulo-equipo">Contribuidores</h2>
+              <p>La autoría se declara en cada entrega y se comprueba en el historial del trabajo.</p>
+            </div>
+            <span className={styles.meta}>
+              {teamMembers.length} perfiles completados
+            </span>
+          </div>
+
+          <div className={styles.contribuidores}>
+            {teamMembers.map((member, idx) => (
+              <article key={member.id} className={styles.contribuidor}>
+                <div className={`${styles.contribuidorArchivo} ${styles.meta}`}>
+                  <span>integrante-{String(idx + 1).padStart(2, "0")}.json</span>
+                  <span>{member.roleTitle || "Desarrollador"}</span>
+                </div>
+
+                <div className={styles.contribuidorRetratoWrap}>
+                  {member.photoPublicId ? (
+                    <Image
+                      src={`https://res.cloudinary.com/db7y9bmbw/image/upload/c_fill,w_300,h_300,g_face/v1/${member.photoPublicId}`}
+                      alt={member.photoAltText || member.fullName}
+                      width={96}
+                      height={96}
+                      className={styles.contribuidorRetrato}
+                      unoptimized
+                    />
+                  ) : (
+                    <div className={styles.contribuidorRetratoPendiente}>
+                      {member.fullName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+
+                <div className={styles.contribuidorIdentidad}>
+                  <h3>{member.fullName}</h3>
+                  <p>{member.roleTitle || "Colaborador"}</p>
+                </div>
+
+                {member.githubUrl && member.githubUrl.startsWith("https://") ? (
+                  <a
+                    href={member.githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.contribuidorLink}
+                    aria-label={`GitHub de ${member.fullName}`}
+                  >
+                    <IconoGitHub />
+                    <span>{member.githubUrl.replace("https://github.com/", "@")}</span>
+                  </a>
+                ) : (
+                  <span className={`${styles.contribuidorPendiente} ${styles.meta}`}>
+                    Sin enlace público
+                  </span>
+                )}
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* ── CIERRE EDITORIAL ─────────────────────────────────────── */}
+        <section className={`${styles.contenedor} ${styles.seccion} ${styles.nosotrosCierre}`}>
+          <p>
+            El resultado importa.<br />
+            El proceso también.
+          </p>
+          <Link prefetch={false} className={`${styles.boton} ${styles.botonPrimario}`} href="/blogs">
+            <span>Explorar las entregas</span> <IconoFlecha />
+          </Link>
+        </section>
       </main>
 
       <PublicFooter />

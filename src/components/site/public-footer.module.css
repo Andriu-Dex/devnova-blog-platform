@@ -1,124 +1,126 @@
 .footer {
-  background-color: var(--color-carbon);
-  color: var(--color-paper);
-  padding: var(--space-16) var(--content-padding) var(--space-8);
+  background-color: var(--color-carbon, #121419);
+  color: var(--color-paper, #fffcf4);
+  padding: clamp(64px, 8vw, 96px) clamp(20px, 4vw, 56px) clamp(40px, 5vw, 64px);
   margin-top: auto;
 }
 
 .inner {
-  max-width: var(--content-width);
+  max-width: var(--content-width, 1280px);
   margin-inline: auto;
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: var(--space-12);
+  grid-template-columns: 1fr 0.8fr;
+  gap: clamp(40px, 6vw, 96px);
   align-items: start;
 }
 
-.brand {
+.brandBlock {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: 16px;
 }
 
-.brandName {
-  font-family: var(--font-sans);
-  font-size: 1.25rem;
-  font-weight: 600;
+.brandTitle {
+  font-family: var(--font-sans, "Space Grotesk", sans-serif);
+  font-size: clamp(3rem, 7vw, 6.5rem);
+  font-weight: 700;
+  line-height: 0.85;
   letter-spacing: -0.04em;
-  color: var(--color-paper);
+  margin: 0;
+  color: #ffffff;
 }
 
-.tagline {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: rgba(255, 252, 244, 0.55);
-  line-height: 1.5;
-  max-width: 42ch;
+.brandLema {
+  font-family: var(--font-sans, "Space Grotesk", sans-serif);
+  font-size: clamp(1.4rem, 2.5vw, 2.2rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--color-cyan, #28c7e8);
+  margin: 0;
+  max-width: 24ch;
 }
 
-.navList {
+.routesBlock {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  list-style: none;
+  gap: 20px;
+}
+
+.routeHeader {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.78rem;
+  color: #8f929a;
   margin: 0;
-  padding: 0;
 }
 
-.navLink {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  text-decoration: none;
-  color: rgba(255, 252, 244, 0.55);
-  transition: color 0.14s var(--ease-out);
-}
-
-.navLink:hover {
-  color: var(--color-paper);
-}
-
-.divider {
-  border: 0;
-  border-top: 1px solid rgba(255, 252, 244, 0.12);
-  margin: var(--space-8) 0 var(--space-6);
-}
-
-.bottom {
-  max-width: var(--content-width);
-  margin-inline: auto;
+.footerNav {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  border-top: 1px solid #34373e;
+}
+
+.footerNav a {
+  display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-4);
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid #34373e;
+  font-family: var(--font-sans, "Space Grotesk", sans-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--color-paper, #fffcf4);
+  text-decoration: none;
+  transition: all 160ms ease;
 }
 
-.copyright {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: rgba(255, 252, 244, 0.4);
+.footerNav a svg {
+  color: var(--color-cyan, #28c7e8);
+  transition: transform 160ms ease;
 }
 
-.socialList {
+.footerNav a:hover {
+  color: var(--color-cyan, #28c7e8);
+  padding-left: 8px;
+}
+
+.footerNav a:hover svg {
+  transform: translateX(6px);
+}
+
+.academicCredit {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  color: #8f929a;
+  margin: 0;
+}
+
+.socialRow {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
-  list-style: none;
-  margin: 0;
-  padding: 0;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .socialLink {
-  display: inline-block;
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  color: var(--color-paper, #fffcf4);
   text-decoration: none;
-  color: var(--color-paper);
-  border: 1px solid rgba(255, 252, 244, 0.25);
-  padding: 4px 12px;
-  border-radius: var(--radius-pill);
-  transition: border-color 0.14s, background-color 0.14s;
+  padding: 4px 10px;
+  border: 1px solid #34373e;
+  border-radius: 6px;
+  transition: all 140ms ease;
 }
 
 .socialLink:hover {
-  border-color: var(--color-cyan);
-  background-color: rgba(40, 199, 232, 0.08);
+  border-color: var(--color-cyan, #28c7e8);
+  color: var(--color-cyan, #28c7e8);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 800px) {
   .inner {
     grid-template-columns: 1fr;
-    gap: var(--space-8);
-  }
-
-  .bottom {
-    flex-direction: column;
-    align-items: flex-start;
+    gap: 48px;
   }
 }

@@ -1,17 +1,22 @@
 import { searchPublishedBlogs } from "@/server/blogs/public-blog-service";
-import { getDeliveryUrl } from "@/server/media/cloudinary";
 import { PublicHeader } from "@/components/site/public-header";
 import { PublicFooter } from "@/components/site/public-footer";
 import { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import styles from "./blogs.module.css";
+import {
+  IconoFlecha,
+  IconoRama,
+  IconoBuscar,
+  IconoCerrar,
+  FilaArchivo,
+} from "@/components/site/devbox-pieces";
 
 export const dynamic = "force-dynamic";
 
 const baseMetadata: Metadata = {
-  title: "DevNova | Blog",
-  description: "Últimas publicaciones y artículos de DevNova.",
+  title: "Entregas | DevNova",
+  description: "Proyectos, talleres y deberes organizados como un repositorio académico verificable.",
   alternates: { canonical: "/blogs" },
 };
 
@@ -28,165 +33,148 @@ export async function generateMetadata(
   return baseMetadata;
 }
 
-export default async function PublicBlogsPage(props: { searchParams: Promise<{ q?: string; page?: string }> }) {
+export default async function PublicBlogsPage(props: {
+  searchParams: Promise<{ q?: string; page?: string }>;
+}) {
   const sp = await props.searchParams;
   const q = sp.q || "";
   const page = parseInt(sp.page || "1", 10) || 1;
 
-  // Si no hay búsqueda, mostramos todo paginado, pero como la función soporta `q` opcional, la llamamos siempre.
-  // Wait, no he importado searchPublishedBlogs. Let's fix that too, I will add it at the top manually.
-
-  const { items, total, totalPages } = await searchPublishedBlogs({ query: q, page });
-  const [featured, ...rest] = items;
-  
+  const { items, total, totalPages } = await searchPublishedBlogs({ query: q, page, pageSize: 20 });
   const hasSearch = q.length > 0;
 
   return (
     <div className={styles.page}>
       <PublicHeader />
 
-      <main style={{ flex: 1 }}>
-        {/* ── PAGE HEADER ─────────────────────────────────────────── */}
-        <header className={styles.pageHeader}>
-          <div className={styles.pageHeaderInner}>
-            <span className={styles.pageEyebrow}>/blog</span>
-            <h1 className={styles.pageTitle}>Blog</h1>
-            <p className={styles.pageSubtitle}>Ideas, tutoriales y novedades del equipo.</p>
-            
-            {/* Search Form */}
-            <form action="/blogs" method="GET" className={styles.searchForm}>
-              <label htmlFor="q" className="sr-only">Buscar publicaciones</label>
-              <input 
-                type="search" 
-                id="q" 
-                name="q" 
-                defaultValue={q} 
-                placeholder="Buscar publicaciones..." 
-                maxLength={100}
-                className={styles.searchInput}
-              />
-              <button type="submit" className={styles.searchButton}>Buscar</button>
-            </form>
-            
-            {hasSearch && (
-              <div className={styles.searchResultsInfo}>
-                <span>{total === 1 ? '1 publicación encontrada' : `${total} publicaciones encontradas`} para &quot;{q}&quot;</span>
-                <Link href="/blogs" className={styles.clearSearch}>Limpiar búsqueda</Link>
-              </div>
-            )}
+      <main>
+        {/* ── HEADER ───────────────────────────────────────────────── */}
+        <header className={`${styles.contenedor} ${styles.cabeceraPagina}`}>
+          <h1>Entregas</h1>
+          <div>
+            <p>Un semestre completo, organizado como archivos que se pueden buscar, abrir y verificar.</p>
+            <span className={styles.meta}>
+              {total} archivos / 3 colecciones / orden reciente
+            </span>
           </div>
         </header>
 
-        <div className={styles.content}>
+        {/* ── ÍNDICE DE REPOSITORIO ────────────────────────────────── */}
+        <section className={`${styles.contenedor} ${styles.indiceRepo}`} aria-label="Índice de entregas">
+          {/* Toolbar Carbón */}
+          <div className={styles.repoToolbar}>
+            <div className={styles.repoToolbarRuta}>
+              <IconoRama />
+              <span>devnova / <strong>main</strong> / entregas</span>
+            </div>
+
+            <form action="/blogs" method="GET" className={styles.repoBusqueda}>
+              <IconoBuscar />
+              <input
+                type="search"
+                name="q"
+                defaultValue={q}
+                placeholder="Buscar por título, resumen o contenido..."
+                maxLength={100}
+                aria-label="Buscar en el repositorio"
+              />
+              {hasSearch && (
+                <Link href="/blogs" className={styles.clearBtn} aria-label="Limpiar búsqueda">
+                  <IconoCerrar />
+                </Link>
+              )}
+            </form>
+          </div>
+
+          {/* Barra de Filtros */}
+          <div className={styles.filtrosRepo}>
+            <Link href="/blogs" className={styles.filtroBtn} data-active={!hasSearch ? "true" : "false"}>
+              Todos <span>({total})</span>
+            </Link>
+            <Link href="/blogs" className={styles.filtroBtn} data-active="false">
+              Proyectos <span>(0)</span>
+            </Link>
+            <Link href="/blogs" className={styles.filtroBtn} data-active="false">
+              Talleres <span>(0)</span>
+            </Link>
+            <Link href="/blogs" className={styles.filtroBtn} data-active="false">
+              Deberes <span>({total})</span>
+            </Link>
+          </div>
+
+          {/* Info de Resultados */}
+          <div className={styles.repoResultados}>
+            <span className={styles.meta}>
+              {hasSearch
+                ? `Mostrando ${items.length} resultado(s) para "${q}"`
+                : `Mostrando ${items.length} de ${total} entregas publicadas`}
+            </span>
+            {hasSearch && (
+              <Link href="/blogs" className={styles.limpiarFiltros}>
+                Restablecer búsqueda <IconoFlecha />
+              </Link>
+            )}
+          </div>
+
+          {/* Lista de Filas de Archivo */}
           {items.length === 0 ? (
-            <div className={styles.empty} role="status">
-              <p className={styles.emptyTitle}>
-                {hasSearch ? "No encontramos publicaciones para esta búsqueda." : "Aún no hay publicaciones disponibles."}
+            <div className={styles.vacioRepo}>
+              <div className={styles.vacioRepoCarpeta} aria-hidden="true" />
+              <h2>No se encontraron archivos</h2>
+              <p>
+                {hasSearch
+                  ? `No existen entregas que coincidan con "${q}". Intenta con otros términos.`
+                  : "Aún no hay entregas publicadas en el repositorio."}
               </p>
               {hasSearch && (
-                <Link href="/blogs" className={styles.emptyLink}>Ver todas las publicaciones</Link>
+                <Link href="/blogs" className={`${styles.boton} ${styles.botonPapel}`}>
+                  <span>Ver todas las entregas</span> <IconoFlecha />
+                </Link>
               )}
             </div>
           ) : (
-            <>
-              {/* Featured article (solo en página 1 y si NO hay búsqueda) */}
-              {!hasSearch && page === 1 && featured ? (
-                <Link href={`/blogs/${featured.slug}`} className={styles.featured} aria-label={`Leer artículo: ${featured.title}`}>
-                  <div className={styles.featuredImageWrap}>
-                    {featured.coverMediaAssetId ? (
-                      <Image
-                        src={getDeliveryUrl(featured.coverMediaAssetId, 900)}
-                        alt={featured.coverAltText || featured.title}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                        style={{ objectFit: "cover" }}
-                        priority
-                        unoptimized
-                      />
-                    ) : (
-                      <div className={styles.featuredNoImage} aria-hidden="true">
-                        {featured.title.charAt(0)}
-                      </div>
-                    )}
-                  </div>
-                  <div className={styles.featuredBody}>
-                    <span className={styles.featuredBadge}>Destacado</span>
-                    <h2 className={styles.featuredTitle}>{featured.title}</h2>
-                    <p className={styles.featuredSummary}>{featured.summary}</p>
-                    <div className={styles.featuredMeta}>
-                      <span>{featured.creatorName}</span>
-                      <span>·</span>
-                      <time dateTime={new Date(featured.publishedAt).toISOString()}>
-                        {new Date(featured.publishedAt).toLocaleDateString("es-ES", { year: "numeric", month: "long", day: "numeric" })}
-                      </time>
-                    </div>
-                    <span className={styles.featuredReadMore} aria-hidden="true">Leer artículo →</span>
-                  </div>
-                </Link>
-              ) : null}
-
-              {/* Rest grid */}
-              {(hasSearch || page > 1 || rest.length > 0) && (
-                <section aria-label="Artículos">
-                  {(!hasSearch && page === 1) && <p className={styles.gridTitle}>Más artículos</p>}
-                  <div className={styles.grid}>
-                    {(hasSearch || page > 1 ? items : rest).map((blog) => (
-                      <Link key={blog.slug} href={`/blogs/${blog.slug}`} className={styles.card} aria-label={`Leer: ${blog.title}`}>
-                        <div className={styles.cardImageWrap}>
-                          {blog.coverMediaAssetId ? (
-                            <Image
-                              src={getDeliveryUrl(blog.coverMediaAssetId, 600)}
-                              alt={blog.coverAltText || blog.title}
-                              fill
-                              sizes="(max-width: 768px) 100vw, 360px"
-                              style={{ objectFit: "cover" }}
-                              unoptimized
-                            />
-                          ) : (
-                            <div className={styles.cardNoImage} aria-hidden="true">
-                              {blog.title.charAt(0)}
-                            </div>
-                          )}
-                        </div>
-                        <div className={styles.cardBody}>
-                          <h2 className={styles.cardTitle}>{blog.title}</h2>
-                          <p className={styles.cardSummary}>{blog.summary}</p>
-                          <div className={styles.cardMeta}>
-                            <span>{blog.creatorName}</span>
-                            <time dateTime={new Date(blog.publishedAt).toISOString()}>
-                              {new Date(blog.publishedAt).toLocaleDateString("es-ES", { year: "numeric", month: "short", day: "numeric" })}
-                            </time>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </section>
-              )}
-              
-              {/* Paginación */}
-              {totalPages > 1 && (
-                <nav className={styles.pagination} aria-label="Paginación de blogs">
-                  <div className={styles.paginationControls}>
-                    {page > 1 ? (
-                      <Link href={`/blogs?${new URLSearchParams({ ...(q && { q }), page: String(page - 1) }).toString()}`} className={styles.paginationBtn}>Anterior</Link>
-                    ) : (
-                      <span className={styles.paginationBtnDisabled}>Anterior</span>
-                    )}
-                    
-                    <span className={styles.paginationInfo} aria-current="page">Página {page} de {totalPages}</span>
-                    
-                    {page < totalPages ? (
-                      <Link href={`/blogs?${new URLSearchParams({ ...(q && { q }), page: String(page + 1) }).toString()}`} className={styles.paginationBtn}>Siguiente</Link>
-                    ) : (
-                      <span className={styles.paginationBtnDisabled}>Siguiente</span>
-                    )}
-                  </div>
-                </nav>
-              )}
-            </>
+            <div className={styles.listaArchivos}>
+              {items.map((blog, idx) => (
+                <FilaArchivo
+                  key={blog.slug}
+                  slug={blog.slug}
+                  title={blog.title}
+                  summary={blog.summary}
+                  author={blog.creatorName || "DevNova"}
+                  date={blog.publishedAt}
+                  indexNumber={(page - 1) * 20 + idx + 1}
+                />
+              ))}
+            </div>
           )}
-        </div>
+
+          {/* Paginación */}
+          {totalPages > 1 && (
+            <div className={styles.paginacion}>
+              <span className={styles.meta}>
+                Página {page} de {totalPages}
+              </span>
+              <div className={styles.paginacionControles}>
+                {page > 1 && (
+                  <Link
+                    href={`/blogs?${new URLSearchParams({ ...(q && { q }), page: String(page - 1) }).toString()}`}
+                    className={`${styles.boton} ${styles.botonPapel}`}
+                  >
+                    <IconoFlecha direccion="izquierda" /> <span>Anterior</span>
+                  </Link>
+                )}
+                {page < totalPages && (
+                  <Link
+                    href={`/blogs?${new URLSearchParams({ ...(q && { q }), page: String(page + 1) }).toString()}`}
+                    className={`${styles.boton} ${styles.botonPapel}`}
+                  >
+                    <span>Siguiente</span> <IconoFlecha />
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
+        </section>
       </main>
 
       <PublicFooter />
