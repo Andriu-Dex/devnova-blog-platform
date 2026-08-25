@@ -110,9 +110,9 @@ export async function changeOwnPasswordAction(prevState: unknown, formData: Form
     await revokeAllUserSessions(admin.id);
     await deleteSessionCookie();
 
-  } catch (error) {
-    console.error("changeOwnPasswordAction failed:", error);
-    return { error: "No fue posible actualizar la contraseña en este momento." };
+  } catch (error: unknown) {
+    console.error("changeOwnPasswordAction failed:", error instanceof Error ? error.message : "Unknown error");
+    return { error: "No se pudo actualizar la contraseña. Inténtalo nuevamente." };
   }
 
   // Redirect to login explicitly catching the Next.js navigation error

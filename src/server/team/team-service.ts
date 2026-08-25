@@ -129,6 +129,37 @@ export async function createTeamMember(
     throw new Error("Las imágenes dentro de la biografía todavía no están habilitadas.");
   }
 
+  let photoAltText = data.photoAltText;
+  if (data.photoMediaAssetId) {
+    if (!photoAltText || photoAltText.trim() === "") {
+      throw new Error("El texto alternativo es obligatorio si se incluye una foto.");
+    }
+  } else {
+    photoAltText = null; // No permitir alt huérfano
+  }
+
+  let githubUrl = data.githubUrl;
+  if (githubUrl) {
+    let url: URL;
+    try { url = new URL(githubUrl); } catch { throw new Error("La URL de GitHub no es válida."); }
+    if (url.protocol !== "https:") throw new Error("La URL de GitHub no es válida.");
+    if (url.hostname !== "github.com" && !url.hostname.endsWith(".github.com")) throw new Error("La URL de GitHub no es válida.");
+    githubUrl = url.toString();
+  } else {
+    githubUrl = null;
+  }
+
+  let linkedinUrl = data.linkedinUrl;
+  if (linkedinUrl) {
+    let url: URL;
+    try { url = new URL(linkedinUrl); } catch { throw new Error("La URL de LinkedIn no es válida."); }
+    if (url.protocol !== "https:") throw new Error("La URL de LinkedIn no es válida.");
+    if (url.hostname !== "linkedin.com" && !url.hostname.endsWith(".linkedin.com")) throw new Error("La URL de LinkedIn no es válida.");
+    linkedinUrl = url.toString();
+  } else {
+    linkedinUrl = null;
+  }
+
   return await db.transaction(async (tx) => {
     // 1. Validar y lock media
     if (data.photoMediaAssetId) {
@@ -156,9 +187,9 @@ export async function createTeamMember(
       roleTitle: data.roleTitle,
       bioMarkdown: data.bioMarkdown,
       photoMediaAssetId: data.photoMediaAssetId,
-      photoAltText: data.photoAltText,
-      githubUrl: data.githubUrl,
-      linkedinUrl: data.linkedinUrl,
+      photoAltText: photoAltText,
+      githubUrl: githubUrl,
+      linkedinUrl: linkedinUrl,
       displayOrder: data.displayOrder,
       isVisible: data.isVisible,
       editedByUserId: adminUserId,
@@ -170,7 +201,7 @@ export async function createTeamMember(
     const reqMeta = await getRequestMetadata();
     const actionTypeRes = await tx.select({ id: auditActionTypes.id }).from(auditActionTypes).where(eq(auditActionTypes.code, "CREATE"));
     const auditRes = await tx.insert(auditEvents).values({
-      auditActionTypeId: actionTypeRes[0].id,
+      actionTypeId: actionTypeRes[0].id,
       actorUserId: adminUserId,
       ipAddress: reqMeta.ipAddress,
       userAgent: reqMeta.userAgent,
@@ -206,6 +237,37 @@ export async function updateTeamMember(
 ) {
   if (data.bioMarkdown.includes("media://")) {
     throw new Error("Las imágenes dentro de la biografía todavía no están habilitadas.");
+  }
+
+  let photoAltText = data.photoAltText;
+  if (data.photoMediaAssetId) {
+    if (!photoAltText || photoAltText.trim() === "") {
+      throw new Error("El texto alternativo es obligatorio si se incluye una foto.");
+    }
+  } else {
+    photoAltText = null; // No permitir alt huérfano
+  }
+
+  let githubUrl = data.githubUrl;
+  if (githubUrl) {
+    let url: URL;
+    try { url = new URL(githubUrl); } catch { throw new Error("La URL de GitHub no es válida."); }
+    if (url.protocol !== "https:") throw new Error("La URL de GitHub no es válida.");
+    if (url.hostname !== "github.com" && !url.hostname.endsWith(".github.com")) throw new Error("La URL de GitHub no es válida.");
+    githubUrl = url.toString();
+  } else {
+    githubUrl = null;
+  }
+
+  let linkedinUrl = data.linkedinUrl;
+  if (linkedinUrl) {
+    let url: URL;
+    try { url = new URL(linkedinUrl); } catch { throw new Error("La URL de LinkedIn no es válida."); }
+    if (url.protocol !== "https:") throw new Error("La URL de LinkedIn no es válida.");
+    if (url.hostname !== "linkedin.com" && !url.hostname.endsWith(".linkedin.com")) throw new Error("La URL de LinkedIn no es válida.");
+    linkedinUrl = url.toString();
+  } else {
+    linkedinUrl = null;
   }
 
   return await db.transaction(async (tx) => {
@@ -257,9 +319,9 @@ export async function updateTeamMember(
       roleTitle: data.roleTitle,
       bioMarkdown: data.bioMarkdown,
       photoMediaAssetId: data.photoMediaAssetId,
-      photoAltText: data.photoAltText,
-      githubUrl: data.githubUrl,
-      linkedinUrl: data.linkedinUrl,
+      photoAltText: photoAltText,
+      githubUrl: githubUrl,
+      linkedinUrl: linkedinUrl,
       displayOrder: data.displayOrder,
       isVisible: data.isVisible,
       editedByUserId: adminUserId,
@@ -271,7 +333,7 @@ export async function updateTeamMember(
     const reqMeta = await getRequestMetadata();
     const actionTypeRes = await tx.select({ id: auditActionTypes.id }).from(auditActionTypes).where(eq(auditActionTypes.code, "EDIT"));
     const auditRes = await tx.insert(auditEvents).values({
-      auditActionTypeId: actionTypeRes[0].id,
+      actionTypeId: actionTypeRes[0].id,
       actorUserId: adminUserId,
       ipAddress: reqMeta.ipAddress,
       userAgent: reqMeta.userAgent,
@@ -351,7 +413,7 @@ export async function restoreTeamMemberVersion(
     const reqMeta = await getRequestMetadata();
     const actionTypeRes = await tx.select({ id: auditActionTypes.id }).from(auditActionTypes).where(eq(auditActionTypes.code, "RESTORE"));
     const auditRes = await tx.insert(auditEvents).values({
-      auditActionTypeId: actionTypeRes[0].id,
+      actionTypeId: actionTypeRes[0].id,
       actorUserId: adminUserId,
       ipAddress: reqMeta.ipAddress,
       userAgent: reqMeta.userAgent,
@@ -377,7 +439,7 @@ export async function softDeleteTeamMember(adminUserId: string, memberId: string
     const reqMeta = await getRequestMetadata();
     const actionTypeRes = await tx.select({ id: auditActionTypes.id }).from(auditActionTypes).where(eq(auditActionTypes.code, "DELETE"));
     const auditRes = await tx.insert(auditEvents).values({
-      auditActionTypeId: actionTypeRes[0].id,
+      actionTypeId: actionTypeRes[0].id,
       actorUserId: adminUserId,
       ipAddress: reqMeta.ipAddress,
       userAgent: reqMeta.userAgent,
@@ -403,7 +465,7 @@ export async function recoverTeamMember(adminUserId: string, memberId: string) {
     const reqMeta = await getRequestMetadata();
     const actionTypeRes = await tx.select({ id: auditActionTypes.id }).from(auditActionTypes).where(eq(auditActionTypes.code, "RECOVER"));
     const auditRes = await tx.insert(auditEvents).values({
-      auditActionTypeId: actionTypeRes[0].id,
+      actionTypeId: actionTypeRes[0].id,
       actorUserId: adminUserId,
       ipAddress: reqMeta.ipAddress,
       userAgent: reqMeta.userAgent,

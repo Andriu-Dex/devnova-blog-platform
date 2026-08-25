@@ -67,7 +67,7 @@ export async function loginAction(prevState: LoginState, formData: FormData): Pr
     if (error && typeof error === "object" && "digest" in error && (error as Record<string, unknown>).digest?.toString().startsWith("NEXT_REDIRECT")) {
       throw error;
     }
-    console.error("Internal login error:", error);
+    console.error("Internal login error:", error instanceof Error ? error.message : "Unknown error");
     return { error: "No fue posible iniciar sesión en este momento. Inténtalo nuevamente." };
   }
 }

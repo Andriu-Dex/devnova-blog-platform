@@ -1,0 +1,196 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-canvas);
+}
+
+/* ── Back nav ────────────────────────────────────────────────────── */
+.backNav {
+  max-width: var(--content-width);
+  margin-inline: auto;
+  padding: var(--space-8) var(--content-padding) 0;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--color-carbon-subtle);
+  transition: color 0.14s;
+}
+
+.backLink:hover {
+  color: var(--color-primary);
+}
+
+/* ── ARTICLE ────────────────────────────────────────────────────── */
+.article {
+  max-width: var(--content-width);
+  margin-inline: auto;
+  padding: var(--space-8) var(--content-padding) var(--space-24);
+}
+
+/* Article header */
+.articleHeader {
+  max-width: var(--reading-width);
+  margin: 0 auto var(--space-8);
+}
+
+.articleTitle {
+  font-size: clamp(2.25rem, 5vw, 4.5rem);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 1.0;
+  color: var(--color-carbon);
+  margin: var(--space-6) 0 var(--space-4) 0;
+}
+
+.articleSummary {
+  font-size: 1.2rem;
+  color: var(--color-carbon-muted);
+  line-height: 1.55;
+  margin: 0 0 var(--space-6) 0;
+}
+
+.articleMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  border-top: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-line);
+  padding: var(--space-4) 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-carbon-subtle);
+}
+
+.metaAuthor {
+  color: var(--color-carbon);
+  font-weight: 600;
+}
+
+.metaDivider {
+  color: var(--color-line-strong);
+}
+
+/* Cover image */
+.coverWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 7;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  background-color: var(--color-cyan-soft);
+  margin-bottom: var(--space-12);
+}
+
+/* Article body */
+.articleBody {
+  max-width: var(--reading-width);
+  margin-inline: auto;
+  font-size: 1.0625rem;
+  line-height: 1.72;
+  color: var(--color-carbon);
+}
+
+/* Markdown overrides inside reading body */
+.articleBody p {
+  margin-bottom: 1.4em;
+}
+
+.articleBody h2 {
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  margin-top: 2.5em;
+  margin-bottom: 0.75em;
+  color: var(--color-carbon);
+}
+
+.articleBody h3 {
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin-top: 2em;
+  margin-bottom: 0.6em;
+}
+
+.articleBody ul,
+.articleBody ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1.4em;
+}
+
+.articleBody li {
+  margin-bottom: 0.4em;
+}
+
+.articleBody blockquote {
+  border-left: 3px solid var(--color-primary);
+  padding: var(--space-4) var(--space-6);
+  margin: var(--space-8) 0;
+  background-color: var(--color-paper);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  color: var(--color-carbon-muted);
+  font-style: italic;
+}
+
+.articleBody pre {
+  background-color: #1a1d23;
+  color: #c9cbd1;
+  padding: var(--space-6);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin: var(--space-8) 0;
+}
+
+.articleBody code:not(pre code) {
+  background-color: var(--color-cyan-soft);
+  color: var(--color-primary-deep);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+}
+
+.articleBody table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--space-8) 0;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: var(--space-8) 0;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+}
+
+.articleBody th,
+.articleBody td {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  border-bottom: 1px solid var(--color-line);
+  font-size: 0.95rem;
+}
+
+.articleBody th {
+  background-color: var(--color-paper);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-carbon-subtle);
+}

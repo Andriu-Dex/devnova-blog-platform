@@ -8,6 +8,7 @@ import {
 } from "@/server/db/schema";
 import { eq, asc, sql } from "drizzle-orm";
 import { getRequestMetadata } from "@/server/utils/request-metadata";
+import { validateSocialUrl } from "./social-url";
 
 export async function listAdminSocialLinks() {
   const platforms = await db.select().from(socialPlatforms).orderBy(asc(socialPlatforms.name));
@@ -39,6 +40,9 @@ export async function upsertSocialLink(
     isVisible: boolean;
   }
 ) {
+  // Validate URL (server-side domain invariant)
+  const canonicalUrl = data.url ? validateSocialUrl(platformCode, data.url) : "";
+
   return await db.transaction(async (tx) => {
     // 1. Lock advisory para site-social-links
     await tx.execute(sql`SELECT pg_advisory_xact_lock(6331902)`);
@@ -58,7 +62,7 @@ export async function upsertSocialLink(
       // INSERT
       const insertRes = await tx.insert(siteSocialLinks).values({
         socialPlatformId: platform.id,
-        url: data.url,
+        url: canonicalUrl,
         displayOrder: data.displayOrder,
         isVisible: data.isVisible,
       }).returning({ id: siteSocialLinks.id });
@@ -67,7 +71,7 @@ export async function upsertSocialLink(
 
       const actionTypeRes = await tx.select({ id: auditActionTypes.id }).from(auditActionTypes).where(eq(auditActionTypes.code, "CREATE"));
       const auditRes = await tx.insert(auditEvents).values({
-        auditActionTypeId: actionTypeRes[0].id,
+        actionTypeId: actionTypeRes[0].id,
         actorUserId: adminUserId,
         ipAddress: reqMeta.ipAddress,
         userAgent: reqMeta.userAgent,
@@ -81,16 +85,15 @@ export async function upsertSocialLink(
     } else {
       // Idempotencia
       if (
-        currentLink.url === data.url &&
+        currentLink.url === canonicalUrl &&
         currentLink.displayOrder === data.displayOrder &&
         currentLink.isVisible === data.isVisible
       ) {
         return; // No-op
       }
 
-      // UPDATE
       await tx.update(siteSocialLinks).set({
-        url: data.url,
+        url: canonicalUrl,
         displayOrder: data.displayOrder,
         isVisible: data.isVisible,
         updatedAt: sql`NOW()`,
@@ -98,7 +101,7 @@ export async function upsertSocialLink(
 
       const actionTypeRes = await tx.select({ id: auditActionTypes.id }).from(auditActionTypes).where(eq(auditActionTypes.code, "EDIT"));
       const auditRes = await tx.insert(auditEvents).values({
-        auditActionTypeId: actionTypeRes[0].id,
+        actionTypeId: actionTypeRes[0].id,
         actorUserId: adminUserId,
         ipAddress: reqMeta.ipAddress,
         userAgent: reqMeta.userAgent,

@@ -84,7 +84,7 @@ export async function completeRequiredPasswordChange(
 
     return { success: true };
   } catch (error) {
-    console.error("completeRequiredPasswordChange failed:", error);
+    console.error("completeRequiredPasswordChange failed:", error instanceof Error ? error.message : "Unknown error");
     return { error: "No fue posible actualizar la contraseña en este momento." };
   }
 }

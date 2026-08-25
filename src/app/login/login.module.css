@@ -1,3 +1,18 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-canvas);
+}
+
+.pageMain {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-12) var(--space-6);
+}
+
 .container {
   max-width: 420px;
   width: 100%;
@@ -6,6 +21,28 @@
   border-radius: 16px;
   padding: 32px;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08); /* card shadow */
+}
+
+.card {
+  /* same as container for active-session state */
+  max-width: 420px;
+  width: 100%;
+  margin: 0 auto;
+  background-color: #fffcf4;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.cardHeader {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.subtitle {
+  color: #51545a;
+  font-size: 0.95rem;
+  margin: 0;
 }
 
 .title {

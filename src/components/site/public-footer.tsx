@@ -1,55 +1,73 @@
 import Link from "next/link";
-import { getPublicSocialLinks } from "@/server/site/public-site-service";
+import { getPublicSiteProfile, getPublicSocialLinks } from "@/server/site/public-site-service";
+import styles from "./public-footer.module.css";
+
+const navLinks = [
+  { href: "/", label: "Inicio" },
+  { href: "/nosotros", label: "Nosotros" },
+  { href: "/blogs", label: "Blog" },
+  { href: "/contacto", label: "Contacto" },
+];
 
 export async function PublicFooter() {
-  const socialLinks = await getPublicSocialLinks();
+  const [socialLinks, profile] = await Promise.all([
+    getPublicSocialLinks(),
+    getPublicSiteProfile(),
+  ]);
+
+  const year = new Date().getFullYear();
+  const brandName = profile?.groupName || "DevNova";
+  const tagline = profile?.tagline;
 
   return (
-    <footer style={{ 
-      marginTop: "60px",
-      padding: "40px 20px", 
-      backgroundColor: "#f9f9f9", 
-      borderTop: "1px solid #eaeaea",
-      textAlign: "center"
-    }}>
-      <div style={{ marginBottom: "20px", display: "flex", justifyContent: "center", gap: "20px" }}>
-        <Link href="/" style={{ color: "#666", textDecoration: "none", fontWeight: "bold" }}>Inicio</Link>
-        <Link href="/nosotros" style={{ color: "#666", textDecoration: "none", fontWeight: "bold" }}>Nosotros</Link>
-        <Link href="/blogs" style={{ color: "#666", textDecoration: "none", fontWeight: "bold" }}>Blogs</Link>
-        <Link href="/contacto" style={{ color: "#666", textDecoration: "none", fontWeight: "bold" }}>Contacto</Link>
-      </div>
-      
-      {socialLinks.length > 0 && (
-        <div style={{ marginBottom: "20px", display: "flex", justifyContent: "center", gap: "15px" }}>
-          {socialLinks.map(link => {
-            // Validación defensiva sencilla
-            if (!link.url.startsWith("https://")) return null;
-            return (
-              <a 
-                key={link.platformCode} 
-                href={link.url} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                style={{ 
-                  color: "#1655f8", 
-                  textDecoration: "none", 
-                  padding: "5px 10px", 
-                  border: "1px solid #1655f8", 
-                  borderRadius: "20px",
-                  fontSize: "0.85rem",
-                  fontFamily: "'IBM Plex Mono', Consolas, monospace"
-                }}
-              >
-                {link.platformName}
-              </a>
-            );
-          })}
+    <footer className={styles.footer}>
+      <div className={styles.inner}>
+        {/* Brand block */}
+        <div className={styles.brand}>
+          <span className={styles.brandName}>{brandName}</span>
+          {tagline && <p className={styles.tagline}>{tagline}</p>}
         </div>
-      )}
 
-      <p style={{ color: "#999", fontSize: "0.9rem", margin: 0 }}>
-        &copy; {new Date().getFullYear()} DevNova. Todos los derechos reservados.
-      </p>
+        {/* Nav links */}
+        <nav aria-label="Navegación secundaria">
+          <ul className={styles.navList}>
+            {navLinks.map(({ href, label }) => (
+              <li key={href}>
+                <Link href={href} className={styles.navLink}>{label}</Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+
+      <hr className={styles.divider} />
+
+      <div className={styles.bottom}>
+        <p className={styles.copyright}>
+          © {year} {brandName}. Todos los derechos reservados.
+        </p>
+
+        {socialLinks.length > 0 && (
+          <ul className={styles.socialList} aria-label="Redes sociales">
+            {socialLinks.map((link) => {
+              if (!link.url.startsWith("https://")) return null;
+              return (
+                <li key={link.platformCode}>
+                  <a
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.socialLink}
+                    aria-label={link.platformName}
+                  >
+                    {link.platformName}
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
     </footer>
   );
 }

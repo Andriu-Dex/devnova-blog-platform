@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState, useEffect } from "react";
+import { useActionState, useState } from "react";
 import { updateTeamMemberAction, type FormState } from "@/server/actions/team-actions";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -13,7 +13,19 @@ export default function EditTeamForm({
   memberId,
   mediaList
 }: { 
-  initialData: any;
+  initialData: {
+    id: string;
+    fullName: string;
+    roleTitle: string | null;
+    bioMarkdown: string | null;
+    photoMediaAssetId: string | null;
+    photoAltText: string | null;
+    githubUrl: string | null;
+    linkedinUrl: string | null;
+    displayOrder: number;
+    isVisible: boolean;
+    mediaArchived?: boolean;
+  };
   memberId: string;
   mediaList: MediaItem[];
 }) {
@@ -77,7 +89,7 @@ export default function EditTeamForm({
         <input 
           type="text" 
           name="roleTitle" 
-          defaultValue={initialData.roleTitle}
+          defaultValue={initialData.roleTitle || ""}
           required
           maxLength={160}
           style={{ width: "100%", padding: "10px", border: "1px solid #ccc", borderRadius: "4px" }} 

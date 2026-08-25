@@ -1,6 +1,6 @@
 "use server";
 
-import { requireAdmin } from "@/server/auth/auth-service";
+import { requireAdmin } from "@/server/auth/authorization";
 import { revalidatePath } from "next/cache";
 import { upsertSocialLink } from "@/server/social/social-service";
 

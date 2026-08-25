@@ -71,7 +71,7 @@ export default async function TeamMemberHistoryPage({ params }: { params: { memb
                   <span>{version.photoMediaAssetId ? "Sí" : "No"}</span>
                   
                   <span style={{ fontWeight: "bold", color: "#333" }}>Resumen:</span>
-                  <span style={{ fontStyle: "italic" }}>"{version.changeSummary}"</span>
+                  <span style={{ fontStyle: "italic" }}>&quot;{version.changeSummary}&quot;</span>
                   
                   <span style={{ fontWeight: "bold", color: "#333" }}>Fecha:</span>
                   <span>{version.createdAt.toLocaleString()}</span>

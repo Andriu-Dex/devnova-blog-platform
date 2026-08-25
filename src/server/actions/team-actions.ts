@@ -1,6 +1,6 @@
 "use server";
 
-import { requireAdmin } from "@/server/auth/auth-service";
+import { requireAdmin } from "@/server/auth/authorization";
 import { revalidatePath } from "next/cache";
 import {
   createTeamMember,
@@ -11,6 +11,28 @@ import {
 } from "@/server/team/team-service";
 
 export type FormState = { error: string; success: boolean };
+
+function validateGithubUrl(urlStr: string): boolean {
+  try {
+    const url = new URL(urlStr);
+    if (url.protocol !== "https:") return false;
+    if (url.hostname !== "github.com" && !url.hostname.endsWith(".github.com")) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function validateLinkedinUrl(urlStr: string): boolean {
+  try {
+    const url = new URL(urlStr);
+    if (url.protocol !== "https:") return false;
+    if (url.hostname !== "linkedin.com" && !url.hostname.endsWith(".linkedin.com")) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export async function createTeamMemberAction(state: FormState, formData: FormData): Promise<FormState> {
   try {
@@ -33,8 +55,8 @@ export async function createTeamMemberAction(state: FormState, formData: FormDat
       return { error: "El texto alternativo es obligatorio si se incluye una foto.", success: false };
     }
 
-    if (githubUrl && !githubUrl.startsWith("https://")) return { error: "URL de GitHub inválida (debe ser HTTPS).", success: false };
-    if (linkedinUrl && !linkedinUrl.startsWith("https://")) return { error: "URL de LinkedIn inválida (debe ser HTTPS).", success: false };
+    if (githubUrl && !validateGithubUrl(githubUrl)) return { error: "La URL de GitHub no es válida.", success: false };
+    if (linkedinUrl && !validateLinkedinUrl(linkedinUrl)) return { error: "La URL de LinkedIn no es válida.", success: false };
 
     await createTeamMember(admin.id, {
       fullName,
@@ -85,8 +107,8 @@ export async function updateTeamMemberAction(state: FormState, formData: FormDat
       return { error: "El texto alternativo es obligatorio si se incluye una foto.", success: false };
     }
 
-    if (githubUrl && !githubUrl.startsWith("https://")) return { error: "URL de GitHub inválida (debe ser HTTPS).", success: false };
-    if (linkedinUrl && !linkedinUrl.startsWith("https://")) return { error: "URL de LinkedIn inválida (debe ser HTTPS).", success: false };
+    if (githubUrl && !validateGithubUrl(githubUrl)) return { error: "La URL de GitHub no es válida.", success: false };
+    if (linkedinUrl && !validateLinkedinUrl(linkedinUrl)) return { error: "La URL de LinkedIn no es válida.", success: false };
 
     await updateTeamMember(admin.id, memberId, {
       baseVersionId,

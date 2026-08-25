@@ -2,7 +2,9 @@ import { getPublicSiteProfile, getPublicSection } from "@/server/site/public-sit
 import { PublicHeader } from "@/components/site/public-header";
 import { PublicFooter } from "@/components/site/public-footer";
 import { MarkdownRenderer } from "@/components/blogs/markdown-renderer";
+import { ContactForm } from "@/components/contact/contact-form";
 import { Metadata } from "next";
+import styles from "./contacto.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -19,57 +21,62 @@ export default async function ContactoPage() {
   const profile = await getPublicSiteProfile();
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", backgroundColor: "#fcfcfa" }}>
+    <div className={styles.page}>
       <PublicHeader />
-      
-      <main style={{ flex: 1, padding: "60px 20px", maxWidth: "800px", margin: "0 auto", width: "100%" }}>
-        
-        <h1 style={{ marginBottom: "40px", fontSize: "2.5rem", textAlign: "center" }}>
-          {contactSection?.title || "Contacto"}
-        </h1>
 
-        <div style={{ display: "flex", gap: "40px", flexWrap: "wrap" }}>
-          {/* Main content */}
-          <article style={{ flex: "1 1 400px", fontSize: "1.1rem", lineHeight: "1.8", color: "#333", backgroundColor: "#fff", padding: "40px", borderRadius: "8px", boxShadow: "0 2px 10px rgba(0,0,0,0.02)" }}>
-            {contactSection ? (
-              <MarkdownRenderer content={contactSection.contentMarkdown} allowMedia={false} />
-            ) : (
-              <p>La información detallada de contacto estará disponible pronto.</p>
+      <main style={{ flex: 1 }}>
+        {/* ── PAGE HEADER ─────────────────────────────────────────── */}
+        <header className={styles.pageHeader}>
+          <div className={styles.pageHeaderInner}>
+            <span className={styles.pageEyebrow}>/contacto</span>
+            <h1 className={styles.pageTitle}>
+              {contactSection?.title || "Contacto"}
+            </h1>
+          </div>
+        </header>
+
+        <div className={styles.content}>
+          {/* Sidebar */}
+          <aside className={styles.sidebar} aria-label="Información de contacto">
+            {contactSection && (
+              <div>
+                <span className={styles.sectionLabel}>Información</span>
+                <div className={styles.infoCard}>
+                  <MarkdownRenderer content={contactSection.contentMarkdown} allowMedia={false} />
+                </div>
+              </div>
             )}
-          </article>
 
-          {/* Sidebar / Quick Contact Info */}
-          <aside style={{ flex: "1 1 250px", display: "flex", flexDirection: "column", gap: "20px" }}>
-            <div style={{ padding: "30px", backgroundColor: "#1655f8", color: "#fff", borderRadius: "8px" }}>
-              <h3 style={{ marginBottom: "20px", fontSize: "1.3rem" }}>Vías de contacto</h3>
-              
-              {profile?.publicEmail && (
-                <div style={{ marginBottom: "15px" }}>
-                  <strong>Email:</strong>
-                  <br />
-                  <a href={`mailto:${profile.publicEmail}`} style={{ color: "#fff", textDecoration: "underline" }}>
-                    {profile.publicEmail}
-                  </a>
+            {(profile?.publicEmail || profile?.publicPhone) ? (
+              <div>
+                <span className={styles.sectionLabel}>Vías directas</span>
+                <div className={styles.infoCard}>
+                  {profile.publicEmail && (
+                    <div className={styles.contactItem}>
+                      <span className={styles.contactLabel}>Email</span>
+                      <a href={`mailto:${profile.publicEmail}`} className={styles.contactValue}>
+                        {profile.publicEmail}
+                      </a>
+                    </div>
+                  )}
+                  {profile.publicPhone && (
+                    <div className={styles.contactItem}>
+                      <span className={styles.contactLabel}>Teléfono</span>
+                      <a href={`tel:${profile.publicPhone}`} className={styles.contactValue}>
+                        {profile.publicPhone}
+                      </a>
+                    </div>
+                  )}
                 </div>
-              )}
-              
-              {profile?.publicPhone && (
-                <div>
-                  <strong>Teléfono:</strong>
-                  <br />
-                  <a href={`tel:${profile.publicPhone}`} style={{ color: "#fff", textDecoration: "none" }}>
-                    {profile.publicPhone}
-                  </a>
-                </div>
-              )}
-
-              {!profile?.publicEmail && !profile?.publicPhone && (
-                <p>No se han configurado canales directos.</p>
-              )}
-            </div>
+              </div>
+            ) : null}
           </aside>
-        </div>
 
+          {/* Form */}
+          <div>
+            <ContactForm />
+          </div>
+        </div>
       </main>
 
       <PublicFooter />

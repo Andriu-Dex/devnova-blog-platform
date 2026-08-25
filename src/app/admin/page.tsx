@@ -1,4 +1,5 @@
 import { requireAdmin } from "@/server/auth/authorization";
+import Link from "next/link";
 import { PrivateHeader } from "@/components/layout/private-header";
 import styles from "./admin.module.css";
 import { Metadata } from "next";
@@ -73,9 +74,17 @@ export default async function AdminPage() {
             Ver papelera →
           </a>
         </div>
-        <div className={styles.card}>
+        <div className={styles.card} style={{ borderColor: "#155eef", borderStyle: "solid", borderWidth: "1px" }}>
           <h3 className={styles.cardTitle}>Mensajes</h3>
-          <span className={styles.cardStatus}>Próximamente</span>
+          <Link href="/admin/messages" style={{ 
+            fontFamily: "'IBM Plex Mono', Consolas, monospace", 
+            fontSize: "0.85rem", 
+            fontWeight: 600, 
+            color: "#155eef", 
+            textDecoration: "none" 
+          }}>
+            Ver bandeja →
+          </Link>
         </div>
         <div className={styles.card}>
           <h3 className={styles.cardTitle}>Auditoría</h3>

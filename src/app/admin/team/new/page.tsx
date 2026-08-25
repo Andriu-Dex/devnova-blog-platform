@@ -26,7 +26,7 @@ export default async function NewTeamMemberPage() {
     width: m.width,
     height: m.height,
     sizeBytes: m.sizeBytes,
-    uploaderName: m.uploaderName,
+    uploaderName: m.uploadedByUserId,
     createdAt: m.createdAt,
     deletedAt: m.deletedAt,
     thumbnailUrl: `https://res.cloudinary.com/db7y9bmbw/image/upload/c_thumb,w_200,g_face/v1/${m.cloudinaryPublicId}.${m.format}`

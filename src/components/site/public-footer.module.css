@@ -1,0 +1,124 @@
+.footer {
+  background-color: var(--color-carbon);
+  color: var(--color-paper);
+  padding: var(--space-16) var(--content-padding) var(--space-8);
+  margin-top: auto;
+}
+
+.inner {
+  max-width: var(--content-width);
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-12);
+  align-items: start;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.brandName {
+  font-family: var(--font-sans);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  color: var(--color-paper);
+}
+
+.tagline {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: rgba(255, 252, 244, 0.55);
+  line-height: 1.5;
+  max-width: 42ch;
+}
+
+.navList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navLink {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: rgba(255, 252, 244, 0.55);
+  transition: color 0.14s var(--ease-out);
+}
+
+.navLink:hover {
+  color: var(--color-paper);
+}
+
+.divider {
+  border: 0;
+  border-top: 1px solid rgba(255, 252, 244, 0.12);
+  margin: var(--space-8) 0 var(--space-6);
+}
+
+.bottom {
+  max-width: var(--content-width);
+  margin-inline: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.copyright {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: rgba(255, 252, 244, 0.4);
+}
+
+.socialList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.socialLink {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--color-paper);
+  border: 1px solid rgba(255, 252, 244, 0.25);
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  transition: border-color 0.14s, background-color 0.14s;
+}
+
+.socialLink:hover {
+  border-color: var(--color-cyan);
+  background-color: rgba(40, 199, 232, 0.08);
+}
+
+@media (max-width: 640px) {
+  .inner {
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+  }
+
+  .bottom {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

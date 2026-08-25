@@ -41,12 +41,8 @@ export async function verifyPassword(hashString: string, password: string): Prom
     return false;
   }
   try {
-    console.log("DEBUG verifyPassword -> hashString length:", hashString?.length);
-    console.log("DEBUG verifyPassword -> hashString:", hashString);
-    console.log("DEBUG verifyPassword -> password length:", password?.length);
     return await verify(hashString, password);
   } catch (error) {
-    console.error("DEBUG verifyPassword error:", error);
     throw error;
   }
 }

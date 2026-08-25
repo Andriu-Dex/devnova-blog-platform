@@ -10,6 +10,7 @@ import {
   socialPlatforms
 } from "@/server/db/schema";
 import { eq, desc, asc, isNull, and, sql } from "drizzle-orm";
+import { isValidSocialUrl } from "@/server/social/social-url";
 
 export async function getPublicSiteProfile() {
   const rows = await db
@@ -108,5 +109,5 @@ export async function getPublicSocialLinks() {
     .where(eq(siteSocialLinks.isVisible, true))
     .orderBy(asc(siteSocialLinks.displayOrder), asc(socialPlatforms.code));
     
-  return rows;
+  return rows.filter(row => isValidSocialUrl(row.platformCode, row.url));
 }

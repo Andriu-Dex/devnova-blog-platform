@@ -31,6 +31,32 @@ export async function authenticateWithPassword(
 
   const metadata = sanitizeMetadata(rawMetadata);
 
+  // Rate Limiting: 5 fallos en 5 minutos por IP
+  if (metadata.ipAddress) {
+    const fiveMinsAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    
+    // Extraer ID de la acción LOGIN_FAILED de manera subquery o explícita
+    const failActionSubquery = db
+      .select({ id: auditActionTypes.id })
+      .from(auditActionTypes)
+      .where(eq(auditActionTypes.code, "LOGIN_FAILED"))
+      .limit(1);
+
+    const recentFailsRes = await db.execute(sql`
+      SELECT COUNT(*) as count 
+      FROM ${auditEvents} 
+      WHERE ${auditEvents.ipAddress} = ${metadata.ipAddress} 
+        AND ${auditEvents.actionTypeId} = (${failActionSubquery})
+        AND ${auditEvents.occurredAt} >= ${fiveMinsAgo}
+    `);
+    
+    const recentFails = Number(recentFailsRes[0]?.count || 0);
+    if (recentFails >= 5) {
+      // Retornar código genérico
+      return { ok: false, code: "INVALID_CREDENTIALS" };
+    }
+  }
+
   // Consulta case-insensitive a la base de datos
   const userRows = await db
     .select({

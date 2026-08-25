@@ -5,7 +5,7 @@ import { upsertSocialLinkAction, type FormState } from "@/server/actions/social-
 
 const initialState: FormState = { error: "", success: false };
 
-export function SocialRowForm({ link }: { link: any }) {
+export function SocialRowForm({ link }: { link: { platformId: number; platformCode: string; platformName: string; url: string; displayOrder: number; isVisible: boolean; } }) {
   const [state, formAction, isPending] = useActionState(upsertSocialLinkAction, initialState);
   
   // Usar estado local para habilitar/deshabilitar botón

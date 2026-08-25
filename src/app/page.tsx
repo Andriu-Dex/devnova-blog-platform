@@ -2,7 +2,9 @@ import { getPublicSiteProfile, getPublicSection } from "@/server/site/public-sit
 import { PublicHeader } from "@/components/site/public-header";
 import { PublicFooter } from "@/components/site/public-footer";
 import { MarkdownRenderer } from "@/components/blogs/markdown-renderer";
+import Link from "next/link";
 import { Metadata } from "next";
+import styles from "./home.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -20,50 +22,93 @@ export default async function HomePage() {
   const missionSection = await getPublicSection("MISSION");
   const visionSection = await getPublicSection("VISION");
 
+  const brandName = profile?.groupName || "DevNova";
+
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", backgroundColor: "#fcfcfa" }}>
+    <div className={styles.page}>
       <PublicHeader />
-      
-      <main style={{ flex: 1, padding: "40px 20px", maxWidth: "900px", margin: "0 auto", width: "100%" }}>
-        
-        {/* HERO SECTION */}
-        <section style={{ textAlign: "center", padding: "60px 0", borderBottom: "1px solid #eaeaea" }}>
-          <h1 style={{ fontSize: "3rem", marginBottom: "20px", color: "#1a1a1a" }}>
-            {profile?.groupName || "DevNova"}
-          </h1>
-          {profile?.tagline && (
-            <p style={{ fontSize: "1.5rem", color: "#666", maxWidth: "600px", margin: "0 auto" }}>
-              {profile.tagline}
-            </p>
-          )}
+
+      <main style={{ flex: 1 }}>
+        {/* ── HERO ─────────────────────────────────────────────────── */}
+        <section className={styles.hero} aria-label="Presentación">
+          <div className={styles.heroInner}>
+            <div>
+              <span className={styles.heroEyebrow}>
+                <span className={styles.heroDot} aria-hidden="true" />
+                Plataforma editorial
+              </span>
+              <h1 className={styles.heroTitle}>{brandName}</h1>
+              {profile?.tagline && (
+                <p className={styles.heroTagline}>{profile.tagline}</p>
+              )}
+              <div className={styles.heroCtas}>
+                <Link href="/blogs" className={styles.ctaPrimary}>
+                  Ver publicaciones
+                </Link>
+                <Link href="/nosotros" className={styles.ctaSecondary}>
+                  Conocenos
+                </Link>
+              </div>
+            </div>
+
+            <div className={styles.heroBadge} aria-hidden="true">
+              <span className={styles.heroBadgeLabel}>
+                Blog
+                <br />
+                Editorial
+              </span>
+            </div>
+          </div>
         </section>
 
-        {/* HOME CONTENT */}
-        {homeSection && (
-          <article style={{ marginTop: "40px", fontSize: "1.1rem", lineHeight: "1.8", color: "#333" }}>
-            {homeSection.title && <h2 style={{ marginBottom: "20px" }}>{homeSection.title}</h2>}
-            <MarkdownRenderer content={homeSection.contentMarkdown} allowMedia={false} />
-          </article>
-        )}
+        {/* ── CONTENT SECTIONS ─────────────────────────────────────── */}
+        <div className={styles.sections}>
+          {homeSection && (
+            <section aria-labelledby="home-section-title">
+              <span className={styles.sectionLabel}>Contenido</span>
+              {homeSection.title && (
+                <h2 id="home-section-title" className={styles.sectionTitle}>{homeSection.title}</h2>
+              )}
+              <div className={styles.articleCard}>
+                <MarkdownRenderer content={homeSection.contentMarkdown} allowMedia={false} />
+              </div>
+            </section>
+          )}
 
-        {/* MISSION & VISION */}
-        <div style={{ display: "flex", gap: "40px", marginTop: "60px", flexWrap: "wrap" }}>
-          {missionSection && (
-            <section style={{ flex: "1 1 300px", padding: "30px", backgroundColor: "#fff", borderRadius: "8px", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
-              <h3 style={{ fontSize: "1.5rem", marginBottom: "15px", color: "#1655f8" }}>
-                {missionSection.title || "Nuestra Misión"}
-              </h3>
-              <MarkdownRenderer content={missionSection.contentMarkdown} allowMedia={false} />
+          {(missionSection || visionSection) && (
+            <section aria-label="Misión y Visión">
+              <span className={styles.sectionLabel}>Propósito</span>
+              <div className={styles.mvGrid}>
+                {missionSection && (
+                  <article className={styles.mvCard}>
+                    <h3 className={styles.mvTitle}>{missionSection.title || "Misión"}</h3>
+                    <MarkdownRenderer content={missionSection.contentMarkdown} allowMedia={false} />
+                  </article>
+                )}
+                {visionSection && (
+                  <article className={styles.mvCard}>
+                    <h3 className={styles.mvTitle}>{visionSection.title || "Visión"}</h3>
+                    <MarkdownRenderer content={visionSection.contentMarkdown} allowMedia={false} />
+                  </article>
+                )}
+              </div>
             </section>
           )}
-          {visionSection && (
-            <section style={{ flex: "1 1 300px", padding: "30px", backgroundColor: "#fff", borderRadius: "8px", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
-              <h3 style={{ fontSize: "1.5rem", marginBottom: "15px", color: "#1655f8" }}>
-                {visionSection.title || "Nuestra Visión"}
-              </h3>
-              <MarkdownRenderer content={visionSection.contentMarkdown} allowMedia={false} />
-            </section>
-          )}
+        </div>
+
+        {/* ── CTA STRIP ────────────────────────────────────────────── */}
+        <div className={styles.ctaStrip}>
+          <div className={styles.ctaStripInner}>
+            <p className={styles.ctaStripTitle}>¿Listo para explorar?</p>
+            <div className={styles.ctaStripLinks}>
+              <Link href="/blogs" className={styles.ctaPaperLink}>
+                Ir al Blog
+              </Link>
+              <Link href="/contacto" className={styles.ctaPaperLink}>
+                Contáctanos
+              </Link>
+            </div>
+          </div>
         </div>
       </main>
 
