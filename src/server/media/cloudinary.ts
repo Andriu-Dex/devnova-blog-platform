@@ -7,7 +7,7 @@ function getCloudinaryConfig() {
   const apiSecret = process.env.CLOUDINARY_API_SECRET;
   const uploadPreset = process.env.CLOUDINARY_UPLOAD_PRESET;
 
-  if (!cloudName || !apiKey || !apiSecret || !uploadPreset) {
+  if (!cloudName || !apiKey || !apiSecret) {
     throw new Error("Configuración de Cloudinary incompleta en el servidor.");
   }
 
@@ -31,7 +31,7 @@ export interface UploadSignaturePayload {
   signature: string;
   cloudName: string;
   apiKey: string;
-  uploadPreset: string;
+  uploadPreset?: string;
   resourceType: "image";
 }
 
@@ -39,10 +39,13 @@ export function generateUploadSignature(): UploadSignaturePayload {
   const config = getCloudinaryConfig();
   const timestamp = Math.floor(Date.now() / 1000);
 
-  const paramsToSign = {
+  const paramsToSign: Record<string, string | number> = {
     timestamp,
-    upload_preset: config.uploadPreset,
   };
+  
+  if (config.uploadPreset) {
+    paramsToSign.upload_preset = config.uploadPreset;
+  }
 
   const signature = cloudinary.utils.api_sign_request(paramsToSign, config.apiSecret);
 

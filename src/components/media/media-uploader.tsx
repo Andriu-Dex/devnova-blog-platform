@@ -70,7 +70,9 @@ export function MediaUploader({ onUploadSuccess }: MediaUploaderProps) {
       formData.append("api_key", apiKey);
       formData.append("timestamp", String(timestamp));
       formData.append("signature", signature);
-      formData.append("upload_preset", uploadPreset);
+      if (uploadPreset) {
+        formData.append("upload_preset", uploadPreset);
+      }
 
       const cloudRes = await fetch(
         `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,

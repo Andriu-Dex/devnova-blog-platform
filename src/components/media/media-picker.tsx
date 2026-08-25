@@ -58,15 +58,43 @@ export function MediaPicker({ mediaList, onSelect, requireAltText, buttonLabel }
     handleClose();
   };
 
+  const [activeTab, setActiveTab] = useState<"library" | "upload">("library");
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
+      if (e.key === "Escape" && isOpen && !isUploading) {
         handleClose();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
+  }, [isOpen, isUploading]);
+
+  const handleUpload = async (file: File) => {
+    setError("");
+    setIsUploading(true);
+    try {
+      // Usar nuestro helper para subir directo desde el cliente
+      const { uploadFileDirectly } = await import("./direct-uploader");
+      const { mediaAssetId } = await uploadFileDirectly(file);
+      
+      const cleanAlt = altText.trim() || file.name;
+      onSelect(mediaAssetId, cleanAlt);
+      handleClose();
+    } catch (err: any) {
+      setError(err.message || "Error al subir la imagen");
+      setIsUploading(false);
+    }
+  };
+
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleUpload(file);
+    }
+  };
 
   return (
     <>
@@ -81,7 +109,7 @@ export function MediaPicker({ mediaList, onSelect, requireAltText, buttonLabel }
       {isOpen && (
         <div
           className={styles.modalOverlay}
-          onClick={handleClose}
+          onClick={() => !isUploading && handleClose()}
           role="presentation"
         >
           <div
@@ -92,58 +120,109 @@ export function MediaPicker({ mediaList, onSelect, requireAltText, buttonLabel }
             onClick={(e) => e.stopPropagation()}
           >
             <div className={styles.modalHeader}>
-              <h2 id="media-picker-title" className={styles.modalTitle}>Seleccionar Multimedia</h2>
+              <h2 id="media-picker-title" className={styles.modalTitle}>Multimedia</h2>
               <button
                 type="button"
                 onClick={handleClose}
                 className={styles.closeButton}
                 aria-label="Cerrar selector de multimedia"
+                disabled={isUploading}
               >
                 &times;
               </button>
             </div>
+            
+            <div style={{ display: "flex", gap: "16px", padding: "0 24px", borderBottom: "1px solid #e5e7eb", marginBottom: "16px" }}>
+              <button 
+                type="button" 
+                onClick={() => setActiveTab("library")} 
+                style={{ background: "none", border: "none", padding: "12px 0", borderBottom: activeTab === "library" ? "2px solid var(--color-cyan, #28c7e8)" : "2px solid transparent", fontWeight: activeTab === "library" ? 600 : 400, cursor: "pointer", color: activeTab === "library" ? "var(--color-carbon, #121419)" : "#6b7280" }}
+              >
+                Biblioteca
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setActiveTab("upload")} 
+                style={{ background: "none", border: "none", padding: "12px 0", borderBottom: activeTab === "upload" ? "2px solid var(--color-cyan, #28c7e8)" : "2px solid transparent", fontWeight: activeTab === "upload" ? 600 : 400, cursor: "pointer", color: activeTab === "upload" ? "var(--color-carbon, #121419)" : "#6b7280" }}
+              >
+                Subir nueva
+              </button>
+            </div>
 
             <div className={styles.modalBody}>
-              {mediaList.length === 0 ? (
-                <div className={styles.emptyState}>
-                  No hay archivos disponibles. Sube archivos primero.
-                </div>
+              {activeTab === "library" ? (
+                mediaList.length === 0 ? (
+                  <div className={styles.emptyState}>
+                    No hay archivos disponibles en la biblioteca.
+                  </div>
+                ) : (
+                  <div className={styles.grid}>
+                    {mediaList.map((item) => {
+                      const isSelected = selectedId === item.id;
+                      return (
+                        <div
+                          key={item.id}
+                          onClick={() => setSelectedId(item.id)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setSelectedId(item.id);
+                            }
+                          }}
+                          className={`${styles.mediaItem} ${isSelected ? styles.mediaItemSelected : ""}`}
+                          role="radio"
+                          aria-checked={isSelected}
+                          tabIndex={0}
+                          aria-label={`Seleccionar imagen ${item.originalFilename}`}
+                        >
+                          <div className={styles.mediaImageWrap}>
+                            <Image
+                              src={item.thumbnailUrl}
+                              alt={item.originalFilename}
+                              fill
+                              sizes="(max-width: 768px) 100vw, 180px"
+                              style={{ objectFit: "cover" }}
+                              unoptimized
+                            />
+                          </div>
+                          <div className={styles.mediaLabel}>
+                            {item.originalFilename}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )
               ) : (
-                <div className={styles.grid}>
-                  {mediaList.map((item) => {
-                    const isSelected = selectedId === item.id;
-                    return (
-                      <div
-                        key={item.id}
-                        onClick={() => setSelectedId(item.id)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            setSelectedId(item.id);
-                          }
-                        }}
-                        className={`${styles.mediaItem} ${isSelected ? styles.mediaItemSelected : ""}`}
-                        role="radio"
-                        aria-checked={isSelected}
-                        tabIndex={0}
-                        aria-label={`Seleccionar imagen ${item.originalFilename}`}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "240px", border: "2px dashed #d1d5db", borderRadius: "8px", padding: "24px", textAlign: "center", backgroundColor: "#f9fafb" }}>
+                  {isUploading ? (
+                    <div style={{ color: "var(--color-primary, #155eef)", fontWeight: 500 }}>
+                      Subiendo archivo de forma segura...
+                    </div>
+                  ) : (
+                    <>
+                      <p style={{ color: "#4b5563", marginBottom: "16px" }}>
+                        Selecciona una imagen desde tu dispositivo para subirla directamente.
+                      </p>
+                      <input 
+                        type="file" 
+                        accept="image/png, image/jpeg, image/webp" 
+                        onChange={onFileChange} 
+                        style={{ display: "none" }} 
+                        ref={fileInputRef} 
+                      />
+                      <button 
+                        type="button" 
+                        onClick={() => fileInputRef.current?.click()} 
+                        style={{ backgroundColor: "var(--color-primary, #155eef)", color: "white", border: "none", padding: "10px 20px", borderRadius: "6px", cursor: "pointer", fontWeight: 600 }}
                       >
-                        <div className={styles.mediaImageWrap}>
-                          <Image
-                            src={item.thumbnailUrl}
-                            alt={item.originalFilename}
-                            fill
-                            sizes="(max-width: 768px) 100vw, 180px"
-                            style={{ objectFit: "cover" }}
-                            unoptimized
-                          />
-                        </div>
-                        <div className={styles.mediaLabel}>
-                          {item.originalFilename}
-                        </div>
-                      </div>
-                    );
-                  })}
+                        Buscar archivo
+                      </button>
+                      <p style={{ fontSize: "0.8rem", color: "#9ca3af", marginTop: "12px" }}>
+                        Formatos soportados: JPG, PNG, WebP (máx. 10 MB)
+                      </p>
+                    </>
+                  )}
                 </div>
               )}
             </div>
@@ -162,22 +241,25 @@ export function MediaPicker({ mediaList, onSelect, requireAltText, buttonLabel }
                     className={styles.input}
                     aria-required={requireAltText}
                     aria-label="Texto alternativo de la imagen"
+                    disabled={isUploading}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") {
+                      if (e.key === "Enter" && activeTab === "library" && selectedId) {
                         e.preventDefault();
                         handleSelect();
                       }
                     }}
                   />
                 </div>
-                <button
-                  type="button"
-                  onClick={handleSelect}
-                  disabled={!selectedId}
-                  className={styles.confirmButton}
-                >
-                  Confirmar
-                </button>
+                {activeTab === "library" && (
+                  <button
+                    type="button"
+                    onClick={handleSelect}
+                    disabled={!selectedId}
+                    className={styles.confirmButton}
+                  >
+                    Confirmar
+                  </button>
+                )}
               </div>
             </div>
           </div>

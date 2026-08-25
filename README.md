@@ -2,6 +2,8 @@
 
 Esta es la plataforma de blog institucional de DevNova, lista para despliegue en producción.
 
+![alt text](https://i.imgur.com/tvj6Ist.png)
+
 ## Stack y Arquitectura
 
 - **Framework**: Next.js (App Router)

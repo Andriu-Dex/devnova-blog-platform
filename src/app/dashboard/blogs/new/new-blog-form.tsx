@@ -63,6 +63,67 @@ export function NewBlogForm({ mediaList, categories }: { mediaList: MediaItem[];
     textarea.focus();
   };
 
+  const handleFileUpload = async (file: File) => {
+    if (!file.type.startsWith("image/")) return;
+    
+    if (!textareaRef.current) return;
+    const textarea = textareaRef.current;
+    
+    const placeholder = `![Subiendo imagen...]()`;
+    textarea.setRangeText(
+      placeholder,
+      textarea.selectionStart,
+      textarea.selectionEnd,
+      "end"
+    );
+    setContentMarkdown(textarea.value);
+    
+    try {
+      const { uploadFileDirectly } = await import("@/components/media/direct-uploader");
+      const { mediaAssetId } = await uploadFileDirectly(file);
+      
+      const newTextareaValue = textarea.value.replace(placeholder, `![${file.name}](media://${mediaAssetId})`);
+      setContentMarkdown(newTextareaValue);
+      // Wait for React to update the DOM
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.value = newTextareaValue;
+        }
+      }, 0);
+    } catch (err) {
+      console.error("Error uploading pasted/dropped image", err);
+      const newTextareaValue = textarea.value.replace(placeholder, `![Error al subir imagen]()`);
+      setContentMarkdown(newTextareaValue);
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.value = newTextareaValue;
+        }
+      }, 0);
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData.items;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf("image") !== -1) {
+        const file = items[i].getAsFile();
+        if (file) {
+          e.preventDefault();
+          handleFileUpload(file);
+          break;
+        }
+      }
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLTextAreaElement>) => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      handleFileUpload(file);
+    }
+  };
+
   const restoreDraft = () => {
     if (draftProps.draftData) {
       setTitle(draftProps.draftData.title || "");
@@ -236,6 +297,9 @@ export function NewBlogForm({ mediaList, categories }: { mediaList: MediaItem[];
             style={{ minHeight: "300px" }}
             value={contentMarkdown}
             onChange={(e) => setContentMarkdown(e.target.value)}
+            onPaste={handlePaste}
+            onDrop={handleDrop}
+            onDragOver={(e) => e.preventDefault()}
           />
         </div>
         
