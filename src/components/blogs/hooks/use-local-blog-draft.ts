@@ -78,6 +78,8 @@ export function useLocalBlogDraft({ draftKey, currentData }: UseLocalBlogDraftPr
   }, [draftKey]);
 
   // Guardado automático
+  const currentDataStr = JSON.stringify(currentData);
+
   useEffect(() => {
     if (!initialLoadDone.current || isDiscarding.current) return;
     
@@ -92,7 +94,7 @@ export function useLocalBlogDraft({ draftKey, currentData }: UseLocalBlogDraftPr
         const now = new Date().toISOString();
         const payload: BlogDraftData = {
           schemaVersion: DRAFT_SCHEMA_VERSION,
-          ...currentData,
+          ...JSON.parse(currentDataStr), // Usamos el string parseado para asegurar consistencia
           savedAt: now,
         };
         localStorage.setItem(draftKey, JSON.stringify(payload));
@@ -107,7 +109,7 @@ export function useLocalBlogDraft({ draftKey, currentData }: UseLocalBlogDraftPr
     return () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
     };
-  }, [draftKey, currentData]);
+  }, [draftKey, currentDataStr]);
 
   // Escuchar cambios de otra pestaña
   useEffect(() => {

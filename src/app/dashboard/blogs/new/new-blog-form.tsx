@@ -10,6 +10,7 @@ import Image from "next/image";
 import { useLocalBlogDraft } from "@/components/blogs/hooks/use-local-blog-draft";
 import { ImportMarkdownButton } from "@/components/blogs/import-markdown-button";
 import type { BlogCategoryItem } from "@/server/blogs/category-service";
+import { BlogPreviewClient } from "@/components/blogs/blog-preview-client";
 
 export function NewBlogForm({ mediaList, categories }: { mediaList: MediaItem[]; categories: BlogCategoryItem[] }) {
   const [state, formAction, isPending] = useActionState(createBlogAction, null);
@@ -124,6 +125,12 @@ export function NewBlogForm({ mediaList, categories }: { mediaList: MediaItem[];
     }
   };
 
+  const handleImport = (data: { title?: string, summary?: string, contentMarkdown: string }) => {
+    if (data.title) setTitle(data.title);
+    if (data.summary) setSummary(data.summary);
+    setContentMarkdown(data.contentMarkdown);
+  };
+
   const restoreDraft = () => {
     if (draftProps.draftData) {
       setTitle(draftProps.draftData.title || "");
@@ -136,14 +143,8 @@ export function NewBlogForm({ mediaList, categories }: { mediaList: MediaItem[];
     }
   };
 
-  const handleImport = (data: { title?: string, summary?: string, contentMarkdown: string }) => {
-    if (data.title) setTitle(data.title);
-    if (data.summary) setSummary(data.summary);
-    setContentMarkdown(data.contentMarkdown);
-  };
-
   return (
-    <div className={styles.formContainer}>
+    <div className={styles.formContainer} style={{ maxWidth: "100%", padding: "0 24px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
         <h2 className={styles.title} style={{ marginBottom: 0 }}>Crear nuevo blog</h2>
         
@@ -174,152 +175,178 @@ export function NewBlogForm({ mediaList, categories }: { mediaList: MediaItem[];
         </div>
       )}
 
-      <form action={formAction}>
-        {state?.error && (
-          <div className={styles.errorMessage} role="alert">
-            {state.error}
-          </div>
-        )}
-
-        {coverMediaId && <input type="hidden" name="coverMediaAssetId" value={coverMediaId} />}
-        {coverAltText && <input type="hidden" name="coverAltText" value={coverAltText} />}
-
-        <div className={styles.formGroup} style={{ backgroundColor: "#f9fafb", padding: "16px", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
-          <label className={styles.label}>Portada del Blog (Opcional)</label>
-          
-          {selectedCover ? (
-            <div style={{ display: "flex", gap: "16px", alignItems: "flex-start", marginTop: "12px" }}>
-              <div style={{ position: "relative", width: "120px", height: "80px", backgroundColor: "#f1f2f4", borderRadius: "6px", overflow: "hidden" }}>
-                <Image src={selectedCover.thumbnailUrl} alt={coverAltText} fill style={{ objectFit: "cover" }} unoptimized />
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", alignItems: "start" }}>
+        {/* LADO IZQUIERDO: EDITOR */}
+        <div>
+          <form action={formAction}>
+            {state?.error && (
+              <div className={styles.errorMessage} role="alert">
+                {state.error}
               </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: "0.9rem", fontWeight: 600 }}>{selectedCover.originalFilename}</div>
-                <div style={{ fontSize: "0.85rem", color: "#51545a", marginTop: "4px" }}>Texto alternativo: {coverAltText}</div>
-                <button type="button" onClick={() => { setCoverMediaId(null); setCoverAltText(""); }} style={{ marginTop: "8px", color: "#d93025", background: "none", border: "none", cursor: "pointer", fontSize: "0.85rem", padding: 0, textDecoration: "underline" }}>
-                  Eliminar portada
-                </button>
-              </div>
+            )}
+
+            {coverMediaId && <input type="hidden" name="coverMediaAssetId" value={coverMediaId} />}
+            {coverAltText && <input type="hidden" name="coverAltText" value={coverAltText} />}
+
+            <div className={styles.formGroup} style={{ backgroundColor: "#f9fafb", padding: "16px", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
+              <label className={styles.label}>Portada del Blog (Opcional)</label>
+              
+              {selectedCover ? (
+                <div style={{ display: "flex", gap: "16px", alignItems: "flex-start", marginTop: "12px" }}>
+                  <div style={{ position: "relative", width: "120px", height: "80px", backgroundColor: "#f1f2f4", borderRadius: "6px", overflow: "hidden" }}>
+                    <Image src={selectedCover.thumbnailUrl} alt={coverAltText} fill style={{ objectFit: "cover" }} unoptimized />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: "0.9rem", fontWeight: 600 }}>{selectedCover.originalFilename}</div>
+                    <div style={{ fontSize: "0.85rem", color: "#51545a", marginTop: "4px" }}>Texto alternativo: {coverAltText}</div>
+                    <button type="button" onClick={() => { setCoverMediaId(null); setCoverAltText(""); }} style={{ marginTop: "8px", color: "#d93025", background: "none", border: "none", cursor: "pointer", fontSize: "0.85rem", padding: 0, textDecoration: "underline" }}>
+                      Eliminar portada
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ marginTop: "8px" }}>
+                  <MediaPicker 
+                    mediaList={mediaList} 
+                    requireAltText={true} 
+                    buttonLabel="Seleccionar portada" 
+                    onSelect={(id, alt) => {
+                      setCoverMediaId(id);
+                      setCoverAltText(alt);
+                    }} 
+                  />
+                </div>
+              )}
             </div>
-          ) : (
-            <div style={{ marginTop: "8px" }}>
-              <MediaPicker 
-                mediaList={mediaList} 
-                requireAltText={true} 
-                buttonLabel="Seleccionar portada" 
-                onSelect={(id, alt) => {
-                  setCoverMediaId(id);
-                  setCoverAltText(alt);
-                }} 
+
+            <div className={styles.formGroup}>
+              <label htmlFor="title" className={styles.label}>Título *</label>
+              <input
+                id="title"
+                name="title"
+                type="text"
+                required
+                maxLength={200}
+                className={styles.input}
+                placeholder="Título del blog"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
               />
             </div>
-          )}
+
+            <div className={styles.formGroup}>
+              <label htmlFor="slug" className={styles.label}>Slug (URL amigable)</label>
+              <input
+                id="slug"
+                name="slug"
+                type="text"
+                maxLength={180}
+                className={styles.input}
+                placeholder="Opcional. Si lo dejas vacío, se generará a partir del título."
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="summary" className={styles.label}>Resumen *</label>
+              <input
+                id="summary"
+                name="summary"
+                type="text"
+                required
+                maxLength={500}
+                className={styles.input}
+                placeholder="Breve resumen del contenido"
+                value={summary}
+                onChange={(e) => setSummary(e.target.value)}
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="categoryId" className={styles.label}>Categoría</label>
+              <select
+                id="categoryId"
+                name="categoryId"
+                className={styles.input}
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
+              >
+                <option value="">Sin categoría</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className={styles.formGroup}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                <label htmlFor="contentMarkdown" className={styles.label} style={{ marginBottom: 0 }}>Contenido (Markdown) *</label>
+                <MediaPicker 
+                  mediaList={mediaList} 
+                  requireAltText={true} 
+                  buttonLabel="Insertar imagen" 
+                  onSelect={insertIntoMarkdown} 
+                />
+              </div>
+              <textarea
+                id="contentMarkdown"
+                name="contentMarkdown"
+                ref={textareaRef}
+                required
+                className={styles.textarea}
+                placeholder="# Título Principal&#10;&#10;Escribe tu contenido aquí usando Markdown..."
+                style={{ minHeight: "600px", resize: "vertical" }}
+                value={contentMarkdown}
+                onChange={(e) => setContentMarkdown(e.target.value)}
+                onPaste={handlePaste}
+                onDrop={handleDrop}
+                onDragOver={(e) => e.preventDefault()}
+              />
+            </div>
+            
+            <p style={{ fontSize: "0.8rem", color: "#6b7280", marginTop: "16px", marginBottom: 0 }}>
+              Los cambios se guardan temporalmente en este navegador. Usa &quot;Crear Blog&quot; para registrarlos en DevNova.
+            </p>
+
+            <div style={{ display: "flex", gap: "12px", marginTop: "16px" }}>
+              <Link
+                href="/dashboard/blogs"
+                className={styles.actionButton}
+                style={{ padding: "14px 20px", display: "inline-flex", alignItems: "center" }}
+              >
+                Cancelar
+              </Link>
+              <button
+                type="submit"
+                disabled={isPending}
+                className={styles.submitButton}
+              >
+                {isPending ? "Guardando..." : "Crear Blog"}
+              </button>
+            </div>
+          </form>
         </div>
 
-        <div className={styles.formGroup}>
-          <label htmlFor="title" className={styles.label}>Título *</label>
-          <input
-            id="title"
-            name="title"
-            type="text"
-            required
-            maxLength={200}
-            className={styles.input}
-            placeholder="Título del blog"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+        {/* LADO DERECHO: VISTA PREVIA */}
+        <div style={{ border: "1px solid #e5e7eb", borderRadius: "8px", overflowY: "auto", height: "calc(100vh - 120px)", position: "sticky", top: "24px" }}>
+          <BlogPreviewClient 
+            blog={{
+              title,
+              summary,
+              slug,
+              contentMarkdown,
+              coverMediaAssetId: coverMediaId,
+              coverAltText,
+              categoryName: categories.find(c => c.id === categoryId)?.name,
+              categorySlug: categories.find(c => c.id === categoryId)?.slug,
+            }}
+            mediaMap={new Map(mediaList.map(m => [m.id, { id: m.id, publicId: m.publicId, width: m.width, height: m.height }]))}
           />
         </div>
-
-        <div className={styles.formGroup}>
-          <label htmlFor="slug" className={styles.label}>Slug (URL amigable)</label>
-          <input
-            id="slug"
-            name="slug"
-            type="text"
-            maxLength={180}
-            className={styles.input}
-            placeholder="Opcional. Si lo dejas vacío, se generará a partir del título."
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-          />
-        </div>
-
-        <div className={styles.formGroup}>
-          <label htmlFor="summary" className={styles.label}>Resumen *</label>
-          <input
-            id="summary"
-            name="summary"
-            type="text"
-            required
-            maxLength={500}
-            className={styles.input}
-            placeholder="Breve descripción (máx 500 caracteres)"
-            value={summary}
-            onChange={(e) => setSummary(e.target.value)}
-          />
-        </div>
-
-        <div className={styles.formGroup}>
-          <label htmlFor="categoryId" className={styles.label}>Categoría</label>
-          <select
-            id="categoryId"
-            name="categoryId"
-            className={styles.input}
-            value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-          >
-            <option value="">Sin categoría</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className={styles.formGroup}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-            <label htmlFor="contentMarkdown" className={styles.label} style={{ marginBottom: 0 }}>Contenido (Markdown) *</label>
-            <MediaPicker 
-              mediaList={mediaList} 
-              requireAltText={true} 
-              buttonLabel="Insertar imagen" 
-              onSelect={insertIntoMarkdown} 
-            />
-          </div>
-          <textarea
-            id="contentMarkdown"
-            name="contentMarkdown"
-            ref={textareaRef}
-            required
-            className={styles.textarea}
-            placeholder="# Título Principal&#10;&#10;Escribe tu contenido aquí usando Markdown..."
-            style={{ minHeight: "300px" }}
-            value={contentMarkdown}
-            onChange={(e) => setContentMarkdown(e.target.value)}
-            onPaste={handlePaste}
-            onDrop={handleDrop}
-            onDragOver={(e) => e.preventDefault()}
-          />
-        </div>
-        
-        <p style={{ fontSize: "0.8rem", color: "#6b7280", marginTop: "16px", marginBottom: 0 }}>
-          Los cambios se guardan temporalmente en este navegador. Usa &quot;Crear Blog&quot; para registrarlos en DevNova.
-        </p>
-
-        <div style={{ display: "flex", gap: "12px", marginTop: "16px" }}>
-          <Link
-            href="/dashboard/blogs"
-            className={styles.actionButton}
-            style={{ padding: "14px 20px", display: "inline-flex", alignItems: "center" }}
-          >
-            Cancelar
-          </Link>
-          <button type="submit" disabled={isPending} className={styles.submitButton} style={{ marginTop: 0 }}>
-            {isPending ? "Guardando..." : "Crear Blog"}
-          </button>
-        </div>
-      </form>
+      </div>
     </div>
   );
 }

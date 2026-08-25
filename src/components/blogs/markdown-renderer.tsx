@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Image from "next/image";
 import Link from "next/link";
-import { getDeliveryUrl } from "@/server/media/cloudinary";
+import { getDeliveryUrlClient } from "@/lib/cloudinary-client";
 
 import { defaultUrlTransform } from "react-markdown";
 
@@ -55,7 +55,7 @@ export function MarkdownRenderer({ content, mediaMap = new Map(), allowMedia = t
             const mediaItem = mediaMap.get(uuid);
 
             if (mediaItem) {
-              const deliveryUrl = getDeliveryUrl(mediaItem.publicId, 800);
+              const deliveryUrl = getDeliveryUrlClient(mediaItem.publicId, 800);
               return (
                 <span style={{ display: "block", margin: "2rem 0" }}>
                   <Image
