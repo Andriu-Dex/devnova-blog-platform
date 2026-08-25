@@ -9,13 +9,15 @@ import { MediaPicker, MediaItem } from "@/components/media/media-picker";
 import Image from "next/image";
 import { useLocalBlogDraft } from "@/components/blogs/hooks/use-local-blog-draft";
 import { ImportMarkdownButton } from "@/components/blogs/import-markdown-button";
+import type { BlogCategoryItem } from "@/server/blogs/category-service";
 
-export function NewBlogForm({ mediaList }: { mediaList: MediaItem[] }) {
+export function NewBlogForm({ mediaList, categories }: { mediaList: MediaItem[]; categories: BlogCategoryItem[] }) {
   const [state, formAction, isPending] = useActionState(createBlogAction, null);
   
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
   const [summary, setSummary] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [contentMarkdown, setContentMarkdown] = useState("");
   const [coverMediaId, setCoverMediaId] = useState<string | null>(null);
   const [coverAltText, setCoverAltText] = useState<string>("");
@@ -26,6 +28,7 @@ export function NewBlogForm({ mediaList }: { mediaList: MediaItem[] }) {
     title,
     slug,
     summary,
+    categoryId: categoryId || null,
     contentMarkdown,
     coverMediaAssetId: coverMediaId,
     coverAltText,
@@ -65,6 +68,7 @@ export function NewBlogForm({ mediaList }: { mediaList: MediaItem[] }) {
       setTitle(draftProps.draftData.title || "");
       setSlug(draftProps.draftData.slug || "");
       setSummary(draftProps.draftData.summary || "");
+      setCategoryId(draftProps.draftData.categoryId || "");
       setContentMarkdown(draftProps.draftData.contentMarkdown || "");
       setCoverMediaId(draftProps.draftData.coverMediaAssetId || null);
       setCoverAltText(draftProps.draftData.coverAltText || "");
@@ -192,6 +196,24 @@ export function NewBlogForm({ mediaList }: { mediaList: MediaItem[] }) {
             value={summary}
             onChange={(e) => setSummary(e.target.value)}
           />
+        </div>
+
+        <div className={styles.formGroup}>
+          <label htmlFor="categoryId" className={styles.label}>Categoría</label>
+          <select
+            id="categoryId"
+            name="categoryId"
+            className={styles.input}
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+          >
+            <option value="">Sin categoría</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className={styles.formGroup}>

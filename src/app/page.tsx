@@ -1,5 +1,5 @@
 import { getPublicSiteProfile, getPublicSection, getPublicTeamMembers } from "@/server/site/public-site-service";
-import { listRecentPublishedBlogs } from "@/server/blogs/public-blog-service";
+import { listPublishedCategoryStats, listRecentPublishedBlogs } from "@/server/blogs/public-blog-service";
 import { getDeliveryUrl } from "@/server/media/cloudinary";
 import { PublicHeader } from "@/components/site/public-header";
 import { PublicFooter } from "@/components/site/public-footer";
@@ -27,11 +27,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const [profile, homeSection, publishedBlogs, teamMembers] = await Promise.all([
+  const [profile, homeSection, publishedBlogs, teamMembers, categoryStats] = await Promise.all([
     getPublicSiteProfile(),
     getPublicSection("HOME"),
     listRecentPublishedBlogs(10),
     getPublicTeamMembers(),
+    listPublishedCategoryStats(),
   ]);
 
   const brandName = profile?.groupName || "DevNova";
@@ -59,6 +60,10 @@ export default async function HomePage() {
       }).format(new Date());
 
   const teamCountText = `${teamMembers.length || 6} integrantes`;
+  const getCategory = (slug: string) => categoryStats.categories.find((category) => category.slug === slug);
+  const proyecto = getCategory("proyecto");
+  const taller = getCategory("taller");
+  const deber = getCategory("deber");
 
   return (
     <div className={styles.page}>
@@ -83,10 +88,10 @@ export default async function HomePage() {
                 <span>$</span> devnova --status
               </p>
               <p>
-                <b>{publishedBlogs.length}</b> archivos indexados
+                <b>{categoryStats.total}</b> archivos indexados
               </p>
               <p>
-                <b>0</b> proyectos · <b>0</b> talleres · <b>{publishedBlogs.length}</b> deberes
+                <b>{proyecto?.publishedCount || 0}</b> proyectos · <b>{taller?.publishedCount || 0}</b> talleres · <b>{deber?.publishedCount || 0}</b> deberes
               </p>
               <p className={styles.heroTerminalOk}>
                 <IconoCheck /> contenido versionado
@@ -234,30 +239,36 @@ export default async function HomePage() {
             <p>Proyectos que evolucionan, talleres que prueban y deberes que documentan lo aprendido.</p>
           </div>
           <div className={styles.coleccionesPestanas}>
-            <Link prefetch={false} href="/blogs" className={`${styles.coleccion} ${styles.coleccionProyecto}`}>
-              <EtiquetaTipo tipo="proyecto" />
-              <h3>Proyectos</h3>
+            <Link prefetch={false} href="/blogs?category=proyecto" className={`${styles.coleccion} ${styles.coleccionProyecto}`}>
+              <span className={`${styles.coleccionCuenta} ${styles.meta}`}>
+                {String(proyecto?.publishedCount || 0).padStart(2, "0")} archivos
+              </span>
+              <EtiquetaTipo tipo="proyecto" label={proyecto?.name || "Proyecto"} />
+              <h3>{proyecto?.name || "Proyectos"}</h3>
               <p>Sistemas construidos por etapas y entregas de mayor alcance.</p>
               <span className={styles.coleccionAccion}>
                 Abrir carpeta <IconoFlecha />
               </span>
             </Link>
 
-            <Link prefetch={false} href="/blogs" className={`${styles.coleccion} ${styles.coleccionTaller}`}>
-              <EtiquetaTipo tipo="taller" />
-              <h3>Talleres</h3>
+            <Link prefetch={false} href="/blogs?category=taller" className={`${styles.coleccion} ${styles.coleccionTaller}`}>
+              <span className={`${styles.coleccionCuenta} ${styles.meta}`}>
+                {String(taller?.publishedCount || 0).padStart(2, "0")} archivos
+              </span>
+              <EtiquetaTipo tipo="taller" label={taller?.name || "Taller"} />
+              <h3>{taller?.name || "Talleres"}</h3>
               <p>Práctica guiada, herramientas y experimentos verificables.</p>
               <span className={styles.coleccionAccion}>
                 Abrir carpeta <IconoFlecha />
               </span>
             </Link>
 
-            <Link prefetch={false} href="/blogs" className={`${styles.coleccion} ${styles.coleccionDeber}`}>
+            <Link prefetch={false} href="/blogs?category=deber" className={`${styles.coleccion} ${styles.coleccionDeber}`}>
               <span className={`${styles.coleccionCuenta} ${styles.meta}`}>
-                {String(publishedBlogs.length).padStart(2, "0")} archivos
+                {String(deber?.publishedCount || 0).padStart(2, "0")} archivos
               </span>
-              <EtiquetaTipo tipo="deber" />
-              <h3>Deberes</h3>
+              <EtiquetaTipo tipo="deber" label={deber?.name || "Deber"} />
+              <h3>{deber?.name || "Deberes"}</h3>
               <p>Análisis, decisiones y fundamentos documentados.</p>
               <span className={styles.coleccionAccion}>
                 Abrir carpeta <IconoFlecha />

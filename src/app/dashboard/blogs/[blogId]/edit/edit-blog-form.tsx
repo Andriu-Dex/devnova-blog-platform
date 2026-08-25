@@ -8,11 +8,14 @@ import { MediaPicker, MediaItem } from "@/components/media/media-picker";
 import Image from "next/image";
 import { useLocalBlogDraft } from "@/components/blogs/hooks/use-local-blog-draft";
 import { ImportMarkdownButton } from "@/components/blogs/import-markdown-button";
+import type { BlogCategoryItem } from "@/server/blogs/category-service";
 
 interface EditBlogFormProps {
   blog: {
     id: string;
     slug: string;
+    categoryId: string | null;
+    categoryName: string | null;
     creatorName: string;
   };
   latestVersion: {
@@ -27,13 +30,15 @@ interface EditBlogFormProps {
     createdAt: Date;
   };
   mediaList: MediaItem[];
+  categories: BlogCategoryItem[];
 }
 
-export function EditBlogForm({ blog, latestVersion, mediaList }: EditBlogFormProps) {
+export function EditBlogForm({ blog, latestVersion, mediaList, categories }: EditBlogFormProps) {
   const [state, formAction, isPending] = useActionState(editBlogAction, null);
   
   const [title, setTitle] = useState(latestVersion.title);
   const [summary, setSummary] = useState(latestVersion.summary);
+  const [categoryId, setCategoryId] = useState(blog.categoryId || "");
   const [contentMarkdown, setContentMarkdown] = useState(latestVersion.contentMarkdown);
   const [coverMediaId, setCoverMediaId] = useState<string | null>(latestVersion.coverMediaAssetId);
   const [coverAltText, setCoverAltText] = useState<string>(latestVersion.coverAltText || "");
@@ -44,6 +49,7 @@ export function EditBlogForm({ blog, latestVersion, mediaList }: EditBlogFormPro
   const currentData = {
     title,
     summary,
+    categoryId: categoryId || null,
     contentMarkdown,
     coverMediaAssetId: coverMediaId,
     coverAltText,
@@ -95,6 +101,7 @@ export function EditBlogForm({ blog, latestVersion, mediaList }: EditBlogFormPro
     if (draftProps.draftData) {
       setTitle(draftProps.draftData.title || "");
       setSummary(draftProps.draftData.summary || "");
+      setCategoryId(draftProps.draftData.categoryId || "");
       setContentMarkdown(draftProps.draftData.contentMarkdown || "");
       setCoverMediaId(draftProps.draftData.coverMediaAssetId || null);
       setCoverAltText(draftProps.draftData.coverAltText || "");
@@ -140,6 +147,9 @@ export function EditBlogForm({ blog, latestVersion, mediaList }: EditBlogFormPro
         </div>
         <div className={styles.metadataItem}>
           <strong>Creador original:</strong> {blog.creatorName}
+        </div>
+        <div className={styles.metadataItem}>
+          <strong>Categoría:</strong> {blog.categoryName || "Sin categoría"}
         </div>
         <div className={styles.metadataItem}>
           <strong>Última edición por:</strong> {latestVersion.editorName} ({latestVersion.createdAt.toLocaleString()})
@@ -249,6 +259,24 @@ export function EditBlogForm({ blog, latestVersion, mediaList }: EditBlogFormPro
             onChange={(e) => setSummary(e.target.value)}
             className={styles.input}
           />
+        </div>
+
+        <div className={styles.formGroup}>
+          <label htmlFor="categoryId" className={styles.label}>Categoría</label>
+          <select
+            id="categoryId"
+            name="categoryId"
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            className={styles.input}
+          >
+            <option value="">Sin categoría</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className={styles.formGroup}>

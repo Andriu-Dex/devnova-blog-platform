@@ -4,6 +4,7 @@ export * from "./users";
 export * from "./user-credentials";
 export * from "./user-sessions";
 export * from "./media-assets";
+export * from "./blog-categories";
 export * from "./blogs";
 export * from "./blog-versions";
 export * from "./blog-publications";

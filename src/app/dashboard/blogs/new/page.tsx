@@ -1,5 +1,6 @@
 import { requireAuthorOrAdmin } from "@/server/auth/authorization";
 import { listActiveMedia } from "@/server/media/media-service";
+import { listActiveBlogCategories } from "@/server/blogs/category-service";
 import { PrivateHeader } from "@/components/layout/private-header";
 import { NewBlogForm } from "./new-blog-form";
 import { Metadata } from "next";
@@ -11,12 +12,15 @@ export const metadata: Metadata = {
 
 export default async function NewBlogPage() {
   const user = await requireAuthorOrAdmin();
-  const mediaList = await listActiveMedia();
+  const [mediaList, categories] = await Promise.all([
+    listActiveMedia(),
+    listActiveBlogCategories(),
+  ]);
 
   return (
     <main>
       <PrivateHeader displayName={user.displayName} role={user.role} />
-      <NewBlogForm mediaList={mediaList} />
+      <NewBlogForm mediaList={mediaList} categories={categories} />
     </main>
   );
 }

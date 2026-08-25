@@ -85,7 +85,7 @@ export default async function PublicBlogDetail({ params }: Props) {
           <div className={styles.entradaHeroGrid}>
             <div>
               <div className={styles.entradaHeroEtiquetas}>
-                <EtiquetaTipo tipo="deber" />
+                <EtiquetaTipo tipo={blog.categoryColorClass || blog.categorySlug || "blog"} label={blog.categoryName} />
                 <EstadoEntrega estado="entregado" />
               </div>
               <h1>{blog.title}</h1>
@@ -122,6 +122,12 @@ export default async function PublicBlogDetail({ params }: Props) {
                     <IconoArchivo /> Estado
                   </dt>
                   <dd>Publicado</dd>
+                </div>
+                <div>
+                  <dt>
+                    <IconoArchivo /> Categoría
+                  </dt>
+                  <dd>{blog.categoryName || "Sin categoría"}</dd>
                 </div>
               </dl>
             </aside>

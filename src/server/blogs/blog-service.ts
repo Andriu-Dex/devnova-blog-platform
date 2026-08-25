@@ -10,6 +10,7 @@ import {
   auditActionTypes,
   blogVersionMedia,
   mediaAssets,
+  blogCategories,
 } from "../db/schema";
 import { eq, desc, and, isNull, sql } from "drizzle-orm";
 import { AuthMetadata } from "../auth/types";
@@ -21,6 +22,10 @@ export interface DashboardBlogItem {
   title: string;
   summary: string;
   versionNumber: number;
+  categoryId: string | null;
+  categoryName: string | null;
+  categorySlug: string | null;
+  categoryColorClass: string | null;
   originalCreatorId: string;
   originalCreatorName: string;
   lastEditorId: string;
@@ -43,12 +48,17 @@ export async function listBlogsForDashboard(): Promise<DashboardBlogItem[]> {
     .select({
       id: blogs.id,
       slug: blogs.slug,
+      categoryId: blogs.categoryId,
+      categoryName: blogCategories.name,
+      categorySlug: blogCategories.slug,
+      categoryColorClass: blogCategories.colorClass,
       createdAt: blogs.createdAt,
       creatorId: blogs.createdByUserId,
       creatorName: users.displayName,
     })
     .from(blogs)
     .innerJoin(users, eq(blogs.createdByUserId, users.id))
+    .leftJoin(blogCategories, eq(blogs.categoryId, blogCategories.id))
     .where(isNull(blogs.deletedAt))
     .orderBy(desc(blogs.createdAt));
 
@@ -95,6 +105,10 @@ export async function listBlogsForDashboard(): Promise<DashboardBlogItem[]> {
       title: v.title,
       summary: v.summary,
       versionNumber: v.versionNumber,
+      categoryId: b.categoryId,
+      categoryName: b.categoryName,
+      categorySlug: b.categorySlug,
+      categoryColorClass: b.categoryColorClass,
       originalCreatorId: b.creatorId,
       originalCreatorName: b.creatorName,
       lastEditorId: v.editedByUserId,
@@ -133,6 +147,7 @@ export async function createBlog(
   contentMarkdown: string,
   coverMediaAssetId: string | null,
   coverAltText: string | null,
+  categoryId: string | null,
   actorUserId: string,
   metadata: AuthMetadata
 ): Promise<{ blogId?: string; error?: string }> {
@@ -194,10 +209,24 @@ export async function createBlog(
       }
 
       // 1. INSERT blogs
+      if (categoryId) {
+        const lockedCategory = await tx
+          .select({ id: blogCategories.id })
+          .from(blogCategories)
+          .where(and(eq(blogCategories.id, categoryId), isNull(blogCategories.deletedAt)))
+          .limit(1)
+          .for("share");
+
+        if (!lockedCategory.length) {
+          throw new Error("CATEGORY_NOT_FOUND");
+        }
+      }
+
       const [newBlog] = await tx
         .insert(blogs)
         .values({
           slug: finalSlug,
+          categoryId,
           createdByUserId: actorUserId,
           createdAt: new Date(),
         })
@@ -260,6 +289,9 @@ export async function createBlog(
     if (err instanceof Error && err.message === "MEDIA_ARCHIVED") {
       return { error: "Una de las imágenes seleccionadas ya no está disponible para nuevos contenidos." };
     }
+    if (err instanceof Error && err.message === "CATEGORY_NOT_FOUND") {
+      return { error: "La categoría seleccionada no existe o fue eliminada." };
+    }
     if (typeof err === "object" && err !== null && "code" in err && (err as { code?: string }).code === "23505") {
       return { error: "Ya existe un blog con ese slug." };
     }
@@ -274,12 +306,17 @@ export async function getBlogForEditing(blogId: string) {
     .select({
       id: blogs.id,
       slug: blogs.slug,
+      categoryId: blogs.categoryId,
+      categoryName: blogCategories.name,
+      categorySlug: blogCategories.slug,
+      categoryColorClass: blogCategories.colorClass,
       deletedAt: blogs.deletedAt,
       creatorId: blogs.createdByUserId,
       creatorName: users.displayName,
     })
     .from(blogs)
     .innerJoin(users, eq(blogs.createdByUserId, users.id))
+    .leftJoin(blogCategories, eq(blogs.categoryId, blogCategories.id))
     .where(eq(blogs.id, blogId))
     .limit(1);
 
@@ -381,6 +418,7 @@ export async function createBlogVersion(
   contentMarkdown: string,
   coverMediaAssetId: string | null,
   coverAltText: string | null,
+  categoryId: string | null,
   changeSummary: string,
   actorUserId: string,
   metadata: AuthMetadata
@@ -409,6 +447,7 @@ export async function createBlogVersion(
       const lockedBlogs = await tx
         .select({
           id: blogs.id,
+          categoryId: blogs.categoryId,
           deletedAt: blogs.deletedAt,
         })
         .from(blogs)
@@ -418,6 +457,19 @@ export async function createBlogVersion(
 
       if (!lockedBlogs.length || lockedBlogs[0].deletedAt !== null) {
         throw new Error("NOT_FOUND");
+      }
+
+      if (categoryId) {
+        const lockedCategory = await tx
+          .select({ id: blogCategories.id })
+          .from(blogCategories)
+          .where(and(eq(blogCategories.id, categoryId), isNull(blogCategories.deletedAt)))
+          .limit(1)
+          .for("share");
+
+        if (!lockedCategory.length) {
+          throw new Error("CATEGORY_NOT_FOUND");
+        }
       }
 
       // 2. Get latest version
@@ -472,6 +524,13 @@ export async function createBlogVersion(
         .limit(1);
 
       if (!editAction.length) throw new Error("Missing EDIT catalog data.");
+
+      if (lockedBlogs[0].categoryId !== categoryId) {
+        await tx
+          .update(blogs)
+          .set({ categoryId })
+          .where(eq(blogs.id, blogId));
+      }
 
       // 4. Insert new version
       const [newVersion] = await tx
@@ -529,6 +588,9 @@ export async function createBlogVersion(
     }
     if (err instanceof Error && err.message === "CONCURRENCY_CONFLICT") {
       return { error: "Este blog fue modificado por otra persona mientras lo editabas. Recarga la página antes de guardar." };
+    }
+    if (err instanceof Error && err.message === "CATEGORY_NOT_FOUND") {
+      return { error: "La categoría seleccionada no existe o fue eliminada." };
     }
     if (err instanceof Error && err.message === "NOT_FOUND") {
       return { error: "El blog no existe." };
@@ -1140,6 +1202,7 @@ export async function duplicateBlog(
         .insert(blogs)
         .values({
           slug: newSlug,
+          categoryId: sourceBlog.categoryId,
           createdByUserId: actorId,
         })
         .returning()

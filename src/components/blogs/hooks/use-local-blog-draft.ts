@@ -10,6 +10,7 @@ export type BlogDraftData = {
   contentMarkdown: string;
   coverMediaAssetId: string | null;
   coverAltText: string | null;
+  categoryId?: string | null;
   changeSummary?: string;
   baseVersionId?: string;
   savedAt: string;
@@ -51,18 +52,16 @@ export function useLocalBlogDraft({ draftKey, currentData }: UseLocalBlogDraftPr
             parsed.contentMarkdown !== currentData.contentMarkdown ||
             (parsed.slug !== currentData.slug && currentData.slug !== undefined) ||
             parsed.coverMediaAssetId !== currentData.coverMediaAssetId ||
-            parsed.coverAltText !== currentData.coverAltText;
+            parsed.coverAltText !== currentData.coverAltText ||
+            parsed.categoryId !== currentData.categoryId;
 
           if (isDifferent) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setDraftData(parsed);
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setHasDraft(true);
-            // eslint-disable-next-line react-hooks/set-state-in-effect
             setLastSavedAt(parsed.savedAt);
             
             if (currentData.baseVersionId && parsed.baseVersionId && currentData.baseVersionId !== parsed.baseVersionId) {
-              // eslint-disable-next-line react-hooks/set-state-in-effect
               setIsStale(true);
             }
           }

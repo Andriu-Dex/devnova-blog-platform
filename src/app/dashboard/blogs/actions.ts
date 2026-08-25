@@ -36,6 +36,7 @@ export async function createBlogAction(prevState: unknown, formData: FormData) {
   const slug = formData.get("slug");
   const summary = formData.get("summary");
   const contentMarkdown = formData.get("contentMarkdown");
+  const categoryIdRaw = formData.get("categoryId");
 
   if (typeof title !== "string" || !title.trim() || title.trim().length > 200) {
     return { error: "El título es requerido y debe tener máximo 200 caracteres." };
@@ -55,9 +56,10 @@ export async function createBlogAction(prevState: unknown, formData: FormData) {
 
   const coverMediaAssetId = formData.get("coverMediaAssetId") as string | null || null;
   const coverAltText = formData.get("coverAltText") as string | null || null;
+  const categoryId = typeof categoryIdRaw === "string" && categoryIdRaw ? categoryIdRaw : null;
 
   const metadata = await getMetadata();
-  const result = await createBlog(title, slug, summary, contentMarkdown, coverMediaAssetId, coverAltText, user.id, metadata);
+  const result = await createBlog(title, slug, summary, contentMarkdown, coverMediaAssetId, coverAltText, categoryId, user.id, metadata);
 
   if (result.error) {
     return { error: result.error };
@@ -75,6 +77,7 @@ export async function editBlogAction(prevState: unknown, formData: FormData) {
   const title = formData.get("title");
   const summary = formData.get("summary");
   const contentMarkdown = formData.get("contentMarkdown");
+  const categoryIdRaw = formData.get("categoryId");
   const changeSummary = formData.get("changeSummary");
 
   if (typeof blogId !== "string" || !blogId) {
@@ -99,6 +102,7 @@ export async function editBlogAction(prevState: unknown, formData: FormData) {
 
   const coverMediaAssetId = formData.get("coverMediaAssetId") as string | null || null;
   const coverAltText = formData.get("coverAltText") as string | null || null;
+  const categoryId = typeof categoryIdRaw === "string" && categoryIdRaw ? categoryIdRaw : null;
 
   const metadata = await getMetadata();
   const result = await createBlogVersion(
@@ -109,6 +113,7 @@ export async function editBlogAction(prevState: unknown, formData: FormData) {
     contentMarkdown,
     coverMediaAssetId,
     coverAltText,
+    categoryId,
     changeSummary,
     user.id,
     metadata

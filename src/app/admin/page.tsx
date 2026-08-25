@@ -26,6 +26,10 @@ export default async function AdminPage() {
           <h3 className={styles.cardTitle}>Blogs</h3>
           <span className={styles.cardLink}>Gestionar →</span>
         </Link>
+        <Link href="/admin/categories" className={styles.card}>
+          <h3 className={styles.cardTitle}>Categorías</h3>
+          <span className={styles.cardLink}>Gestionar →</span>
+        </Link>
         <Link href="/admin/authors" className={styles.card}>
           <h3 className={styles.cardTitle}>Autores</h3>
           <span className={styles.cardLink}>Gestionar →</span>

@@ -1,6 +1,7 @@
 import { requireAuthorOrAdmin } from "@/server/auth/authorization";
 import { PrivateHeader } from "@/components/layout/private-header";
 import { getBlogForEditing } from "@/server/blogs/blog-service";
+import { listActiveBlogCategories } from "@/server/blogs/category-service";
 import { listActiveMedia } from "@/server/media/media-service";
 import { EditBlogForm } from "./edit-blog-form";
 import { Metadata } from "next";
@@ -15,8 +16,11 @@ export default async function EditBlogPage({ params }: { params: Promise<{ blogI
   const user = await requireAuthorOrAdmin();
   const resolvedParams = await params;
   
-  const result = await getBlogForEditing(resolvedParams.blogId);
-  const mediaList = await listActiveMedia();
+  const [result, mediaList, categories] = await Promise.all([
+    getBlogForEditing(resolvedParams.blogId),
+    listActiveMedia(),
+    listActiveBlogCategories(),
+  ]);
 
   if (result.error || !result.blog || !result.latestVersion) {
     notFound();
@@ -25,7 +29,7 @@ export default async function EditBlogPage({ params }: { params: Promise<{ blogI
   return (
     <main>
       <PrivateHeader displayName={user.displayName} role={user.role} />
-      <EditBlogForm blog={result.blog} latestVersion={result.latestVersion} mediaList={mediaList} />
+      <EditBlogForm blog={result.blog} latestVersion={result.latestVersion} mediaList={mediaList} categories={categories} />
     </main>
   );
 }

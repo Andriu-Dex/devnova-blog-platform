@@ -138,13 +138,13 @@ export function IconoGitHub() {
   );
 }
 
-export function EtiquetaTipo({ tipo = "blog" }: { tipo?: string }) {
+export function EtiquetaTipo({ tipo = "blog", label }: { tipo?: string; label?: string | null }) {
   const Icono = tipo === "proyecto" ? IconoRama : tipo === "taller" ? IconoTerminal : IconoArchivo;
-  const label = tipo === "proyecto" ? "Proyecto" : tipo === "taller" ? "Taller" : tipo === "deber" ? "Deber" : "Repositorio académico";
+  const displayLabel = label || (tipo === "proyecto" ? "Proyecto" : tipo === "taller" ? "Taller" : tipo === "deber" ? "Deber" : "Repositorio académico");
   return (
     <span className={styles.etiquetaTipo} data-tipo={tipo}>
       <Icono />
-      {label}
+      {displayLabel}
     </span>
   );
 }

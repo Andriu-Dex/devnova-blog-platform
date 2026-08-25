@@ -5,9 +5,11 @@ import { blogs } from "../db/schema/blogs";
 import { blogVersions } from "../db/schema/blog-versions";
 import { blogPublications } from "../db/schema/blog-publications";
 import { users } from "../db/schema/users";
+import { blogCategories } from "../db/schema/blog-categories";
 import { blogVersionMedia } from "../db/schema/blog-version-media";
 import { mediaAssets } from "../db/schema/media-assets";
 import { eq, desc, isNull, and, ilike, or, sql, not, SQL } from "drizzle-orm";
+import { listBlogCategoriesWithPublishedCounts } from "./category-service";
 
 export async function listPublishedBlogs() {
   const publishedBlogs = await db
@@ -19,11 +21,15 @@ export async function listPublishedBlogs() {
       coverAltText: blogVersions.coverAltText,
       publishedAt: blogPublications.publishedAt,
       creatorName: users.displayName,
+      categoryName: blogCategories.name,
+      categorySlug: blogCategories.slug,
+      categoryColorClass: blogCategories.colorClass,
     })
     .from(blogPublications)
     .innerJoin(blogs, eq(blogPublications.blogId, blogs.id))
     .innerJoin(blogVersions, eq(blogPublications.blogVersionId, blogVersions.id))
     .innerJoin(users, eq(blogs.createdByUserId, users.id))
+    .leftJoin(blogCategories, eq(blogs.categoryId, blogCategories.id))
     .where(isNull(blogs.deletedAt))
     .orderBy(desc(blogPublications.publishedAt));
 
@@ -40,11 +46,15 @@ export async function listRecentPublishedBlogs(limit: number = 3) {
       coverAltText: blogVersions.coverAltText,
       publishedAt: blogPublications.publishedAt,
       creatorName: users.displayName,
+      categoryName: blogCategories.name,
+      categorySlug: blogCategories.slug,
+      categoryColorClass: blogCategories.colorClass,
     })
     .from(blogPublications)
     .innerJoin(blogs, eq(blogPublications.blogId, blogs.id))
     .innerJoin(blogVersions, eq(blogPublications.blogVersionId, blogVersions.id))
     .innerJoin(users, eq(blogs.createdByUserId, users.id))
+    .leftJoin(blogCategories, eq(blogs.categoryId, blogCategories.id))
     .where(isNull(blogs.deletedAt))
     .orderBy(desc(blogPublications.publishedAt))
     .limit(limit);
@@ -65,11 +75,15 @@ export async function getPublishedBlogBySlug(slug: string) {
       coverAltText: blogVersions.coverAltText,
       publishedAt: blogPublications.publishedAt,
       creatorName: users.displayName,
+      categoryName: blogCategories.name,
+      categorySlug: blogCategories.slug,
+      categoryColorClass: blogCategories.colorClass,
     })
     .from(blogPublications)
     .innerJoin(blogs, eq(blogPublications.blogId, blogs.id))
     .innerJoin(blogVersions, eq(blogPublications.blogVersionId, blogVersions.id))
     .innerJoin(users, eq(blogs.createdByUserId, users.id))
+    .leftJoin(blogCategories, eq(blogs.categoryId, blogCategories.id))
     .where(and(eq(blogs.slug, slug), isNull(blogs.deletedAt)))
     .limit(1);
 
@@ -122,6 +136,7 @@ export async function getPublishedBlogBySlug(slug: string) {
 
 export async function searchPublishedBlogs(params: {
   query?: string;
+  categorySlug?: string;
   page: number;
   pageSize?: number;
 }) {
@@ -143,12 +158,21 @@ export async function searchPublishedBlogs(params: {
     );
   }
 
+  if (params.categorySlug && params.categorySlug.trim().length > 0) {
+    baseCondition = and(
+      baseCondition,
+      eq(blogCategories.slug, params.categorySlug.trim().slice(0, 80)),
+      isNull(blogCategories.deletedAt)
+    );
+  }
+
   // Contar total
   const [countRes] = await db
     .select({ count: sql<number>`count(*)` })
     .from(blogPublications)
     .innerJoin(blogs, eq(blogPublications.blogId, blogs.id))
     .innerJoin(blogVersions, eq(blogPublications.blogVersionId, blogVersions.id))
+    .leftJoin(blogCategories, eq(blogs.categoryId, blogCategories.id))
     .where(baseCondition);
 
   const total = Number(countRes?.count || 0);
@@ -164,11 +188,15 @@ export async function searchPublishedBlogs(params: {
       coverAltText: blogVersions.coverAltText,
       publishedAt: blogPublications.publishedAt,
       creatorName: users.displayName,
+      categoryName: blogCategories.name,
+      categorySlug: blogCategories.slug,
+      categoryColorClass: blogCategories.colorClass,
     })
     .from(blogPublications)
     .innerJoin(blogs, eq(blogPublications.blogId, blogs.id))
     .innerJoin(blogVersions, eq(blogPublications.blogVersionId, blogVersions.id))
     .innerJoin(users, eq(blogs.createdByUserId, users.id))
+    .leftJoin(blogCategories, eq(blogs.categoryId, blogCategories.id))
     .where(baseCondition)
     .orderBy(desc(blogPublications.publishedAt))
     .limit(pageSize)
@@ -179,6 +207,19 @@ export async function searchPublishedBlogs(params: {
     total,
     page: currentPage,
     totalPages,
+  };
+}
+
+export async function listPublishedCategoryStats() {
+  const [totalRow] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(blogPublications)
+    .innerJoin(blogs, eq(blogPublications.blogId, blogs.id))
+    .where(isNull(blogs.deletedAt));
+
+  return {
+    total: Number(totalRow?.count || 0),
+    categories: await listBlogCategoriesWithPublishedCounts(),
   };
 }
 
@@ -197,11 +238,15 @@ export async function listRelatedPublishedBlogs(params: {
       coverAltText: blogVersions.coverAltText,
       publishedAt: blogPublications.publishedAt,
       creatorName: users.displayName,
+      categoryName: blogCategories.name,
+      categorySlug: blogCategories.slug,
+      categoryColorClass: blogCategories.colorClass,
     })
     .from(blogPublications)
     .innerJoin(blogs, eq(blogPublications.blogId, blogs.id))
     .innerJoin(blogVersions, eq(blogPublications.blogVersionId, blogVersions.id))
     .innerJoin(users, eq(blogs.createdByUserId, users.id))
+    .leftJoin(blogCategories, eq(blogs.categoryId, blogCategories.id))
     .where(
       and(
         isNull(blogs.deletedAt),
@@ -222,11 +267,15 @@ export async function listPublishedBlogsForFeed(limit: number = 30) {
       summary: blogVersions.summary,
       publishedAt: blogPublications.publishedAt,
       creatorName: users.displayName,
+      categoryName: blogCategories.name,
+      categorySlug: blogCategories.slug,
+      categoryColorClass: blogCategories.colorClass,
     })
     .from(blogPublications)
     .innerJoin(blogs, eq(blogPublications.blogId, blogs.id))
     .innerJoin(blogVersions, eq(blogPublications.blogVersionId, blogVersions.id))
     .innerJoin(users, eq(blogs.createdByUserId, users.id))
+    .leftJoin(blogCategories, eq(blogs.categoryId, blogCategories.id))
     .where(isNull(blogs.deletedAt))
     .orderBy(desc(blogPublications.publishedAt))
     .limit(limit);

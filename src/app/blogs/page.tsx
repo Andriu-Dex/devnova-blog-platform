@@ -1,4 +1,4 @@
-import { searchPublishedBlogs } from "@/server/blogs/public-blog-service";
+import { listPublishedCategoryStats, searchPublishedBlogs } from "@/server/blogs/public-blog-service";
 import { PublicHeader } from "@/components/site/public-header";
 import { PublicFooter } from "@/components/site/public-footer";
 import { Metadata } from "next";
@@ -21,10 +21,10 @@ const baseMetadata: Metadata = {
 };
 
 export async function generateMetadata(
-  props: { searchParams: Promise<{ q?: string }> }
+  props: { searchParams: Promise<{ q?: string; category?: string }> }
 ): Promise<Metadata> {
   const sp = await props.searchParams;
-  if (sp.q) {
+  if (sp.q || sp.category) {
     return {
       ...baseMetadata,
       robots: { index: false, follow: true },
@@ -34,14 +34,27 @@ export async function generateMetadata(
 }
 
 export default async function PublicBlogsPage(props: {
-  searchParams: Promise<{ q?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; page?: string; category?: string }>;
 }) {
   const sp = await props.searchParams;
   const q = sp.q || "";
+  const categorySlug = sp.category || "";
   const page = parseInt(sp.page || "1", 10) || 1;
 
-  const { items, total, totalPages } = await searchPublishedBlogs({ query: q, page, pageSize: 20 });
+  const [{ items, total, totalPages }, categoryStats] = await Promise.all([
+    searchPublishedBlogs({ query: q, categorySlug, page, pageSize: 20 }),
+    listPublishedCategoryStats(),
+  ]);
   const hasSearch = q.length > 0;
+  const hasCategory = categorySlug.length > 0;
+  const activeCategory = categoryStats.categories.find((category) => category.slug === categorySlug);
+  const makeCategoryHref = (slug?: string) => {
+    const params = new URLSearchParams();
+    if (q) params.set("q", q);
+    if (slug) params.set("category", slug);
+    const qs = params.toString();
+    return qs ? `/blogs?${qs}` : "/blogs";
+  };
 
   return (
     <div className={styles.page}>
@@ -54,7 +67,7 @@ export default async function PublicBlogsPage(props: {
           <div>
             <p>Un semestre completo, organizado como archivos que se pueden buscar, abrir y verificar.</p>
             <span className={styles.meta}>
-              {total} archivos / 3 colecciones / orden reciente
+              {categoryStats.total} archivos / {categoryStats.categories.length} colecciones / orden reciente
             </span>
           </div>
         </header>
@@ -70,6 +83,7 @@ export default async function PublicBlogsPage(props: {
 
             <form action="/blogs" method="GET" className={styles.repoBusqueda}>
               <IconoBuscar />
+              {categorySlug && <input type="hidden" name="category" value={categorySlug} />}
               <input
                 type="search"
                 name="q"
@@ -78,8 +92,8 @@ export default async function PublicBlogsPage(props: {
                 maxLength={100}
                 aria-label="Buscar en el repositorio"
               />
-              {hasSearch && (
-                <Link href="/blogs" className={styles.clearBtn} aria-label="Limpiar búsqueda">
+              {(hasSearch || hasCategory) && (
+                <Link href={hasSearch && hasCategory ? makeCategoryHref(categorySlug) : "/blogs"} className={styles.clearBtn} aria-label="Limpiar búsqueda">
                   <IconoCerrar />
                 </Link>
               )}
@@ -88,18 +102,19 @@ export default async function PublicBlogsPage(props: {
 
           {/* Barra de Filtros */}
           <div className={styles.filtrosRepo}>
-            <Link href="/blogs" className={styles.filtroBtn} data-active={!hasSearch ? "true" : "false"}>
-              Todos <span>({total})</span>
+            <Link href={makeCategoryHref()} className={styles.filtroBtn} data-active={!hasCategory ? "true" : "false"}>
+              Todos <span>({categoryStats.total})</span>
             </Link>
-            <Link href="/blogs" className={styles.filtroBtn} data-active="false">
-              Proyectos <span>(0)</span>
-            </Link>
-            <Link href="/blogs" className={styles.filtroBtn} data-active="false">
-              Talleres <span>(0)</span>
-            </Link>
-            <Link href="/blogs" className={styles.filtroBtn} data-active="false">
-              Deberes <span>({total})</span>
-            </Link>
+            {categoryStats.categories.map((category) => (
+              <Link
+                key={category.id}
+                href={makeCategoryHref(category.slug)}
+                className={styles.filtroBtn}
+                data-active={category.slug === categorySlug ? "true" : "false"}
+              >
+                {category.name} <span>({category.publishedCount})</span>
+              </Link>
+            ))}
           </div>
 
           {/* Info de Resultados */}
@@ -107,11 +122,13 @@ export default async function PublicBlogsPage(props: {
             <span className={styles.meta}>
               {hasSearch
                 ? `Mostrando ${items.length} resultado(s) para "${q}"`
-                : `Mostrando ${items.length} de ${total} entregas publicadas`}
+                : hasCategory
+                  ? `Mostrando ${items.length} de ${total} entrega(s) en ${activeCategory?.name || categorySlug}`
+                  : `Mostrando ${items.length} de ${total} entregas publicadas`}
             </span>
-            {hasSearch && (
+            {(hasSearch || hasCategory) && (
               <Link href="/blogs" className={styles.limpiarFiltros}>
-                Restablecer búsqueda <IconoFlecha />
+                Restablecer filtros <IconoFlecha />
               </Link>
             )}
           </div>
@@ -124,9 +141,11 @@ export default async function PublicBlogsPage(props: {
               <p>
                 {hasSearch
                   ? `No existen entregas que coincidan con "${q}". Intenta con otros términos.`
+                  : hasCategory
+                    ? `No existen entregas publicadas en ${activeCategory?.name || categorySlug}.`
                   : "Aún no hay entregas publicadas en el repositorio."}
               </p>
-              {hasSearch && (
+              {(hasSearch || hasCategory) && (
                 <Link href="/blogs" className={`${styles.boton} ${styles.botonPapel}`}>
                   <span>Ver todas las entregas</span> <IconoFlecha />
                 </Link>
@@ -157,7 +176,7 @@ export default async function PublicBlogsPage(props: {
               <div className={styles.paginacionControles}>
                 {page > 1 && (
                   <Link
-                    href={`/blogs?${new URLSearchParams({ ...(q && { q }), page: String(page - 1) }).toString()}`}
+                    href={`/blogs?${new URLSearchParams({ ...(q && { q }), ...(categorySlug && { category: categorySlug }), page: String(page - 1) }).toString()}`}
                     className={`${styles.boton} ${styles.botonPapel}`}
                   >
                     <IconoFlecha direccion="izquierda" /> <span>Anterior</span>
@@ -165,7 +184,7 @@ export default async function PublicBlogsPage(props: {
                 )}
                 {page < totalPages && (
                   <Link
-                    href={`/blogs?${new URLSearchParams({ ...(q && { q }), page: String(page + 1) }).toString()}`}
+                    href={`/blogs?${new URLSearchParams({ ...(q && { q }), ...(categorySlug && { category: categorySlug }), page: String(page + 1) }).toString()}`}
                     className={`${styles.boton} ${styles.botonPapel}`}
                   >
                     <span>Siguiente</span> <IconoFlecha />
