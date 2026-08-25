@@ -26,6 +26,14 @@
   color: var(--color-carbon, #121419);
 }
 
+.brandLogo {
+  height: 72px;
+  width: auto;
+  max-width: 234px;
+  object-fit: contain;
+  display: block;
+}
+
 .brandGlyph {
   width: 28px;
   height: 24px;

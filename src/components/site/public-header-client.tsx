@@ -40,8 +40,9 @@ export function PublicHeaderClient({ brandName, logoUrl, logoAlt }: PublicHeader
               alt={logoAlt}
               width={160}
               height={50}
-              style={{ objectFit: "contain", height: "36px", width: "auto", maxWidth: "180px" }}
+              className={styles.brandLogo}
               priority
+              unoptimized
             />
           ) : (
             <>
