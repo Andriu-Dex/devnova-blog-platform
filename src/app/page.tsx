@@ -1,5 +1,4 @@
-import { getPublicSiteProfile, getPublicSection } from "@/server/site/public-site-service";
-import { getPublicTeamMembers } from "@/server/site/public-site-service";
+import { getPublicSiteProfile, getPublicSection, getPublicTeamMembers } from "@/server/site/public-site-service";
 import { listRecentPublishedBlogs } from "@/server/blogs/public-blog-service";
 import { getDeliveryUrl } from "@/server/media/cloudinary";
 import { PublicHeader } from "@/components/site/public-header";
@@ -11,9 +10,8 @@ import {
   IconoCheck,
   IconoFlecha,
   IconoTerminal,
+  IconoRama,
   EtiquetaTipo,
-  EstadoEntrega,
-  BarraProgreso,
   VentanaEvidencia,
   FilaArchivo,
 } from "@/components/site/devbox-pieces";
@@ -47,6 +45,20 @@ export default async function HomePage() {
   const featuredCoverUrl = featuredBlog?.coverMediaAssetId
     ? getDeliveryUrl(featuredBlog.coverMediaAssetId, 1200)
     : null;
+
+  const displayDate = featuredBlog
+    ? new Intl.DateTimeFormat("es-ES", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }).format(new Date(featuredBlog.publishedAt))
+    : new Intl.DateTimeFormat("es-ES", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }).format(new Date());
+
+  const teamCountText = `${teamMembers.length || 6} integrantes`;
 
   return (
     <div className={styles.page}>
@@ -96,7 +108,9 @@ export default async function HomePage() {
                     </div>
                     <div className={styles.repoFolderContenido}>
                       <div>
-                        <EtiquetaTipo tipo="deber" />
+                        <div className={styles.repoFolderTag}>
+                          <IconoRama /> Repositorio académico
+                        </div>
                         <h2>{featuredBlog.title}</h2>
                         <p>{featuredBlog.summary}</p>
                       </div>
@@ -115,53 +129,52 @@ export default async function HomePage() {
                     <div className={`${styles.repoFolderRuta} ${styles.meta}`}>
                       devnova / desarrollo-asistido-por-software.md
                     </div>
-                    <EtiquetaTipo tipo="deber" />
-                    <h2>Desarrollo asistido<br />por Software</h2>
-                    <p>Documentamos métodos, herramientas y decisiones que apoyan el análisis, diseño, construcción, prueba y evolución del software.</p>
-                    <div className={styles.repoFolderAcciones}>
-                      <Link prefetch={false} className={`${styles.boton} ${styles.botonPapel}`} href="/blogs">
-                        <span>Explorar entregas</span> <IconoFlecha />
-                      </Link>
-                      <Link prefetch={false} className={styles.enlaceTecnico} href="/nosotros">
-                        Conocer al equipo
-                      </Link>
+                    <div className={styles.repoFolderContenido}>
+                      <div>
+                        <div className={styles.repoFolderTag}>
+                          <IconoRama /> Repositorio académico
+                        </div>
+                        <h2>
+                          Desarrollo<br />asistido<br />por Software
+                        </h2>
+                        <p>
+                          Documentamos métodos, herramientas y decisiones que apoyan el análisis, diseño, construcción, prueba y evolución del software.
+                        </p>
+                      </div>
+                      <div className={styles.repoFolderAcciones}>
+                        <Link prefetch={false} className={`${styles.boton} ${styles.botonPapel}`} href="/blogs">
+                          <span>Explorar entregas</span> <IconoFlecha />
+                        </Link>
+                        <Link prefetch={false} className={styles.enlaceTecnico} href="/nosotros">
+                          Conocer al equipo
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Ficha de Estado Derecha */}
-            {featuredBlog ? (
-              <aside className={styles.heroEstado} aria-label="Estado de la entrega destacada">
-                <div className={styles.heroEstadoCabecera}>
-                  <span>Última Publicación</span>
-                  <span className={styles.heroEstadoSenal} aria-hidden="true" />
+            {/* Ficha de Estado Derecha ("Última Publicación") */}
+            <aside className={styles.heroEstado} aria-label="Estado de la entrega destacada">
+              <div className={styles.heroEstadoCabecera}>
+                <span>Última Publicación</span>
+                <span className={styles.heroEstadoSenal} aria-hidden="true" />
+              </div>
+              <p className={styles.heroEstadoFecha}>
+                {displayDate}
+              </p>
+              <dl className={styles.heroEstadoDl}>
+                <div>
+                  <dt>Archivo</dt>
+                  <dd>01</dd>
                 </div>
-                <div style={{ padding: "16px 16px 0" }}>
-                  <EstadoEntrega estado="entregado" />
+                <div>
+                  <dt>Equipo</dt>
+                  <dd>{teamCountText}</dd>
                 </div>
-                <dl className={styles.heroEstadoDl}>
-                  <div>
-                    <dt>Autor</dt>
-                    <dd>{featuredBlog.creatorName || "DevNova"}</dd>
-                  </div>
-                  <div>
-                    <dt>Publicado</dt>
-                    <dd>
-                      {new Intl.DateTimeFormat("es-ES", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      }).format(new Date(featuredBlog.publishedAt))}
-                    </dd>
-                  </div>
-                </dl>
-                <div style={{ padding: "0 16px" }}>
-                  <BarraProgreso valor={100} />
-                </div>
-              </aside>
-            ) : null}
+              </dl>
+            </aside>
           </div>
 
           <div className={styles.heroDevnovaPie}>

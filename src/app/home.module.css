@@ -33,7 +33,7 @@
 
 /* ── Hero DevNova ─────────────────────────────────────────────────────────── */
 .heroDevnova {
-  padding-top: clamp(40px, 5vw, 68px);
+  padding-top: clamp(32px, 4vw, 56px);
   padding-bottom: clamp(64px, 7vw, 84px);
 }
 
@@ -48,18 +48,17 @@
   letter-spacing: -0.04em;
   text-align: center;
   white-space: nowrap;
-  margin: 0;
+  margin: 0 0 clamp(24px, 3vw, 36px) 0;
   color: var(--color-carbon, #121419);
 }
 
 .heroDevnovaEscena {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(210px, 220px) minmax(0, 800px) minmax(210px, 220px);
-  gap: clamp(14px, 1.5vw, 20px);
+  grid-template-columns: minmax(200px, 230px) minmax(0, 1fr) minmax(200px, 230px);
+  gap: clamp(14px, 1.8vw, 24px);
   align-items: center;
-  justify-content: space-between;
-  margin-top: clamp(26px, 3vw, 42px);
+  justify-content: center;
 }
 
 /* Terminal Izquierda */
@@ -67,11 +66,11 @@
   position: relative;
   z-index: 5;
   width: 100%;
-  max-width: 270px;
+  max-width: 250px;
   color: var(--color-paper, #fffcf4);
   background-color: var(--color-carbon, #121419);
   border-radius: 16px;
-  box-shadow: var(--shadow-card, 0 10px 28px rgba(18, 20, 25, 0.1));
+  box-shadow: var(--shadow-card, 0 10px 28px rgba(18, 20, 25, 0.12));
   font-family: var(--font-mono, monospace);
   font-size: 0.7rem;
   grid-column: 1;
@@ -137,69 +136,75 @@
   z-index: 2;
   grid-column: 2;
   width: 100%;
-  max-width: 850px;
+  max-width: 760px;
   margin-inline: auto;
-  padding-top: 48px;
+  padding-top: 36px;
 }
 
 .repoFolderPestanas {
   position: absolute;
-  inset: 0 0 auto 0;
-  height: 76px;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 42px;
+  z-index: 1;
+  pointer-events: none;
 }
 
 .repoFolderPestanas span {
   position: absolute;
   top: 0;
-  display: flex;
-  min-width: 150px;
-  height: 62px;
+  display: inline-flex;
+  min-width: 130px;
+  height: 42px;
   align-items: center;
   justify-content: center;
-  padding-inline: 22px;
+  padding: 0 18px 6px;
   color: #ffffff;
-  background-color: var(--color-primary-deep, #0b3dba);
-  border-radius: 20px 20px 0 0;
+  background-color: #0b3dba;
+  border-radius: 14px 14px 0 0;
   font-family: var(--font-mono, monospace);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
 }
 
 .repoFolderPestanas span:nth-child(1) {
-  left: 4%;
-  top: 17px;
-  opacity: 0.82;
+  left: 32px;
+  background-color: #0b3dba;
+  z-index: 1;
 }
 
 .repoFolderPestanas span:nth-child(2) {
-  left: 28%;
-  top: 8px;
-  background-color: #0f4ed1;
+  left: 175px;
+  background-color: #0b3dba;
+  z-index: 2;
 }
 
 .repoFolderPestanas span:nth-child(3) {
-  right: 8%;
-  z-index: 2;
-  color: var(--color-carbon, #121419);
-  background-color: var(--color-cyan, #28c7e8);
+  right: 32px;
+  background-color: #155eef;
+  z-index: 3;
 }
 
 .repoFolderCuerpo {
   position: relative;
   z-index: 3;
-  min-height: 390px;
+  min-height: 380px;
   display: flex;
   flex-direction: column;
-  padding: clamp(26px, 3vw, 42px);
+  padding: clamp(24px, 3vw, 36px);
   color: #ffffff;
   background-color: var(--color-primary, #155eef);
-  border-radius: 22px 22px 30px 30px;
+  border-radius: 20px 20px 28px 28px;
   box-shadow: var(--shadow-float, 0 18px 45px rgba(18, 20, 25, 0.14));
 }
 
 .repoFolderRuta {
   padding-bottom: 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.38);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.28);
   color: #dbe7ff;
+  font-size: 0.78rem;
   overflow-wrap: anywhere;
 }
 
@@ -207,16 +212,16 @@
   flex: 1;
   display: grid;
   grid-template-columns: 1.25fr 0.75fr;
-  gap: 32px;
+  gap: 28px;
   align-items: end;
-  padding-top: 32px;
+  padding-top: 24px;
 }
 
 .repoFolderContenido h2 {
   font-family: var(--font-sans, "Space Grotesk", sans-serif);
-  max-width: 14ch;
-  margin-top: 16px;
-  font-size: clamp(2rem, 4vw, 3.8rem);
+  max-width: 15ch;
+  margin-top: 14px;
+  font-size: clamp(2.2rem, 3.8vw, 3.8rem);
   font-weight: 700;
   line-height: 0.95;
   letter-spacing: -0.04em;
@@ -224,18 +229,38 @@
 }
 
 .repoFolderContenido p {
-  max-width: 48ch;
-  margin-top: 16px;
+  max-width: 46ch;
+  margin-top: 14px;
   color: #e4ecff;
   line-height: 1.55;
-  font-size: 0.95rem;
+  font-size: 0.92rem;
 }
 
 .repoFolderAcciones {
   display: grid;
   align-content: end;
   justify-items: start;
-  gap: 18px;
+  gap: 16px;
+}
+
+.repoFolderTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background-color: var(--color-cyan, #28c7e8);
+  color: var(--color-carbon, #121419);
+  border-radius: 8px;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1;
+  width: fit-content;
+}
+
+.repoFolderTag svg {
+  width: 14px;
+  height: 14px;
 }
 
 .enlaceTecnico {
@@ -248,22 +273,25 @@
   text-decoration: underline;
   text-decoration-color: var(--color-cyan, #28c7e8);
   text-decoration-thickness: 2px;
+  font-weight: 600;
 }
 
 .repoFolderVacio {
-  margin: auto 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
-/* Ficha Estado Derecha */
+/* Ficha Estado Derecha ("Última Publicación") */
 .heroEstado {
   position: relative;
   z-index: 5;
   width: 100%;
-  max-width: 270px;
+  max-width: 250px;
   color: var(--color-paper, #fffcf4);
   background-color: var(--color-carbon, #121419);
   border-radius: 16px;
-  box-shadow: var(--shadow-card, 0 10px 28px rgba(18, 20, 25, 0.1));
+  box-shadow: var(--shadow-card, 0 10px 28px rgba(18, 20, 25, 0.12));
   font-family: var(--font-mono, monospace);
   font-size: 0.7rem;
   grid-column: 3;
@@ -280,6 +308,7 @@
   padding: 0 14px;
   border-bottom: 1px solid #35383f;
   color: #b9bbc1;
+  font-size: 0.7rem;
 }
 
 .heroEstadoSenal {
@@ -289,21 +318,31 @@
   border-radius: 50%;
 }
 
+.heroEstadoFecha {
+  padding: 16px 14px 12px;
+  margin: 0;
+  color: var(--color-cyan, #28c7e8);
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
 .heroEstadoDl {
   display: grid;
-  grid-template-columns: 0.55fr 1fr;
-  margin: 16px 16px 12px;
-  padding: 0;
+  grid-template-columns: 0.6fr 1fr;
+  margin: 0 14px;
+  padding: 12px 0 0;
   border-top: 1px solid #35383f;
 }
 
 .heroEstadoDl div {
-  padding-top: 11px;
+  padding-top: 2px;
 }
 
 .heroEstadoDl dt {
   color: #9ea1a8;
   font-size: 0.62rem;
+  text-transform: uppercase;
 }
 
 .heroEstadoDl dd {
@@ -328,8 +367,8 @@
   font-weight: 700;
   line-height: 0.92;
   letter-spacing: -0.04em;
-  color: var(--color-carbon, #121419);
   margin: 0;
+  color: var(--color-carbon, #121419);
 }
 
 .heroDevnovaDescripcion {
@@ -341,68 +380,23 @@
   margin: 0;
 }
 
-/* ── 2. Sección Azul (Destacada Editorial) ─────────────────────────────────── */
-.destacadaEditorial {
-  display: grid;
-  grid-template-columns: 0.85fr 1.15fr;
-  gap: clamp(40px, 7vw, 96px);
-  align-items: center;
-}
-
-.destacadaEditorialTexto h2 {
-  font-family: var(--font-sans, "Space Grotesk", sans-serif);
-  font-size: clamp(2.4rem, 4.5vw, 4.5rem);
-  font-weight: 700;
-  line-height: 0.94;
-  letter-spacing: -0.04em;
-  margin: 0;
-  color: #ffffff;
-}
-
-.destacadaEditorialArchivo {
-  margin-top: 24px;
-  color: #c9d9ff;
-  font-size: 0.75rem;
-}
-
-.destacadaEditorialTexto > p:not(.meta) {
-  max-width: 43ch;
-  margin-top: 24px;
-  color: #e5edff;
-  font-size: 1.05rem;
-  line-height: 1.6;
-}
-
-.acciones {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px;
-  margin-top: 32px;
-}
-
-/* Botones */
+/* ── Botones ──────────────────────────────────────────────────────────────── */
 .boton {
   display: inline-flex;
   min-height: 48px;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 12px 18px;
-  border: 2px solid transparent;
-  border-radius: 10px;
+  padding: 0 24px;
+  border-radius: var(--radius-btn, 8px);
+  border: 1.5px solid transparent;
   font-family: var(--font-sans, "Space Grotesk", sans-serif);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 600;
-  line-height: 1;
   text-decoration: none;
   cursor: pointer;
   transition: transform 140ms ease, background-color 140ms ease, box-shadow 140ms ease;
-}
-
-.boton svg {
-  width: 19px;
-  height: 19px;
+  white-space: nowrap;
 }
 
 .boton:hover {
@@ -413,11 +407,12 @@
   color: var(--color-carbon, #121419);
   background-color: var(--color-paper, #fffcf4);
   border-color: var(--color-paper, #fffcf4);
+  box-shadow: 0 4px 12px rgba(18, 20, 25, 0.08);
 }
 
 .botonPapel:hover {
-  background-color: var(--color-cyan-soft, #cff6fc);
-  border-color: var(--color-cyan-soft, #cff6fc);
+  background-color: #ffffff;
+  box-shadow: 0 6px 16px rgba(18, 20, 25, 0.12);
 }
 
 .botonCarbon {
@@ -426,14 +421,10 @@
   border-color: var(--color-carbon, #121419);
 }
 
-.botonCarbon:hover {
-  background-color: #232730;
-}
-
 .botonLineaClara {
   color: #ffffff;
   background-color: transparent;
-  border-color: rgba(255, 255, 255, 0.72);
+  border-color: rgba(255, 255, 255, 0.6);
 }
 
 .botonLineaClara:hover {
@@ -449,43 +440,80 @@
 }
 
 .botonPrimario:hover {
-  background-color: var(--color-primary-hover, #0d47d9);
+  background-color: var(--color-primary-hover, #004ecc);
+}
+
+/* ── 2. Sección Azul Editorial ────────────────────────────────────────────── */
+.destacadaEditorial {
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  gap: clamp(40px, 7vw, 96px);
+  align-items: center;
+}
+
+.destacadaEditorialTexto h2 {
+  font-family: var(--font-sans, "Space Grotesk", sans-serif);
+  font-size: clamp(2.4rem, 4.5vw, 4.4rem);
+  font-weight: 700;
+  line-height: 0.94;
+  letter-spacing: -0.04em;
+  margin: 0;
+}
+
+.destacadaEditorialArchivo {
+  margin-top: 24px;
+  color: #c9d9ff;
+}
+
+.destacadaEditorialTexto > p:not(.meta) {
+  max-width: 43ch;
+  margin-top: 16px;
+  color: #e5edff;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 32px;
 }
 
 /* ── 3. Colecciones ───────────────────────────────────────────────────────── */
 .seccionCabecera {
-  display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(250px, 0.7fr);
-  gap: 32px;
-  align-items: end;
   margin-bottom: 40px;
 }
 
 .seccionCabecera h2 {
   font-family: var(--font-sans, "Space Grotesk", sans-serif);
-  font-size: clamp(2.25rem, 4.4vw, 4.75rem);
+  font-size: clamp(2.2rem, 4vw, 4rem);
   font-weight: 700;
-  line-height: 0.94;
+  line-height: 0.95;
   letter-spacing: -0.04em;
   margin: 0;
-  color: var(--color-carbon, #121419);
 }
 
 .seccionCabecera p {
   max-width: 50ch;
+  margin-top: 16px;
   color: var(--color-carbon-muted, #51545a);
-  font-size: 1.05rem;
-  margin: 0;
+  font-size: 1.1rem;
+  line-height: 1.5;
 }
 
 .seccionCabeceraFila {
-  grid-template-columns: 1fr auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
 }
 
 .coleccionesPestanas {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+  gap: 18px;
   align-items: end;
 }
 
@@ -496,7 +524,7 @@
   flex-direction: column;
   align-items: flex-start;
   padding: 28px;
-  color: #ffffff;
+  color: var(--color-white);
   background-color: var(--color-primary, #155eef);
   border-radius: 20px 20px 14px 14px;
   text-decoration: none;
@@ -609,7 +637,7 @@
   box-shadow: var(--shadow-card, 0 10px 28px rgba(18, 20, 25, 0.1));
 }
 
-.equipoCtaTerminal > span {
+.equipoCtaTerminal > .meta {
   color: #aeb0b6;
 }
 
