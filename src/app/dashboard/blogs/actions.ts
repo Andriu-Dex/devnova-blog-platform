@@ -29,7 +29,9 @@ async function getMetadata() {
   return { ipAddress, userAgent };
 }
 
-export async function createBlogAction(prevState: unknown, formData: FormData) {
+type BlogActionState = { error?: string; success?: string | boolean; blogId?: string } | null;
+
+export async function createBlogAction(prevState: unknown, formData: FormData): Promise<BlogActionState> {
   const user = await requireAuthorOrAdmin();
 
   const title = formData.get("title");
@@ -69,7 +71,7 @@ export async function createBlogAction(prevState: unknown, formData: FormData) {
   return { success: true, blogId: result.blogId };
 }
 
-export async function editBlogAction(prevState: unknown, formData: FormData) {
+export async function editBlogAction(prevState: unknown, formData: FormData): Promise<BlogActionState> {
   const user = await requireAuthorOrAdmin();
 
   const blogId = formData.get("blogId");

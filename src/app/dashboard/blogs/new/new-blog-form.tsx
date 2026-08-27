@@ -11,6 +11,7 @@ import { useLocalBlogDraft } from "@/components/blogs/hooks/use-local-blog-draft
 import { ImportMarkdownButton } from "@/components/blogs/import-markdown-button";
 import type { BlogCategoryItem } from "@/server/blogs/category-service";
 import { BlogPreviewClient } from "@/components/blogs/blog-preview-client";
+import { ResizableSplitView, SplitViewMode } from "@/components/ui/resizable-split-view";
 
 export function NewBlogForm({ mediaList, categories }: { mediaList: MediaItem[]; categories: BlogCategoryItem[] }) {
   const [state, formAction, isPending] = useActionState(createBlogAction, null);
@@ -22,6 +23,7 @@ export function NewBlogForm({ mediaList, categories }: { mediaList: MediaItem[];
   const [contentMarkdown, setContentMarkdown] = useState("");
   const [coverMediaId, setCoverMediaId] = useState<string | null>(null);
   const [coverAltText, setCoverAltText] = useState<string>("");
+  const [viewMode, setViewMode] = useState<SplitViewMode>("split");
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -85,7 +87,6 @@ export function NewBlogForm({ mediaList, categories }: { mediaList: MediaItem[];
       
       const newTextareaValue = textarea.value.replace(placeholder, `![${file.name}](media://${mediaAssetId})`);
       setContentMarkdown(newTextareaValue);
-      // Wait for React to update the DOM
       setTimeout(() => {
         if (textareaRef.current) {
           textareaRef.current.value = newTextareaValue;
@@ -125,6 +126,20 @@ export function NewBlogForm({ mediaList, categories }: { mediaList: MediaItem[];
     }
   };
 
+  const insertFormatting = (prefix: string, suffix: string = prefix) => {
+    if (!textareaRef.current) return;
+    const textarea = textareaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    const selected = text.substring(start, end);
+    const insertText = `${prefix}${selected}${suffix}`;
+    
+    textarea.setRangeText(insertText, start, end, "select");
+    setContentMarkdown(textarea.value);
+    textarea.focus();
+  };
+
   const handleImport = (data: { title?: string, summary?: string, contentMarkdown: string }) => {
     if (data.title) setTitle(data.title);
     if (data.summary) setSummary(data.summary);
@@ -143,73 +158,171 @@ export function NewBlogForm({ mediaList, categories }: { mediaList: MediaItem[];
     }
   };
 
+  const EditorComponent = (
+    <div style={{ paddingRight: viewMode === "split" ? "12px" : "0", display: "flex", flexDirection: "column", height: "100%" }}>
+      <div className={styles.editorToolbar} style={{ position: "sticky", top: "12px", zIndex: 10, backgroundColor: "#ffffff" }}>
+        <button type="button" onClick={() => insertFormatting("**")} className={styles.toolbarBtn} title="Negrita"><b>B</b></button>
+        <button type="button" onClick={() => insertFormatting("*")} className={styles.toolbarBtn} title="Cursiva"><i>I</i></button>
+        <div style={{ width: "1px", height: "20px", background: "#e5e7eb", margin: "0 4px", alignSelf: "center" }} />
+        <button type="button" onClick={() => insertFormatting("### ", "")} className={styles.toolbarBtn}>H3</button>
+        <button type="button" onClick={() => insertFormatting("#### ", "")} className={styles.toolbarBtn}>H4</button>
+        <div style={{ width: "1px", height: "20px", background: "#e5e7eb", margin: "0 4px", alignSelf: "center" }} />
+        <button type="button" onClick={() => insertFormatting("[", "](url)")} className={styles.toolbarBtn}>Enlace</button>
+        <button type="button" onClick={() => insertFormatting("`")} className={styles.toolbarBtn}>Código</button>
+        <button type="button" onClick={() => insertFormatting("```\n", "\n```")} className={styles.toolbarBtn}>Bloque</button>
+        <button type="button" onClick={() => insertFormatting("> ", "")} className={styles.toolbarBtn}>Cita</button>
+        <button type="button" onClick={() => insertFormatting("- ", "")} className={styles.toolbarBtn}>Lista</button>
+        <div style={{ width: "1px", height: "20px", background: "#e5e7eb", margin: "0 4px", alignSelf: "center" }} />
+        <MediaPicker 
+          mediaList={mediaList} 
+          requireAltText={true} 
+          buttonLabel="📸 Insertar imagen" 
+          onSelect={insertIntoMarkdown} 
+        />
+      </div>
+      <textarea
+        id="contentMarkdown"
+        name="contentMarkdown"
+        ref={textareaRef}
+        required
+        className={styles.modernTextarea}
+        style={{ minHeight: "800px" }}
+        placeholder="Comienza a escribir tu contenido aquí..."
+        value={contentMarkdown}
+        onChange={(e) => setContentMarkdown(e.target.value)}
+        onPaste={handlePaste}
+        onDrop={handleDrop}
+        onDragOver={(e) => e.preventDefault()}
+      />
+    </div>
+  );
+
+  const PreviewComponent = (
+    <div style={{ paddingLeft: viewMode === "split" ? "12px" : "0", height: "100%", alignSelf: "flex-start", position: "sticky", top: "12px" }}>
+      <div style={{ border: "1px solid #e5e7eb", borderRadius: "12px", backgroundColor: "#ffffff" }}>
+        <BlogPreviewClient 
+          blog={{
+            title: title || "Sin título",
+            summary: summary || "Sin resumen",
+            slug: slug || "sin-slug",
+            contentMarkdown: contentMarkdown || "*No hay contenido aún*",
+            coverMediaAssetId: coverMediaId,
+            coverAltText,
+            categoryName: categories.find(c => c.id === categoryId)?.name,
+            categorySlug: categories.find(c => c.id === categoryId)?.slug,
+          }}
+          mediaMap={new Map(mediaList.map(m => [m.id, { id: m.id, publicId: m.publicId, width: m.width, height: m.height }]))}
+        />
+      </div>
+    </div>
+  );
+
+  const containerStyle = viewMode === "split" 
+    ? { width: "100vw", marginLeft: "calc(50% - 50vw)", padding: "0 40px" }
+    : { maxWidth: "900px", margin: "0 auto" };
+
   return (
-    <div className={styles.formContainer} style={{ maxWidth: "100%", padding: "0 24px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-        <h2 className={styles.title} style={{ marginBottom: 0 }}>Crear nuevo blog</h2>
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", ...containerStyle }}>
+      
+      {/* HEADER / BARRA DE ACCIONES SUPERIOR */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", flexShrink: 0, flexWrap: "wrap", gap: "12px" }}>
+        
+        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <h2 className={styles.title} style={{ fontSize: "1.5rem", margin: 0 }}>Nuevo borrador</h2>
+          {draftProps.saveStatus !== "idle" && (
+            <span style={{ fontSize: "0.8rem", color: "#6b7280", background: "#f3f4f6", padding: "4px 8px", borderRadius: "4px" }}>
+              {draftProps.saveStatus === "saving" ? "Guardando..." : `Guardado a las ${new Date(draftProps.lastSavedAt || 0).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`}
+            </span>
+          )}
+        </div>
         
         <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-          <ImportMarkdownButton 
-            onImport={handleImport} 
-            hasExistingContent={Boolean(title || summary || contentMarkdown)} 
-          />
-          {draftProps.saveStatus !== "idle" && (
-            <div style={{ fontSize: "0.85rem", color: "#6b7280", fontFamily: "var(--font-mono)" }} aria-live="polite">
-              {draftProps.saveStatus === "saving" ? "Guardando..." : 
-               draftProps.lastSavedAt ? `Guardado localmente a las ${new Date(draftProps.lastSavedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}` : "Guardado localmente"}
-            </div>
-          )}
+          <div className={styles.viewModeContainer}>
+            <button className={`${styles.viewModeButton} ${viewMode === "editor" ? styles.active : ""}`} onClick={() => setViewMode("editor")} title="Solo Editor">
+              Editor
+            </button>
+            <button className={`${styles.viewModeButton} ${viewMode === "split" ? styles.active : ""}`} onClick={() => setViewMode("split")} title="Vista Dividida">
+              Dividido
+            </button>
+            <button className={`${styles.viewModeButton} ${viewMode === "preview" ? styles.active : ""}`} onClick={() => setViewMode("preview")} title="Pantalla Completa">
+              Vista Previa
+            </button>
+          </div>
+          
+          <div style={{ width: "1px", height: "24px", background: "#e5e7eb" }}></div>
+          
+          <ImportMarkdownButton onImport={handleImport} hasExistingContent={Boolean(title || summary || contentMarkdown)} />
+          
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <Link href="/dashboard/blogs" className={styles.actionButton} style={{ padding: "8px 16px", margin: 0 }}>
+              Cancelar
+            </Link>
+            <button type="submit" form="blog-form" disabled={isPending} className={styles.submitButton} style={{ margin: 0, padding: "8px 16px" }}>
+              {isPending ? "Guardando..." : "Crear Blog"}
+            </button>
+          </div>
         </div>
       </div>
       
       {draftProps.hasDraft && (
-        <div style={{ backgroundColor: "#f0f9ff", border: "1px solid #bae6fd", padding: "16px", borderRadius: "8px", marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center" }} role="status">
+        <div style={{ backgroundColor: "#f0f9ff", border: "1px solid #bae6fd", padding: "12px 16px", borderRadius: "8px", marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }} role="status">
           <div>
-            <p style={{ margin: "0 0 4px 0", fontWeight: 600, color: "#0369a1", fontSize: "0.95rem" }}>Encontramos un borrador local sin guardar.</p>
-            <p style={{ margin: 0, color: "#0ea5e9", fontSize: "0.85rem" }}>Puedes restaurarlo o descartarlo para empezar de cero.</p>
+            <p style={{ margin: "0 0 2px 0", fontWeight: 600, color: "#0369a1", fontSize: "0.9rem" }}>Borrador recuperado</p>
+            <p style={{ margin: 0, color: "#0ea5e9", fontSize: "0.8rem" }}>Tienes un progreso no guardado.</p>
           </div>
           <div style={{ display: "flex", gap: "12px" }}>
-            <button type="button" onClick={draftProps.discardDraft} style={{ background: "none", border: "none", color: "#0369a1", fontSize: "0.85rem", cursor: "pointer", textDecoration: "underline" }}>Descartar</button>
-            <button type="button" onClick={restoreDraft} style={{ backgroundColor: "#0284c7", color: "white", border: "none", borderRadius: "4px", padding: "6px 12px", fontSize: "0.85rem", cursor: "pointer", fontWeight: 600 }}>Restaurar borrador</button>
+            <button type="button" onClick={draftProps.discardDraft} style={{ background: "none", border: "none", color: "#0369a1", fontSize: "0.8rem", cursor: "pointer", textDecoration: "underline" }}>Descartar</button>
+            <button type="button" onClick={restoreDraft} style={{ backgroundColor: "#0284c7", color: "white", border: "none", borderRadius: "4px", padding: "4px 10px", fontSize: "0.8rem", cursor: "pointer", fontWeight: 600 }}>Cargar</button>
           </div>
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", alignItems: "start" }}>
-        {/* LADO IZQUIERDO: EDITOR */}
-        <div>
-          <form action={formAction}>
-            {state?.error && (
-              <div className={styles.errorMessage} role="alert">
-                {state.error}
-              </div>
-            )}
+      {/* FORM AND METADATA */}
+      <form id="blog-form" action={formAction} style={{ display: "flex", flexDirection: "column", flex: 1, paddingBottom: "24px" }}>
+        {state?.error && (
+          <div className={styles.errorMessage} role="alert">
+            {state.error}
+          </div>
+        )}
 
-            {coverMediaId && <input type="hidden" name="coverMediaAssetId" value={coverMediaId} />}
-            {coverAltText && <input type="hidden" name="coverAltText" value={coverAltText} />}
+        {coverMediaId && <input type="hidden" name="coverMediaAssetId" value={coverMediaId} />}
+        {coverAltText && <input type="hidden" name="coverAltText" value={coverAltText} />}
 
-            <div className={styles.formGroup} style={{ backgroundColor: "#f9fafb", padding: "16px", borderRadius: "8px", border: "1px solid #e5e7eb" }}>
-              <label className={styles.label}>Portada del Blog (Opcional)</label>
-              
+        {/* METADATA FIELDS (Moved to the top) */}
+        <div style={{ marginBottom: "24px" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", marginBottom: "16px" }}>
+            <div style={{ flex: "1 1 300px" }}>
+              <input
+                id="title"
+                name="title"
+                type="text"
+                required
+                maxLength={200}
+                className={styles.modernInput}
+                style={{ fontSize: "2rem", fontWeight: 700 }}
+                placeholder="Título del artículo"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </div>
+            
+            <div style={{ flex: "0 0 auto", minWidth: "200px" }}>
               {selectedCover ? (
-                <div style={{ display: "flex", gap: "16px", alignItems: "flex-start", marginTop: "12px" }}>
-                  <div style={{ position: "relative", width: "120px", height: "80px", backgroundColor: "#f1f2f4", borderRadius: "6px", overflow: "hidden" }}>
+                <div style={{ display: "flex", gap: "12px", alignItems: "center", border: "1px solid #e5e7eb", borderRadius: "8px", padding: "8px" }}>
+                  <div style={{ position: "relative", width: "60px", height: "40px", backgroundColor: "#f1f2f4", borderRadius: "4px", overflow: "hidden" }}>
                     <Image src={selectedCover.thumbnailUrl} alt={coverAltText} fill style={{ objectFit: "cover" }} unoptimized />
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: "0.9rem", fontWeight: 600 }}>{selectedCover.originalFilename}</div>
-                    <div style={{ fontSize: "0.85rem", color: "#51545a", marginTop: "4px" }}>Texto alternativo: {coverAltText}</div>
-                    <button type="button" onClick={() => { setCoverMediaId(null); setCoverAltText(""); }} style={{ marginTop: "8px", color: "#d93025", background: "none", border: "none", cursor: "pointer", fontSize: "0.85rem", padding: 0, textDecoration: "underline" }}>
-                      Eliminar portada
-                    </button>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: "0.75rem", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{selectedCover.originalFilename}</div>
+                    <button type="button" onClick={() => { setCoverMediaId(null); setCoverAltText(""); }} style={{ color: "#d93025", background: "none", border: "none", cursor: "pointer", fontSize: "0.75rem", padding: 0 }}>Eliminar</button>
                   </div>
                 </div>
               ) : (
-                <div style={{ marginTop: "8px" }}>
+                <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
                   <MediaPicker 
                     mediaList={mediaList} 
                     requireAltText={true} 
-                    buttonLabel="Seleccionar portada" 
+                    buttonLabel="Añadir portada" 
                     onSelect={(id, alt) => {
                       setCoverMediaId(id);
                       setCoverAltText(alt);
@@ -218,57 +331,41 @@ export function NewBlogForm({ mediaList, categories }: { mediaList: MediaItem[];
                 </div>
               )}
             </div>
+          </div>
 
-            <div className={styles.formGroup}>
-              <label htmlFor="title" className={styles.label}>Título *</label>
-              <input
-                id="title"
-                name="title"
-                type="text"
-                required
-                maxLength={200}
-                className={styles.input}
-                placeholder="Título del blog"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
+          <input
+            id="summary"
+            name="summary"
+            type="text"
+            required
+            maxLength={500}
+            className={styles.modernInput}
+            style={{ marginBottom: "16px" }}
+            placeholder="Escribe un breve resumen de lo que trata el artículo..."
+            value={summary}
+            onChange={(e) => setSummary(e.target.value)}
+          />
 
-            <div className={styles.formGroup}>
-              <label htmlFor="slug" className={styles.label}>Slug (URL amigable)</label>
+          <div style={{ display: "flex", gap: "16px" }}>
+            <div style={{ flex: 1 }}>
               <input
                 id="slug"
                 name="slug"
                 type="text"
                 maxLength={180}
-                className={styles.input}
-                placeholder="Opcional. Si lo dejas vacío, se generará a partir del título."
+                className={styles.modernInput}
+                style={{ fontSize: "0.9rem" }}
+                placeholder="slug-opcional"
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
               />
             </div>
-
-            <div className={styles.formGroup}>
-              <label htmlFor="summary" className={styles.label}>Resumen *</label>
-              <input
-                id="summary"
-                name="summary"
-                type="text"
-                required
-                maxLength={500}
-                className={styles.input}
-                placeholder="Breve resumen del contenido"
-                value={summary}
-                onChange={(e) => setSummary(e.target.value)}
-              />
-            </div>
-
-            <div className={styles.formGroup}>
-              <label htmlFor="categoryId" className={styles.label}>Categoría</label>
+            <div style={{ flex: 1 }}>
               <select
                 id="categoryId"
                 name="categoryId"
-                className={styles.input}
+                className={styles.modernInput}
+                style={{ fontSize: "0.9rem", color: categoryId ? "#121419" : "#9ca3af" }}
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
               >
@@ -280,73 +377,18 @@ export function NewBlogForm({ mediaList, categories }: { mediaList: MediaItem[];
                 ))}
               </select>
             </div>
-
-            <div className={styles.formGroup}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                <label htmlFor="contentMarkdown" className={styles.label} style={{ marginBottom: 0 }}>Contenido (Markdown) *</label>
-                <MediaPicker 
-                  mediaList={mediaList} 
-                  requireAltText={true} 
-                  buttonLabel="Insertar imagen" 
-                  onSelect={insertIntoMarkdown} 
-                />
-              </div>
-              <textarea
-                id="contentMarkdown"
-                name="contentMarkdown"
-                ref={textareaRef}
-                required
-                className={styles.textarea}
-                placeholder="# Título Principal&#10;&#10;Escribe tu contenido aquí usando Markdown..."
-                style={{ minHeight: "600px", resize: "vertical" }}
-                value={contentMarkdown}
-                onChange={(e) => setContentMarkdown(e.target.value)}
-                onPaste={handlePaste}
-                onDrop={handleDrop}
-                onDragOver={(e) => e.preventDefault()}
-              />
-            </div>
-            
-            <p style={{ fontSize: "0.8rem", color: "#6b7280", marginTop: "16px", marginBottom: 0 }}>
-              Los cambios se guardan temporalmente en este navegador. Usa &quot;Crear Blog&quot; para registrarlos en DevNova.
-            </p>
-
-            <div style={{ display: "flex", gap: "12px", marginTop: "16px" }}>
-              <Link
-                href="/dashboard/blogs"
-                className={styles.actionButton}
-                style={{ padding: "14px 20px", display: "inline-flex", alignItems: "center" }}
-              >
-                Cancelar
-              </Link>
-              <button
-                type="submit"
-                disabled={isPending}
-                className={styles.submitButton}
-              >
-                {isPending ? "Guardando..." : "Crear Blog"}
-              </button>
-            </div>
-          </form>
+          </div>
         </div>
 
-        {/* LADO DERECHO: VISTA PREVIA */}
-        <div style={{ border: "1px solid #e5e7eb", borderRadius: "8px", overflowY: "auto", height: "calc(100vh - 120px)", position: "sticky", top: "24px" }}>
-          <BlogPreviewClient 
-            blog={{
-              title,
-              summary,
-              slug,
-              contentMarkdown,
-              coverMediaAssetId: coverMediaId,
-              coverAltText,
-              categoryName: categories.find(c => c.id === categoryId)?.name,
-              categorySlug: categories.find(c => c.id === categoryId)?.slug,
-            }}
-            mediaMap={new Map(mediaList.map(m => [m.id, { id: m.id, publicId: m.publicId, width: m.width, height: m.height }]))}
-          />
-        </div>
-      </div>
+        {/* SPLIT VIEW WITH MARKDOWN EDITOR AND PREVIEW */}
+        <ResizableSplitView
+          mode={viewMode}
+          editor={EditorComponent}
+          preview={PreviewComponent}
+          initialEditorWidth={50}
+        />
+        
+      </form>
     </div>
   );
 }

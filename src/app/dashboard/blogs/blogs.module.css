@@ -238,3 +238,106 @@
   flex-direction: column;
   gap: 4px;
 }
+
+.editorToolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(255, 252, 244, 0.9);
+  backdrop-filter: blur(8px);
+  padding: 8px 0;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.viewModeContainer {
+  display: inline-flex;
+  background-color: #f1f2f4;
+  border-radius: 8px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.viewModeButton {
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-family: 'Space Grotesk', Arial, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #51545a;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.viewModeButton.active {
+  background-color: #ffffff;
+  color: #121419;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.viewModeButton:hover:not(.active) {
+  background-color: #e5e7eb;
+}
+
+.modernInput {
+  width: 100%;
+  padding: 10px 0;
+  border: none;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: transparent;
+  font-family: 'Space Grotesk', Arial, sans-serif;
+  font-size: 1.2rem;
+  color: #121419;
+  transition: border-color 0.2s ease;
+}
+
+.modernInput:focus {
+  outline: none;
+  border-bottom-color: #155eef;
+}
+
+.modernInput::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.modernTextarea {
+  width: 100%;
+  padding: 16px 0;
+  border: none;
+  background-color: transparent;
+  font-family: 'IBM Plex Mono', Consolas, monospace;
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 600px;
+}
+
+.modernTextarea:focus {
+  outline: none;
+}
+
+.toolbarBtn {
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background-color: transparent;
+  cursor: pointer;
+  color: #4b5563;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.toolbarBtn:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+

@@ -108,7 +108,7 @@ export default async function BlogsListPage() {
                         <Link href={`/dashboard/blogs/${blog.id}/edit`} className={styles.actionButton}>
                           Editar
                         </Link>
-                        <Link href={`/dashboard/blogs/${blog.id}/history`} className={styles.actionButton} style={{ background: "#4a4a4a" }}>
+                        <Link href={`/dashboard/blogs/${blog.id}/history`} className={styles.actionButton} style={{ background: "#475569", color: "white" }}>
                           Historial
                         </Link>
                         <Link href={`/dashboard/blogs/${blog.id}/duplicate`} className={styles.actionButton} style={{ background: "#10b981", color: "white" }}>
