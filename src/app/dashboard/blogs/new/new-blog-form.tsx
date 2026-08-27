@@ -66,6 +66,21 @@ export function NewBlogForm({ mediaList, categories }: { mediaList: MediaItem[];
     textarea.focus();
   };
 
+  const insertMultipleIntoMarkdown = (items: { id: string, alt: string }[]) => {
+    if (!textareaRef.current) return;
+    const textarea = textareaRef.current;
+    const insertText = items.map(item => `![${item.alt}](media://${item.id})`).join("\n\n");
+    
+    textarea.setRangeText(
+      insertText,
+      textarea.selectionStart,
+      textarea.selectionEnd,
+      "end"
+    );
+    setContentMarkdown(textarea.value);
+    textarea.focus();
+  };
+
   const handleFileUpload = async (file: File) => {
     if (!file.type.startsWith("image/")) return;
     
@@ -177,7 +192,8 @@ export function NewBlogForm({ mediaList, categories }: { mediaList: MediaItem[];
           mediaList={mediaList} 
           requireAltText={true} 
           buttonLabel="📸 Insertar imagen" 
-          onSelect={insertIntoMarkdown} 
+          onSelect={insertIntoMarkdown}
+          onSelectMultiple={insertMultipleIntoMarkdown}
         />
       </div>
       <textarea

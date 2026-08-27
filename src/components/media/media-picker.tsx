@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import styles from "./media-picker.module.css";
 
@@ -21,16 +22,22 @@ export interface MediaItem {
 interface MediaPickerProps {
   mediaList: MediaItem[];
   onSelect: (mediaId: string, altText: string) => void;
+  onSelectMultiple?: (items: {id: string, alt: string}[]) => void;
   requireAltText: boolean;
   buttonLabel: string;
 }
 
-export function MediaPicker({ mediaList, onSelect, requireAltText, buttonLabel }: MediaPickerProps) {
+export function MediaPicker({ mediaList, onSelect, onSelectMultiple, requireAltText, buttonLabel }: MediaPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [altText, setAltText] = useState("");
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleOpen = () => {
     setIsOpen(true);
@@ -72,27 +79,37 @@ export function MediaPicker({ mediaList, onSelect, requireAltText, buttonLabel }
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, isUploading]);
 
-  const handleUpload = async (file: File) => {
+  const handleUpload = async (files: File[] | FileList) => {
+    if (files.length === 0) return;
     setError("");
     setIsUploading(true);
     try {
-      // Usar nuestro helper para subir directo desde el cliente
       const { uploadFileDirectly } = await import("./direct-uploader");
-      const { mediaAssetId } = await uploadFileDirectly(file);
       
-      const cleanAlt = altText.trim() || file.name;
-      onSelect(mediaAssetId, cleanAlt);
+      const uploadedItems = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const { mediaAssetId } = await uploadFileDirectly(file);
+        const cleanAlt = (files.length === 1 ? altText.trim() : "") || file.name;
+        uploadedItems.push({ id: mediaAssetId, alt: cleanAlt });
+      }
+      
+      if (onSelectMultiple) {
+        onSelectMultiple(uploadedItems);
+      } else {
+        onSelect(uploadedItems[0].id, uploadedItems[0].alt);
+      }
       handleClose();
     } catch (err: any) {
-      setError(err.message || "Error al subir la imagen");
+      setError(err.message || "Error al subir la(s) imagen(es)");
       setIsUploading(false);
     }
   };
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleUpload(file);
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      handleUpload(files);
     }
   };
 
@@ -106,7 +123,7 @@ export function MediaPicker({ mediaList, onSelect, requireAltText, buttonLabel }
         {buttonLabel}
       </button>
 
-      {isOpen && (
+      {isMounted && isOpen && typeof document !== "undefined" && createPortal(
         <div
           className={styles.modalOverlay}
           onClick={() => !isUploading && handleClose()}
@@ -202,7 +219,7 @@ export function MediaPicker({ mediaList, onSelect, requireAltText, buttonLabel }
                   ) : (
                     <>
                       <p style={{ color: "#4b5563", marginBottom: "16px" }}>
-                        Selecciona una imagen desde tu dispositivo para subirla directamente.
+                        Selecciona una o más imágenes desde tu dispositivo para subirlas directamente.
                       </p>
                       <input 
                         type="file" 
@@ -210,6 +227,7 @@ export function MediaPicker({ mediaList, onSelect, requireAltText, buttonLabel }
                         onChange={onFileChange} 
                         style={{ display: "none" }} 
                         ref={fileInputRef} 
+                        multiple
                       />
                       <button 
                         type="button" 
@@ -263,7 +281,8 @@ export function MediaPicker({ mediaList, onSelect, requireAltText, buttonLabel }
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
