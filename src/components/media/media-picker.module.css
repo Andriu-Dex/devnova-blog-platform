@@ -15,8 +15,8 @@
 .modalContent {
   background-color: var(--color-paper);
   width: 90%;
-  maxWidth: 800px;
-  maxHeight: 90vh;
+  max-width: 800px;
+  max-height: 90vh;
   border-radius: var(--radius-card);
   display: flex;
   flex-direction: column;

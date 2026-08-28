@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useRef, useState, useEffect } from "react";
-import { editBlogAction } from "../../actions";
+import { editBlogAction, editAndPublishBlogAction } from "../../actions";
 import styles from "../../blogs.module.css";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -47,6 +47,9 @@ export function EditBlogForm({
   isArchivedCover?: boolean;
 }) {
   const [state, formAction, isPending] = useActionState(editBlogAction, null);
+  const [statePublish, formActionPublish, isPendingPublish] = useActionState(editAndPublishBlogAction, null);
+  const isAnyPending = isPending || isPendingPublish;
+  const activeState = state || statePublish;
   
   const [title, setTitle] = useState(latestVersion.title);
   const [summary, setSummary] = useState(latestVersion.summary);
@@ -77,10 +80,13 @@ export function EditBlogForm({
   const router = useRouter();
 
   useEffect(() => {
-    if (state?.success) {
+    if (statePublish?.success) {
+      draftProps.clearDraftOnSuccess();
+      router.push(`/dashboard/blogs`);
+    } else if (state?.success) {
       draftProps.clearDraftOnSuccess();
     }
-  }, [state, draftProps, router]);
+  }, [state, statePublish, draftProps, router]);
 
   const selectedCover = coverMediaId ? mediaList.find(m => m.id === coverMediaId) : null;
 
@@ -332,8 +338,11 @@ export function EditBlogForm({
             <Link href="/dashboard/blogs" className={styles.actionButton} style={{ padding: "8px 16px", margin: 0 }}>
               Volver
             </Link>
-            <button type="submit" form="edit-blog-form" disabled={isPending} className={styles.submitButton} style={{ margin: 0, padding: "8px 16px" }}>
-              {isPending ? "Guardando..." : "Guardar Versión"}
+            <button type="submit" form="edit-blog-form" formAction={formAction} disabled={isAnyPending} className={styles.submitButton} style={{ margin: 0, padding: "8px 16px", backgroundColor: "#f3f4f6", color: "#1f2937", border: "1px solid #d1d5db" }}>
+              {isPending ? "Guardando..." : "Guardar Borrador"}
+            </button>
+            <button type="submit" form="edit-blog-form" formAction={formActionPublish} disabled={isAnyPending} className={styles.submitButton} style={{ margin: 0, padding: "8px 16px", backgroundColor: "#10b981" }}>
+              {isPendingPublish ? "Publicando..." : "Guardar y Publicar"}
             </button>
           </div>
         </div>
@@ -357,7 +366,19 @@ export function EditBlogForm({
       )}
 
       {/* FORM AND METADATA */}
-      <form id="edit-blog-form" action={formAction} style={{ display: "flex", flexDirection: "column", flex: 1, paddingBottom: "24px" }}>
+      <form id="edit-blog-form" style={{ display: "flex", flexDirection: "column", flex: 1, paddingBottom: "24px" }}>
+        {activeState?.error && (
+          <div className={styles.errorMessage} role="alert">
+            {activeState.error}
+          </div>
+        )}
+
+        {activeState?.success && (
+          <div className={styles.successMessage} role="alert">
+            {activeState.success}
+          </div>
+        )}
+
         <input type="hidden" name="blogId" value={blog.id} />
         <input type="hidden" name="baseVersionId" value={latestVersion.id} />
         

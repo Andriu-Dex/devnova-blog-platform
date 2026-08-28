@@ -22,12 +22,12 @@
 }
 
 .seccionAzul {
-  padding-block: clamp(68px, 7vw, 96px);
+  padding-block: clamp(56px, 7vw, 96px);
   color: #ffffff;
   background-color: var(--color-primary, #155eef);
 }
 
-/* ── Hero de Detalle ──────────────────────────────────────────────────────── */
+/* ── Hero de Detalle (Blue) ───────────────────────────────────────────────── */
 .entradaHero {
   padding-block: 48px 64px;
 }
@@ -39,52 +39,98 @@
   gap: 8px;
   font-family: var(--font-mono, monospace);
   font-size: 0.85rem;
-  color: var(--color-carbon-muted, #51545a);
-  margin-bottom: 32px;
+  color: rgba(255, 255, 255, 0.65);
+  margin-bottom: 28px;
 }
 
 .breadcrumb a {
-  color: var(--color-carbon-muted, #51545a);
+  color: rgba(255, 255, 255, 0.65);
   text-decoration: underline;
   text-decoration-color: var(--color-cyan, #28c7e8);
+  transition: color 0.15s;
+}
+
+.breadcrumb a:hover {
+  color: #ffffff;
 }
 
 .breadcrumbActive {
-  color: var(--color-carbon, #121419);
+  color: #ffffff;
   font-weight: 600;
 }
 
 .entradaHeroGrid {
   display: grid;
-  grid-template-columns: 1.3fr 0.7fr;
-  gap: clamp(40px, 8vw, 112px);
-  align-items: start;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(32px, 6vw, 80px);
+  align-items: center;
+}
+
+.entradaHeroTexto {
+  display: flex;
+  flex-direction: column;
 }
 
 .entradaHeroEtiquetas {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .entradaHeroGrid h1 {
   font-family: var(--font-sans, "Space Grotesk", sans-serif);
-  font-size: clamp(2.8rem, 6vw, 5.5rem);
+  font-size: clamp(2.4rem, 5vw, 4.5rem);
   font-weight: 700;
   line-height: 0.95;
   letter-spacing: -0.04em;
   margin: 0;
-  color: var(--color-carbon, #121419);
+  color: #ffffff;
 }
 
 .entradaHeroResumen {
-  max-width: 58ch;
-  margin-top: 24px;
-  color: var(--color-carbon-muted, #51545a);
-  font-size: 1.15rem;
+  max-width: 52ch;
+  margin-top: 20px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.1rem;
   line-height: 1.6;
 }
+
+/* Cover image */
+.entradaHeroMedia {
+  width: 100%;
+}
+
+.entradaHeroCover {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.3);
+}
+
+.entradaHeroPlaceholder {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.08);
+  border: 2px dashed rgba(255,255,255,0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: rgba(255,255,255,0.4);
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85rem;
+}
+
+.entradaHeroPlaceholder svg {
+  width: 40px;
+  height: 40px;
+}
+
 
 /* Ficha Técnica */
 .entradaFicha {

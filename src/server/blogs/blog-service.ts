@@ -36,7 +36,7 @@ export interface DashboardBlogItem {
 }
 
 // 1. listBlogsForDashboard
-export async function listBlogsForDashboard(): Promise<DashboardBlogItem[]> {
+export async function listBlogsForDashboard(userId?: string, role?: string): Promise<DashboardBlogItem[]> {
   // En Drizzle para hacer subqueries o agrupar y obtener la última versión,
   // la forma más robusta sin RAW excesivo es usar un query que extrae el max(version_number) 
   // o hacer un JOIN a una CTE. 
@@ -44,7 +44,7 @@ export async function listBlogsForDashboard(): Promise<DashboardBlogItem[]> {
   // o hacerlo en una sola pasada con raw sql / subqueries.
   
   // Por simplicidad, obtenemos los blogs activos y su última versión:
-  const activeBlogs = await db
+  let query = db
     .select({
       id: blogs.id,
       slug: blogs.slug,
@@ -60,7 +60,13 @@ export async function listBlogsForDashboard(): Promise<DashboardBlogItem[]> {
     .innerJoin(users, eq(blogs.createdByUserId, users.id))
     .leftJoin(blogCategories, eq(blogs.categoryId, blogCategories.id))
     .where(isNull(blogs.deletedAt))
-    .orderBy(desc(blogs.createdAt));
+    .$dynamic();
+    
+  if (role === "AUTHOR" && userId) {
+    query = query.where(and(isNull(blogs.deletedAt), eq(blogs.createdByUserId, userId)));
+  }
+
+  const activeBlogs = await query.orderBy(desc(blogs.createdAt));
 
   if (activeBlogs.length === 0) return [];
 

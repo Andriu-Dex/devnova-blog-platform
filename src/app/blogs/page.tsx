@@ -1,21 +1,22 @@
 import { listPublishedCategoryStats, searchPublishedBlogs } from "@/server/blogs/public-blog-service";
+import { getDeliveryUrl } from "@/server/media/cloudinary";
 import { PublicHeader } from "@/components/site/public-header";
 import { PublicFooter } from "@/components/site/public-footer";
 import { Metadata } from "next";
 import Link from "next/link";
 import styles from "./blogs.module.css";
+import { BlogCard } from "@/components/site/blog-card";
 import {
   IconoFlecha,
   IconoRama,
   IconoBuscar,
   IconoCerrar,
-  FilaArchivo,
 } from "@/components/site/devbox-pieces";
 
 export const dynamic = "force-dynamic";
 
 const baseMetadata: Metadata = {
-  title: "Entregas | DevNova",
+  title: "Blogs | DevNova",
   description: "Proyectos, talleres y deberes organizados como un repositorio académico verificable.",
   alternates: { canonical: "/blogs" },
 };
@@ -63,7 +64,7 @@ export default async function PublicBlogsPage(props: {
       <main>
         {/* ── HEADER ───────────────────────────────────────────────── */}
         <header className={`${styles.contenedor} ${styles.cabeceraPagina}`}>
-          <h1>Entregas</h1>
+          <h1>Blogs</h1>
           <div>
             <p>Un semestre completo, organizado como archivos que se pueden buscar, abrir y verificar.</p>
             <span className={styles.meta}>
@@ -133,35 +134,36 @@ export default async function PublicBlogsPage(props: {
             )}
           </div>
 
-          {/* Lista de Filas de Archivo */}
+          {/* Grid de Cards */}
           {items.length === 0 ? (
             <div className={styles.vacioRepo}>
               <div className={styles.vacioRepoCarpeta} aria-hidden="true" />
-              <h2>No se encontraron archivos</h2>
+              <h2>No se encontraron blogs</h2>
               <p>
                 {hasSearch
-                  ? `No existen entregas que coincidan con "${q}". Intenta con otros términos.`
+                  ? `No existen blogs que coincidan con "${q}". Intenta con otros términos.`
                   : hasCategory
-                    ? `No existen entregas publicadas en ${activeCategory?.name || categorySlug}.`
-                  : "Aún no hay entregas publicadas en el repositorio."}
+                    ? `No existen blogs publicados en ${activeCategory?.name || categorySlug}.`
+                  : "Aún no hay blogs publicados en el repositorio."}
               </p>
               {(hasSearch || hasCategory) && (
                 <Link href="/blogs" className={`${styles.boton} ${styles.botonPapel}`}>
-                  <span>Ver todas las entregas</span> <IconoFlecha />
+                  <span>Ver todos los blogs</span> <IconoFlecha />
                 </Link>
               )}
             </div>
           ) : (
-            <div className={styles.listaArchivos}>
-              {items.map((blog, idx) => (
-                <FilaArchivo
+            <div className={styles.blogsGrid}>
+              {items.map((blog) => (
+                <BlogCard
                   key={blog.slug}
                   slug={blog.slug}
                   title={blog.title}
                   summary={blog.summary}
                   author={blog.creatorName || "DevNova"}
                   date={blog.publishedAt}
-                  indexNumber={(page - 1) * 20 + idx + 1}
+                  categoryName={blog.categoryName}
+                  coverUrl={blog.coverMediaPublicId ? getDeliveryUrl(blog.coverMediaPublicId, 600) : null}
                 />
               ))}
             </div>

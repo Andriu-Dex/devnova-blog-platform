@@ -7,10 +7,22 @@ import {
   teamMembers,
   teamMemberVersions,
   siteSocialLinks,
-  socialPlatforms
+  socialPlatforms,
+  users
 } from "@/server/db/schema";
-import { eq, desc, asc, isNull, and, sql } from "drizzle-orm";
+import { eq, desc, asc, isNull, and, sql, count } from "drizzle-orm";
 import { isValidSocialUrl } from "@/server/social/social-url";
+
+import { userStatuses } from "@/server/db/schema/user-statuses";
+
+export async function getPublicUserCount() {
+  const result = await db
+    .select({ count: count() })
+    .from(users)
+    .innerJoin(userStatuses, eq(users.statusId, userStatuses.id))
+    .where(eq(userStatuses.code, "ACTIVE"));
+  return result[0]?.count || 0;
+}
 
 export async function getPublicSiteProfile() {
   const rows = await db

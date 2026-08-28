@@ -12,6 +12,26 @@ interface PrivateHeaderProps {
   role: RoleCode;
 }
 
+function HomeIcon() {
+  return (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      width="16" 
+      height="16" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      style={{ marginRight: "6px", display: "inline-block", verticalAlign: "text-bottom" }}
+    >
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+      <polyline points="9 22 9 12 15 12 15 22"></polyline>
+    </svg>
+  );
+}
+
 const adminLinks = [
   { href: "/admin", label: "Panel" },
   { href: "/admin/authors", label: "Autores" },
@@ -23,6 +43,7 @@ const adminLinks = [
   { href: "/admin/messages", label: "Mensajes" },
   { href: "/admin/audit", label: "Auditoría" },
   { href: "/admin/security", label: "Seguridad" },
+  { href: "/", label: "Home", icon: <HomeIcon /> },
 ];
 
 const authorLinks = [
@@ -31,6 +52,7 @@ const authorLinks = [
   { href: "/dashboard/blogs/new", label: "Nuevo blog" },
   { href: "/dashboard/media", label: "Multimedia" },
   { href: "/account/change-password", label: "Cuenta" },
+  { href: "/", label: "Home", icon: <HomeIcon /> },
 ];
 
 export function PrivateHeader({ displayName, role }: PrivateHeaderProps) {
@@ -69,7 +91,8 @@ export function PrivateHeader({ displayName, role }: PrivateHeaderProps) {
 
       <nav className={`${styles.navBar} ${menuOpen ? styles.navBarOpen : ""}`} aria-label="Navegación del panel">
         <ul className={styles.navList}>
-          {navLinks.map(({ href, label }) => {
+          {navLinks.map((link) => {
+            const { href, label, icon } = link as any;
             const isActive = pathname === href || (href !== "/admin" && href !== "/dashboard" && pathname.startsWith(href));
             return (
               <li key={href}>
@@ -79,6 +102,7 @@ export function PrivateHeader({ displayName, role }: PrivateHeaderProps) {
                   aria-current={isActive ? "page" : undefined}
                   onClick={() => setMenuOpen(false)}
                 >
+                  {icon}
                   {label}
                 </Link>
               </li>

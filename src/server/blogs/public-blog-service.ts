@@ -24,12 +24,14 @@ export async function listPublishedBlogs() {
       categoryName: blogCategories.name,
       categorySlug: blogCategories.slug,
       categoryColorClass: blogCategories.colorClass,
+      coverMediaPublicId: mediaAssets.cloudinaryPublicId,
     })
     .from(blogPublications)
     .innerJoin(blogs, eq(blogPublications.blogId, blogs.id))
     .innerJoin(blogVersions, eq(blogPublications.blogVersionId, blogVersions.id))
     .innerJoin(users, eq(blogs.createdByUserId, users.id))
     .leftJoin(blogCategories, eq(blogs.categoryId, blogCategories.id))
+    .leftJoin(mediaAssets, eq(blogVersions.coverMediaAssetId, mediaAssets.id))
     .where(isNull(blogs.deletedAt))
     .orderBy(desc(blogPublications.publishedAt));
 
@@ -49,12 +51,14 @@ export async function listRecentPublishedBlogs(limit: number = 3) {
       categoryName: blogCategories.name,
       categorySlug: blogCategories.slug,
       categoryColorClass: blogCategories.colorClass,
+      coverMediaPublicId: mediaAssets.cloudinaryPublicId,
     })
     .from(blogPublications)
     .innerJoin(blogs, eq(blogPublications.blogId, blogs.id))
     .innerJoin(blogVersions, eq(blogPublications.blogVersionId, blogVersions.id))
     .innerJoin(users, eq(blogs.createdByUserId, users.id))
     .leftJoin(blogCategories, eq(blogs.categoryId, blogCategories.id))
+    .leftJoin(mediaAssets, eq(blogVersions.coverMediaAssetId, mediaAssets.id))
     .where(isNull(blogs.deletedAt))
     .orderBy(desc(blogPublications.publishedAt))
     .limit(limit);
@@ -78,12 +82,14 @@ export async function getPublishedBlogBySlug(slug: string) {
       categoryName: blogCategories.name,
       categorySlug: blogCategories.slug,
       categoryColorClass: blogCategories.colorClass,
+      coverMediaPublicId: mediaAssets.cloudinaryPublicId,
     })
     .from(blogPublications)
     .innerJoin(blogs, eq(blogPublications.blogId, blogs.id))
     .innerJoin(blogVersions, eq(blogPublications.blogVersionId, blogVersions.id))
     .innerJoin(users, eq(blogs.createdByUserId, users.id))
     .leftJoin(blogCategories, eq(blogs.categoryId, blogCategories.id))
+    .leftJoin(mediaAssets, eq(blogVersions.coverMediaAssetId, mediaAssets.id))
     .where(and(eq(blogs.slug, slug), isNull(blogs.deletedAt)))
     .limit(1);
 
@@ -191,12 +197,14 @@ export async function searchPublishedBlogs(params: {
       categoryName: blogCategories.name,
       categorySlug: blogCategories.slug,
       categoryColorClass: blogCategories.colorClass,
+      coverMediaPublicId: mediaAssets.cloudinaryPublicId,
     })
     .from(blogPublications)
     .innerJoin(blogs, eq(blogPublications.blogId, blogs.id))
     .innerJoin(blogVersions, eq(blogPublications.blogVersionId, blogVersions.id))
     .innerJoin(users, eq(blogs.createdByUserId, users.id))
     .leftJoin(blogCategories, eq(blogs.categoryId, blogCategories.id))
+    .leftJoin(mediaAssets, eq(blogVersions.coverMediaAssetId, mediaAssets.id))
     .where(baseCondition)
     .orderBy(desc(blogPublications.publishedAt))
     .limit(pageSize)
@@ -241,12 +249,14 @@ export async function listRelatedPublishedBlogs(params: {
       categoryName: blogCategories.name,
       categorySlug: blogCategories.slug,
       categoryColorClass: blogCategories.colorClass,
+      coverMediaPublicId: mediaAssets.cloudinaryPublicId,
     })
     .from(blogPublications)
     .innerJoin(blogs, eq(blogPublications.blogId, blogs.id))
     .innerJoin(blogVersions, eq(blogPublications.blogVersionId, blogVersions.id))
     .innerJoin(users, eq(blogs.createdByUserId, users.id))
     .leftJoin(blogCategories, eq(blogs.categoryId, blogCategories.id))
+    .leftJoin(mediaAssets, eq(blogVersions.coverMediaAssetId, mediaAssets.id))
     .where(
       and(
         isNull(blogs.deletedAt),

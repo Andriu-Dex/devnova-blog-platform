@@ -5,7 +5,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import styles from "./public-header.module.css";
-import { IconoFlecha } from "./devbox-pieces";
+import { IconoFlecha, IconoHome, IconoBlog, IconoUser, IconoMail } from "./devbox-pieces";
 
 interface PublicHeaderClientProps {
   brandName: string;
@@ -14,10 +14,10 @@ interface PublicHeaderClientProps {
 }
 
 const navLinks = [
-  { href: "/", label: "Inicio" },
-  { href: "/blogs", label: "Entregas" },
-  { href: "/nosotros", label: "Nosotros" },
-  { href: "/contacto", label: "Contacto" },
+  { href: "/", label: "Inicio", icon: <IconoHome /> },
+  { href: "/blogs", label: "Blogs", icon: <IconoBlog /> },
+  { href: "/nosotros", label: "Nosotros", icon: <IconoUser /> },
+  { href: "/contacto", label: "Contacto", icon: <IconoMail /> },
 ];
 
 function isPathActive(pathname: string, href: string) {
@@ -61,7 +61,7 @@ export function PublicHeaderClient({ brandName, logoUrl, logoAlt }: PublicHeader
         {/* Desktop nav capsule */}
         <nav className={styles.desktopNav} aria-label="Navegación principal">
           <div className={styles.navCapsule}>
-            {navLinks.map(({ href, label }) => {
+            {navLinks.map(({ href, label, icon }) => {
               const active = isPathActive(pathname, href);
               return (
                 <Link
@@ -70,6 +70,7 @@ export function PublicHeaderClient({ brandName, logoUrl, logoAlt }: PublicHeader
                   className={`${styles.navLink} ${active ? styles.navLinkActive : ""}`}
                   aria-current={active ? "page" : undefined}
                 >
+                  {icon}
                   {label}
                 </Link>
               );
@@ -108,7 +109,7 @@ export function PublicHeaderClient({ brandName, logoUrl, logoAlt }: PublicHeader
         aria-label="Navegación móvil"
         className={`${styles.mobileNav} ${menuOpen ? styles.mobileNavOpen : ""}`}
       >
-        {navLinks.map(({ href, label }) => {
+        {navLinks.map(({ href, label, icon }) => {
           const active = isPathActive(pathname, href);
           return (
             <Link
@@ -118,7 +119,7 @@ export function PublicHeaderClient({ brandName, logoUrl, logoAlt }: PublicHeader
               aria-current={active ? "page" : undefined}
               onClick={() => setMenuOpen(false)}
             >
-              <span>{label}</span>
+              <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>{icon}{label}</span>
               <IconoFlecha />
             </Link>
           );

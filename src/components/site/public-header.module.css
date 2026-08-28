@@ -80,6 +80,7 @@
 .navLink {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   padding: 8px 18px;
   border-radius: 999px;
   font-family: var(--font-sans, "Space Grotesk", sans-serif);
@@ -89,6 +90,12 @@
   text-decoration: none;
   transition: all 160ms ease;
   line-height: 1;
+}
+
+.navLink svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
 }
 
 .navLink:hover {

@@ -196,6 +196,14 @@
   border-top: 1px solid var(--color-carbon, #121419);
 }
 
+/* Grid de cards */
+.blogsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+  margin-top: 24px;
+}
+
 /* Vacío */
 .vacioRepo {
   min-height: 400px;

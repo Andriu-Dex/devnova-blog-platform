@@ -249,3 +249,24 @@ export async function duplicateBlogAction(prevState: unknown, formData: FormData
   return { success: true, blogId: result.blogId };
 }
 
+export async function createAndPublishBlogAction(prevState: unknown, formData: FormData): Promise<BlogActionState> {
+  const result = await createBlogAction(prevState, formData);
+  if (result?.error) return result;
+  if (result?.blogId) {
+    const pubResult = await publishBlogAction(result.blogId);
+    if (pubResult.error) return { error: pubResult.error };
+  }
+  return result;
+}
+
+export async function editAndPublishBlogAction(prevState: unknown, formData: FormData): Promise<BlogActionState> {
+  const result = await editBlogAction(prevState, formData);
+  if (result?.error) return result;
+  
+  const blogId = formData.get("blogId") as string;
+  if (blogId) {
+    const pubResult = await publishBlogAction(blogId);
+    if (pubResult.error) return { error: pubResult.error };
+  }
+  return result;
+}

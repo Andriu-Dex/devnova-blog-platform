@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default async function BlogsListPage() {
   const user = await requireAuthorOrAdmin();
-  const blogs = await listBlogsForDashboard();
+  const blogs = await listBlogsForDashboard(user.id, user.role);
 
   return (
     <main>

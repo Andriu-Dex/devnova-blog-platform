@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useRef, useState, useEffect } from "react";
-import { createBlogAction } from "../actions";
+import { createBlogAction, createAndPublishBlogAction } from "../actions";
 import styles from "../blogs.module.css";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -15,6 +15,9 @@ import { ResizableSplitView, SplitViewMode } from "@/components/ui/resizable-spl
 
 export function NewBlogForm({ mediaList, categories }: { mediaList: MediaItem[]; categories: BlogCategoryItem[] }) {
   const [state, formAction, isPending] = useActionState(createBlogAction, null);
+  const [statePublish, formActionPublish, isPendingPublish] = useActionState(createAndPublishBlogAction, null);
+  const isAnyPending = isPending || isPendingPublish;
+  const activeState = state || statePublish;
   
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
@@ -43,11 +46,14 @@ export function NewBlogForm({ mediaList, categories }: { mediaList: MediaItem[];
 
   // Listen to state changes to clear draft if success
   useEffect(() => {
-    if (state?.success && state?.blogId) {
+    if (statePublish?.success) {
+      draftProps.clearDraftOnSuccess();
+      router.push(`/dashboard/blogs`);
+    } else if (state?.success && state?.blogId) {
       draftProps.clearDraftOnSuccess();
       router.push(`/dashboard/blogs/${state.blogId}/edit`);
     }
-  }, [state, draftProps, router]);
+  }, [state, statePublish, draftProps, router]);
 
   const selectedCover = coverMediaId ? mediaList.find(m => m.id === coverMediaId) : null;
 
@@ -273,8 +279,11 @@ export function NewBlogForm({ mediaList, categories }: { mediaList: MediaItem[];
             <Link href="/dashboard/blogs" className={styles.actionButton} style={{ padding: "8px 16px", margin: 0 }}>
               Cancelar
             </Link>
-            <button type="submit" form="blog-form" disabled={isPending} className={styles.submitButton} style={{ margin: 0, padding: "8px 16px" }}>
-              {isPending ? "Guardando..." : "Crear Blog"}
+            <button type="submit" form="blog-form" formAction={formAction} disabled={isAnyPending} className={styles.submitButton} style={{ margin: 0, padding: "8px 16px", backgroundColor: "#f3f4f6", color: "#1f2937", border: "1px solid #d1d5db" }}>
+              {isPending ? "Guardando..." : "Crear Borrador"}
+            </button>
+            <button type="submit" form="blog-form" formAction={formActionPublish} disabled={isAnyPending} className={styles.submitButton} style={{ margin: 0, padding: "8px 16px", backgroundColor: "#10b981" }}>
+              {isPendingPublish ? "Publicando..." : "Crear y Publicar"}
             </button>
           </div>
         </div>
@@ -294,10 +303,10 @@ export function NewBlogForm({ mediaList, categories }: { mediaList: MediaItem[];
       )}
 
       {/* FORM AND METADATA */}
-      <form id="blog-form" action={formAction} style={{ display: "flex", flexDirection: "column", flex: 1, paddingBottom: "24px" }}>
-        {state?.error && (
+      <form id="blog-form" style={{ display: "flex", flexDirection: "column", flex: 1, paddingBottom: "24px" }}>
+        {activeState?.error && (
           <div className={styles.errorMessage} role="alert">
-            {state.error}
+            {activeState.error}
           </div>
         )}
 

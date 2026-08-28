@@ -1,4 +1,4 @@
-import { getPublicSiteProfile, getPublicSection, getPublicTeamMembers } from "@/server/site/public-site-service";
+import { getPublicSiteProfile, getPublicSection, getPublicTeamMembers, getPublicUserCount } from "@/server/site/public-site-service";
 import { listPublishedCategoryStats, listRecentPublishedBlogs } from "@/server/blogs/public-blog-service";
 import { getDeliveryUrl } from "@/server/media/cloudinary";
 import { PublicHeader } from "@/components/site/public-header";
@@ -27,12 +27,13 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const [profile, homeSection, publishedBlogs, teamMembers, categoryStats] = await Promise.all([
+  const [profile, homeSection, publishedBlogs, teamMembers, categoryStats, userCount] = await Promise.all([
     getPublicSiteProfile(),
     getPublicSection("HOME"),
     listRecentPublishedBlogs(10),
     getPublicTeamMembers(),
     listPublishedCategoryStats(),
+    getPublicUserCount(),
   ]);
 
   const brandName = profile?.groupName || "DevNova";
@@ -43,8 +44,8 @@ export default async function HomePage() {
   const featuredBlog = publishedBlogs[0] ?? null;
   const recentBlogs = publishedBlogs.slice(1, 5);
 
-  const featuredCoverUrl = featuredBlog?.coverMediaAssetId
-    ? getDeliveryUrl(featuredBlog.coverMediaAssetId, 1200)
+  const featuredCoverUrl = featuredBlog?.coverMediaPublicId
+    ? getDeliveryUrl(featuredBlog.coverMediaPublicId, 1200)
     : null;
 
   const displayDate = featuredBlog
@@ -59,7 +60,7 @@ export default async function HomePage() {
         year: "numeric",
       }).format(new Date());
 
-  const teamCountText = `${teamMembers.length || 6} integrantes`;
+  const teamCountText = `${userCount || 0} integrantes`;
   const getCategory = (slug: string) => categoryStats.categories.find((category) => category.slug === slug);
   const proyecto = getCategory("proyecto");
   const taller = getCategory("taller");
@@ -124,7 +125,7 @@ export default async function HomePage() {
                           <span>Abrir archivo</span> <IconoFlecha />
                         </Link>
                         <Link prefetch={false} className={styles.enlaceTecnico} href="/blogs">
-                          Explorar todo el repositorio
+                          Ver todos los blogs
                         </Link>
                       </div>
                     </div>
@@ -148,7 +149,7 @@ export default async function HomePage() {
                       </div>
                       <div className={styles.repoFolderAcciones}>
                         <Link prefetch={false} className={`${styles.boton} ${styles.botonPapel}`} href="/blogs">
-                          <span>Explorar entregas</span> <IconoFlecha />
+                          <span>Ver blogs</span> <IconoFlecha />
                         </Link>
                         <Link prefetch={false} className={styles.enlaceTecnico} href="/nosotros">
                           Conocer al equipo
@@ -213,7 +214,7 @@ export default async function HomePage() {
               </p>
               <div className={styles.acciones}>
                 <Link prefetch={false} className={`${styles.boton} ${styles.botonCarbon}`} href="/blogs">
-                  <span>Explorar entregas</span> <IconoFlecha />
+                  <span>Ver blogs</span> <IconoFlecha />
                 </Link>
                 <Link prefetch={false} className={`${styles.boton} ${styles.botonLineaClara}`} href="/nosotros">
                   <span>Conocer al equipo</span> <IconoFlecha />
@@ -307,8 +308,8 @@ export default async function HomePage() {
           <div className={styles.equipoCtaTerminal}>
             <span className={styles.meta}>contributors.json</span>
             <p>
-              <span>{teamMembers.length || "—"}</span>{" "}
-              {teamMembers.length === 1 ? "persona" : "personas"},<br />
+              <span>{userCount || "0"}</span>{" "}
+              {userCount === 1 ? "persona" : "personas"},<br />
               un repositorio común.
             </p>
           </div>
