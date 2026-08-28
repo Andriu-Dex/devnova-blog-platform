@@ -100,15 +100,6 @@
   border-top: 1px solid var(--color-line, #c9c6bb);
   background-color: var(--color-canvas, #f7f3e8);
 }
-.author {
-  font-family: var(--font-mono, monospace);
-  font-size: 0.75rem;
-  color: var(--color-carbon-muted, #51545a);
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.author svg { flex-shrink: 0; }
 .infoWrap { position: relative; }
 .infoBtn {
   background: none;

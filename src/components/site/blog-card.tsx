@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import styles from "./blog-card.module.css";
-import { IconoTerminal, IconoUser, IconoInfo } from "./devbox-pieces";
+import { IconoTerminal, IconoInfo } from "./devbox-pieces";
 
 interface BlogCardProps {
   slug: string;
@@ -43,22 +43,18 @@ export function BlogCard({ slug, title, summary, author, date, categoryName, cov
 
       {/* Body */}
       <div className={styles.body}>
-        <div className={styles.meta}>
-          {categoryName && (
-            <span className={styles.category}>{categoryName}</span>
-          )}
-          <span>{formattedDate}</span>
-        </div>
         <h3 className={styles.title}>{title}</h3>
         {summary && <p className={styles.summary}>{summary}</p>}
       </div>
 
       {/* Footer */}
       <div className={styles.footer}>
-        <span className={styles.author}>
-          <IconoUser />
-          {author}
-        </span>
+        <div className={styles.meta}>
+          {categoryName && (
+            <span className={styles.category}>{categoryName}</span>
+          )}
+          <span>{formattedDate}</span>
+        </div>
 
         <div className={styles.infoWrap}>
           <button
