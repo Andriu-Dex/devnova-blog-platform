@@ -41,7 +41,20 @@ export async function registerUploadedMedia({
   signature: string;
   actorUserId: string;
   metadata: AuthMetadata;
-}): Promise<{ success?: boolean; mediaAssetId?: string; error?: string }> {
+}): Promise<{
+  success?: boolean;
+  mediaAssetId?: string;
+  mediaItem?: {
+    id: string;
+    publicId: string;
+    format: string;
+    originalFilename: string;
+    width: number;
+    height: number;
+    sizeBytes: number;
+  };
+  error?: string;
+}> {
   // 1. Validar firma de respuesta de Cloudinary
   const isSignatureValid = verifyUploadResponseSignature(publicId, version, signature);
   if (!isSignatureValid) {
@@ -83,7 +96,7 @@ export async function registerUploadedMedia({
 
   // 4. Registro en PostgreSQL con manejo de idempotencia y auditoría
   try {
-    const mediaAssetId = await db.transaction(async (tx) => {
+    const registeredAsset = await db.transaction(async (tx) => {
       // Comprobar si ya existe registrado
       const existing = await tx
         .select()
@@ -103,7 +116,15 @@ export async function registerUploadedMedia({
           item.cloudinaryPublicId === canonical.publicId
         ) {
           // Idempotente: ya está registrado
-          return item.id;
+          return {
+            id: item.id,
+            publicId: item.cloudinaryPublicId,
+            format: item.format,
+            originalFilename: item.originalFilename,
+            width: item.width,
+            height: item.height,
+            sizeBytes: item.sizeBytes,
+          };
         }
         throw new Error("INCONSISTENT_EXISTING_ASSET");
       }
@@ -150,10 +171,22 @@ export async function registerUploadedMedia({
         mediaAssetId: newMedia.id,
       });
 
-      return newMedia.id;
+      return {
+        id: newMedia.id,
+        publicId: canonical.publicId,
+        format: normalizedFormat,
+        originalFilename: canonical.originalFilename.substring(0, 255),
+        width: canonical.width,
+        height: canonical.height,
+        sizeBytes: canonical.bytes,
+      };
     });
 
-    return { success: true, mediaAssetId };
+    return { 
+      success: true, 
+      mediaAssetId: registeredAsset.id,
+      mediaItem: registeredAsset,
+    };
   } catch (err: unknown) {
     if (err instanceof Error && err.message === "INCONSISTENT_EXISTING_ASSET") {
       return { error: "Inconsistencia con un asset previamente registrado." };

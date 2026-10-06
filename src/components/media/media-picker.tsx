@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import styles from "./media-picker.module.css";
+
+const emptySubscribe = () => () => {};
 
 export interface MediaItem {
   id: string;
@@ -23,31 +25,42 @@ interface MediaPickerProps {
   mediaList: MediaItem[];
   onSelect: (mediaId: string, altText: string) => void;
   onSelectMultiple?: (items: {id: string, alt: string}[]) => void;
+  onMediaUploaded?: (item: MediaItem) => void;
   requireAltText: boolean;
   buttonLabel: string;
 }
 
-export function MediaPicker({ mediaList, onSelect, onSelectMultiple, requireAltText, buttonLabel }: MediaPickerProps) {
+export function MediaPicker({ mediaList, onSelect, onSelectMultiple, onMediaUploaded, requireAltText, buttonLabel }: MediaPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
+  const isMounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [altText, setAltText] = useState("");
   const [error, setError] = useState("");
+  const [localUploaded, setLocalUploaded] = useState<MediaItem[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  const combinedMediaList = [
+    ...localUploaded,
+    ...mediaList.filter(m => !localUploaded.some(u => u.id === m.id))
+  ];
 
   const handleOpen = () => {
     setIsOpen(true);
     setSelectedId(null);
     setAltText("");
     setError("");
+    setIsUploading(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleClose = () => {
     setIsOpen(false);
+    setIsUploading(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleSelect = () => {
@@ -89,20 +102,32 @@ export function MediaPicker({ mediaList, onSelect, onSelectMultiple, requireAltT
       const uploadedItems = [];
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const { mediaAssetId } = await uploadFileDirectly(file);
+        const res = await uploadFileDirectly(file);
         const cleanAlt = (files.length === 1 ? altText.trim() : "") || file.name;
-        uploadedItems.push({ id: mediaAssetId, alt: cleanAlt });
+        uploadedItems.push({ id: res.mediaAssetId, alt: cleanAlt });
+
+        const uploadedMedia = res.mediaItem;
+        if (uploadedMedia) {
+          setLocalUploaded((prev) => [uploadedMedia, ...prev.filter(p => p.id !== uploadedMedia.id)]);
+          if (onMediaUploaded) {
+            onMediaUploaded(uploadedMedia);
+          }
+        }
       }
       
       if (onSelectMultiple) {
         onSelectMultiple(uploadedItems);
-      } else {
+      } else if (uploadedItems.length > 0) {
         onSelect(uploadedItems[0].id, uploadedItems[0].alt);
       }
       handleClose();
-    } catch (err: any) {
-      setError(err.message || "Error al subir la(s) imagen(es)");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error al subir la(s) imagen(es)");
+    } finally {
       setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
@@ -168,13 +193,13 @@ export function MediaPicker({ mediaList, onSelect, onSelectMultiple, requireAltT
 
             <div className={styles.modalBody}>
               {activeTab === "library" ? (
-                mediaList.length === 0 ? (
+                combinedMediaList.length === 0 ? (
                   <div className={styles.emptyState}>
                     No hay archivos disponibles en la biblioteca.
                   </div>
                 ) : (
                   <div className={styles.grid}>
-                    {mediaList.map((item) => {
+                    {combinedMediaList.map((item) => {
                       const isSelected = selectedId === item.id;
                       return (
                         <div

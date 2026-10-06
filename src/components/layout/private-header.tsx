@@ -32,7 +32,13 @@ function HomeIcon() {
   );
 }
 
-const adminLinks = [
+interface HeaderNavLink {
+  href: string;
+  label: string;
+  icon?: React.ReactNode;
+}
+
+const adminLinks: HeaderNavLink[] = [
   { href: "/admin", label: "Panel" },
   { href: "/admin/authors", label: "Autores" },
   { href: "/dashboard/blogs", label: "Blogs" },
@@ -46,7 +52,7 @@ const adminLinks = [
   { href: "/", label: "Home", icon: <HomeIcon /> },
 ];
 
-const authorLinks = [
+const authorLinks: HeaderNavLink[] = [
   { href: "/dashboard", label: "Panel" },
   { href: "/dashboard/blogs", label: "Blogs" },
   { href: "/dashboard/blogs/new", label: "Nuevo blog" },
@@ -92,7 +98,7 @@ export function PrivateHeader({ displayName, role }: PrivateHeaderProps) {
       <nav className={`${styles.navBar} ${menuOpen ? styles.navBarOpen : ""}`} aria-label="Navegación del panel">
         <ul className={styles.navList}>
           {navLinks.map((link) => {
-            const { href, label, icon } = link as any;
+            const { href, label, icon } = link;
             const isActive = pathname === href || (href !== "/admin" && href !== "/dashboard" && pathname.startsWith(href));
             return (
               <li key={href}>

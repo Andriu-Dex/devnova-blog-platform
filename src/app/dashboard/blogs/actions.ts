@@ -29,7 +29,13 @@ async function getMetadata() {
   return { ipAddress, userAgent };
 }
 
-type BlogActionState = { error?: string; success?: string | boolean; blogId?: string } | null;
+type BlogActionState = { 
+  error?: string; 
+  success?: string | boolean; 
+  blogId?: string;
+  versionId?: string;
+  versionNumber?: number;
+} | null;
 
 export async function createBlogAction(prevState: unknown, formData: FormData): Promise<BlogActionState> {
   const user = await requireAuthorOrAdmin();
@@ -80,7 +86,10 @@ export async function editBlogAction(prevState: unknown, formData: FormData): Pr
   const summary = formData.get("summary");
   const contentMarkdown = formData.get("contentMarkdown");
   const categoryIdRaw = formData.get("categoryId");
-  const changeSummary = formData.get("changeSummary");
+  const changeSummaryRaw = formData.get("changeSummary");
+  const changeSummary = (typeof changeSummaryRaw === "string" && changeSummaryRaw.trim())
+    ? changeSummaryRaw.trim()
+    : "Actualización de contenido";
 
   if (typeof blogId !== "string" || !blogId) {
     return { error: "ID de blog inválido." };
@@ -98,8 +107,8 @@ export async function editBlogAction(prevState: unknown, formData: FormData): Pr
   if (typeof contentMarkdown !== "string" || !contentMarkdown.trim()) {
     return { error: "El contenido es requerido." };
   }
-  if (typeof changeSummary !== "string" || !changeSummary.trim() || changeSummary.trim().length > 500) {
-    return { error: "El resumen del cambio es requerido y debe tener máximo 500 caracteres." };
+  if (changeSummary.length > 500) {
+    return { error: "El resumen del cambio debe tener máximo 500 caracteres." };
   }
 
   const coverMediaAssetId = formData.get("coverMediaAssetId") as string | null || null;
@@ -127,7 +136,11 @@ export async function editBlogAction(prevState: unknown, formData: FormData): Pr
 
   revalidatePath(`/dashboard/blogs`);
   revalidatePath(`/dashboard/blogs/${blogId}/edit`);
-  return { success: "El blog ha sido actualizado exitosamente." };
+  return { 
+    success: `Borrador guardado exitosamente (v${result.versionNumber || ""}).`,
+    versionId: result.versionId,
+    versionNumber: result.versionNumber,
+  };
 }
 
 export async function publishBlogAction(blogId: string) {

@@ -51,5 +51,8 @@ export async function uploadFileDirectly(file: File) {
     throw new Error(registerRes.error);
   }
 
-  return { mediaAssetId: registerRes.mediaAssetId! };
+  return { 
+    mediaAssetId: registerRes.mediaAssetId!,
+    mediaItem: registerRes.mediaItem,
+  };
 }

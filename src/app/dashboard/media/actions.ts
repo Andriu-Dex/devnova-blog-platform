@@ -49,7 +49,29 @@ export async function registerUploadedMediaAction(data: {
   }
 
   revalidatePath("/dashboard/media");
-  return { success: true, mediaAssetId: result.mediaAssetId };
+  
+  let mediaItem = undefined;
+  if (result.mediaItem) {
+    const { getDeliveryUrl } = await import("@/server/media/cloudinary");
+    mediaItem = {
+      id: result.mediaItem.id,
+      publicId: result.mediaItem.publicId,
+      format: result.mediaItem.format,
+      originalFilename: result.mediaItem.originalFilename,
+      width: result.mediaItem.width,
+      height: result.mediaItem.height,
+      sizeBytes: result.mediaItem.sizeBytes,
+      uploaderName: user.displayName || "Tú",
+      createdAt: new Date(),
+      thumbnailUrl: getDeliveryUrl(result.mediaItem.publicId, 400),
+    };
+  }
+
+  return { 
+    success: true, 
+    mediaAssetId: result.mediaAssetId,
+    mediaItem,
+  };
 }
 
 export async function deleteMediaAction(mediaAssetId: string) {

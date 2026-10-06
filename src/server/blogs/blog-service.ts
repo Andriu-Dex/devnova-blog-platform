@@ -428,7 +428,7 @@ export async function createBlogVersion(
   changeSummary: string,
   actorUserId: string,
   metadata: AuthMetadata
-): Promise<{ success?: boolean; error?: string }> {
+): Promise<{ success?: boolean; versionId?: string; versionNumber?: number; error?: string }> {
   const cleanTitle = title.trim();
   const cleanSummary = summary.trim();
   const cleanChangeSummary = changeSummary.trim();
@@ -448,6 +448,8 @@ export async function createBlogVersion(
   }
 
   try {
+    let createdVersion: { id: string; versionNumber: number } | undefined;
+
     await db.transaction(async (tx) => {
       // 1. Lock blogs row FOR UPDATE
       const lockedBlogs = await tx
@@ -553,7 +555,12 @@ export async function createBlogVersion(
           coverAltText: coverMediaAssetId ? coverAltText?.trim() : null,
           createdAt: new Date(),
         })
-        .returning({ id: blogVersions.id });
+        .returning({ id: blogVersions.id, versionNumber: blogVersions.versionNumber });
+
+      createdVersion = {
+        id: newVersion.id,
+        versionNumber: newVersion.versionNumber,
+      };
 
       // Insert media links
       if (extractedMediaIds.length > 0) {
@@ -584,7 +591,11 @@ export async function createBlogVersion(
       });
     });
 
-    return { success: true };
+    return { 
+      success: true, 
+      versionId: createdVersion?.id, 
+      versionNumber: createdVersion?.versionNumber 
+    };
   } catch (err: unknown) {
     if (err instanceof Error && err.message === "MEDIA_NOT_FOUND") {
       return { error: "Una de las imágenes seleccionadas ya no existe." };

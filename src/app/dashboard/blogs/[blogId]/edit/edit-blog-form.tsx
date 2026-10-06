@@ -51,16 +51,32 @@ export function EditBlogForm({
   const isAnyPending = isPending || isPendingPublish;
   const activeState = state || statePublish;
   
+  // Derive current version to avoid optimistic concurrency conflicts on successive saves
+  const baseVersionId = state?.versionId || latestVersion.id;
+  const currentVersionNumber = state?.versionNumber || latestVersion.versionNumber;
+
+  // Reactive media list so newly uploaded/pasted images are instantly usable in preview and picker
+  const [currentMediaList, setCurrentMediaList] = useState<MediaItem[]>(mediaList);
+
   const [title, setTitle] = useState(latestVersion.title);
   const [summary, setSummary] = useState(latestVersion.summary);
   const [categoryId, setCategoryId] = useState(latestVersion.categoryId || "");
   const [contentMarkdown, setContentMarkdown] = useState(latestVersion.contentMarkdown);
   const [coverMediaId, setCoverMediaId] = useState<string | null>(latestVersion.coverMediaAssetId || null);
   const [coverAltText, setCoverAltText] = useState<string>(latestVersion.coverAltText || "");
-  const [changeSummary, setChangeSummary] = useState("");
+  const [changeSummary, setChangeSummary] = useState(latestVersion.changeSummary || "");
   const [viewMode, setViewMode] = useState<SplitViewMode>("split");
+  const [toastDismissed, setToastDismissed] = useState(false);
+  const showToast = Boolean((activeState?.success || activeState?.error) && !toastDismissed);
+  const toastMessage = activeState?.error 
+    ? activeState.error 
+    : typeof activeState?.success === "string" 
+      ? activeState.success 
+      : "Borrador guardado exitosamente.";
+  const toastType: "success" | "error" = activeState?.error ? "error" : "success";
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const currentData = {
     title,
@@ -88,12 +104,33 @@ export function EditBlogForm({
     }
   }, [state, statePublish, draftProps, router]);
 
-  const selectedCover = coverMediaId ? mediaList.find(m => m.id === coverMediaId) : null;
+  // Keyboard shortcut Ctrl+S / Cmd+S to save draft
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        if (!isAnyPending) {
+          const form = document.getElementById("edit-blog-form") as HTMLFormElement | null;
+          if (form) {
+            form.requestSubmit();
+          }
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isAnyPending]);
+
+  const handleMediaUploaded = (newMedia: MediaItem) => {
+    setCurrentMediaList((prev) => [newMedia, ...prev.filter((m) => m.id !== newMedia.id)]);
+  };
+
+  const selectedCover = coverMediaId ? currentMediaList.find((m) => m.id === coverMediaId) : null;
 
   const insertIntoMarkdown = (mediaId: string, altText: string) => {
     if (!textareaRef.current) return;
     const textarea = textareaRef.current;
-    const insertText = `![${altText}](media://${mediaId})`;
+    const insertText = `![${altText || "imagen"}](media://${mediaId})`;
     
     textarea.setRangeText(
       insertText,
@@ -108,7 +145,7 @@ export function EditBlogForm({
   const insertMultipleIntoMarkdown = (items: { id: string, alt: string }[]) => {
     if (!textareaRef.current) return;
     const textarea = textareaRef.current;
-    const insertText = items.map(item => `![${item.alt}](media://${item.id})`).join("\n\n");
+    const insertText = items.map(item => `![${item.alt || "imagen"}](media://${item.id})`).join("\n\n");
     
     textarea.setRangeText(
       insertText,
@@ -137,8 +174,12 @@ export function EditBlogForm({
     
     try {
       const { uploadFileDirectly } = await import("@/components/media/direct-uploader");
-      const { mediaAssetId } = await uploadFileDirectly(file);
+      const { mediaAssetId, mediaItem } = await uploadFileDirectly(file);
       
+      if (mediaItem) {
+        handleMediaUploaded(mediaItem);
+      }
+
       const newTextareaValue = textarea.value.replace(placeholder, `![${file.name}](media://${mediaAssetId})`);
       setContentMarkdown(newTextareaValue);
       setTimeout(() => {
@@ -212,9 +253,22 @@ export function EditBlogForm({
     setContentMarkdown(data.contentMarkdown);
   };
 
+  const isDirty = 
+    title !== latestVersion.title || 
+    contentMarkdown !== latestVersion.contentMarkdown || 
+    summary !== latestVersion.summary;
+
+  const handleBackClick = (e: React.MouseEvent) => {
+    if (isDirty) {
+      if (!confirm("Tienes cambios sin guardar en el servidor. ¿Seguro que deseas salir del editor?")) {
+        e.preventDefault();
+      }
+    }
+  };
+
   const EditorComponent = (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", paddingRight: viewMode === "split" ? "12px" : "0" }}>
-      <div className={styles.editorToolbar} style={{ position: "sticky", top: "12px", zIndex: 10, backgroundColor: "#ffffff" }}>
+      <div className={styles.editorToolbar} style={{ position: "sticky", top: "72px", zIndex: 10, backgroundColor: "#ffffff" }}>
         <button type="button" onClick={() => insertFormatting("**")} className={styles.toolbarBtn} title="Negrita"><b>B</b></button>
         <button type="button" onClick={() => insertFormatting("*")} className={styles.toolbarBtn} title="Cursiva"><i>I</i></button>
         <div style={{ width: "1px", height: "20px", background: "#e5e7eb", margin: "0 4px", alignSelf: "center" }} />
@@ -224,15 +278,25 @@ export function EditBlogForm({
         <button type="button" onClick={() => insertFormatting("[", "](url)")} className={styles.toolbarBtn}>Enlace</button>
         <button type="button" onClick={() => insertFormatting("`")} className={styles.toolbarBtn}>Código</button>
         <button type="button" onClick={() => insertFormatting("```\n", "\n```")} className={styles.toolbarBtn}>Bloque</button>
+        <button 
+          type="button" 
+          onClick={() => insertFormatting("```mermaid\ngraph TD\n  A[Inicio] --> B[Proceso]\n  B --> C[Fin]\n```\n", "")} 
+          className={styles.toolbarBtn}
+          title="Insertar diagrama Mermaid"
+          style={{ display: "inline-flex", alignItems: "center", gap: "4px", backgroundColor: "#f0fdf4", color: "#166534", border: "1px solid #bbf7d0", fontWeight: 600 }}
+        >
+          📊 Mermaid
+        </button>
         <button type="button" onClick={() => insertFormatting("> ", "")} className={styles.toolbarBtn}>Cita</button>
         <button type="button" onClick={() => insertFormatting("- ", "")} className={styles.toolbarBtn}>Lista</button>
         <div style={{ width: "1px", height: "20px", background: "#e5e7eb", margin: "0 4px", alignSelf: "center" }} />
         <MediaPicker 
-          mediaList={mediaList} 
+          mediaList={currentMediaList} 
           requireAltText={true} 
           buttonLabel="📸 Insertar imagen" 
           onSelect={insertIntoMarkdown}
           onSelectMultiple={insertMultipleIntoMarkdown}
+          onMediaUploaded={handleMediaUploaded}
         />
       </div>
       <textarea
@@ -242,34 +306,18 @@ export function EditBlogForm({
         required
         className={styles.modernTextarea}
         style={{ flex: 1, minHeight: "800px" }}
-        placeholder="Comienza a escribir tu contenido aquí..."
+        placeholder="Comienza a escribir tu contenido aquí en Markdown..."
         value={contentMarkdown}
         onChange={(e) => setContentMarkdown(e.target.value)}
         onPaste={handlePaste}
         onDrop={handleDrop}
         onDragOver={(e) => e.preventDefault()}
       />
-      
-      <div style={{ marginTop: "24px", backgroundColor: "#f9fafb", padding: "16px", borderRadius: "10px", border: "1px solid #e5e7eb", flexShrink: 0 }}>
-        <label htmlFor="changeSummary" className={styles.label} style={{ color: "#374151" }}>Resumen del cambio (Auditoría) *</label>
-        <input
-          id="changeSummary"
-          name="changeSummary"
-          type="text"
-          required
-          maxLength={500}
-          className={styles.modernInput}
-          style={{ backgroundColor: "#ffffff", padding: "8px 12px", border: "1px solid #d1d5db", borderRadius: "6px", marginTop: "8px", fontSize: "0.9rem" }}
-          placeholder="Ej: Corrección de introducción"
-          value={changeSummary}
-          onChange={(e) => setChangeSummary(e.target.value)}
-        />
-      </div>
     </div>
   );
 
   const PreviewComponent = (
-    <div style={{ height: "100%", paddingLeft: viewMode === "split" ? "12px" : "0", alignSelf: "flex-start", position: "sticky", top: "12px" }}>
+    <div style={{ height: "100%", paddingLeft: viewMode === "split" ? "12px" : "0", alignSelf: "flex-start", position: "sticky", top: "72px" }}>
       <div style={{ border: "1px solid #e5e7eb", borderRadius: "12px", backgroundColor: "#ffffff" }}>
         <BlogPreviewClient 
           blog={{
@@ -283,7 +331,7 @@ export function EditBlogForm({
             categoryName: categories.find(c => c.id === categoryId)?.name,
             categorySlug: categories.find(c => c.id === categoryId)?.slug,
           }}
-          mediaMap={new Map(mediaList.map(m => [m.id, { id: m.id, publicId: m.publicId, width: m.width, height: m.height }]))}
+          mediaMap={new Map(currentMediaList.map(m => [m.id, { id: m.id, publicId: m.publicId, width: m.width, height: m.height }]))}
         />
       </div>
     </div>
@@ -291,29 +339,91 @@ export function EditBlogForm({
 
   const containerStyle = viewMode === "split" 
     ? { width: "100vw", marginLeft: "calc(50% - 50vw)", padding: "0 40px" }
-    : { maxWidth: "900px", margin: "0 auto" };
+    : { maxWidth: "950px", margin: "0 auto" };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", ...containerStyle }}>
       
-      {/* HEADER / BARRA DE ACCIONES SUPERIOR */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px", flexShrink: 0, gap: "16px", flexWrap: "wrap" }}>
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            <h2 className={styles.title} style={{ fontSize: "1.5rem", marginBottom: 0 }}>Editando: {latestVersion.title}</h2>
-            {draftProps.saveStatus !== "idle" && (
-              <span style={{ fontSize: "0.8rem", color: "#6b7280", background: "#f3f4f6", padding: "4px 8px", borderRadius: "4px", whiteSpace: "nowrap" }}>
-                {draftProps.saveStatus === "saving" ? "Guardando..." : `Guardado local a las ${new Date(draftProps.lastSavedAt || 0).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`}
-              </span>
-            )}
+      {/* TOAST FEEDBACK NOTIFICATION */}
+      {showToast && (
+        <div 
+          style={{
+            position: "fixed",
+            bottom: "28px",
+            right: "28px",
+            zIndex: 100,
+            backgroundColor: toastType === "success" ? "#065f46" : "#991b1b",
+            color: "#ffffff",
+            padding: "12px 22px",
+            borderRadius: "10px",
+            boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)",
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            fontSize: "0.9rem",
+            fontWeight: 500,
+          }}
+        >
+          <span>{toastType === "success" ? "✓" : "⚠️"}</span>
+          <span>{toastMessage}</span>
+          <button 
+            type="button" 
+            onClick={() => setToastDismissed(true)}
+            style={{ background: "none", border: "none", color: "#ffffff", cursor: "pointer", marginLeft: "8px", fontWeight: "bold" }}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      {/* STICKY HEADER / BARRA DE NAVEGACIÓN Y ACCIONES SUPERIOR */}
+      <div 
+        style={{ 
+          position: "sticky",
+          top: 0,
+          zIndex: 35,
+          backgroundColor: "rgba(255, 255, 255, 0.95)",
+          backdropFilter: "blur(12px)",
+          borderBottom: "1px solid #e5e7eb",
+          padding: "12px 16px",
+          marginBottom: "16px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "16px",
+          flexWrap: "wrap",
+          borderRadius: "0 0 12px 12px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.03)"
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+          <Link 
+            href="/dashboard/blogs" 
+            onClick={handleBackClick}
+            className={styles.actionButton} 
+            style={{ padding: "6px 12px", margin: 0, display: "inline-flex", alignItems: "center", gap: "6px" }}
+            title="Volver al listado de blogs"
+          >
+            ← Volver
+          </Link>
+          
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <h2 className={styles.title} style={{ fontSize: "1.25rem", margin: 0, maxWidth: "320px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={title || latestVersion.title}>
+              {title || latestVersion.title}
+            </h2>
+            <span style={{ fontSize: "0.75rem", background: "#e0f2fe", color: "#0369a1", padding: "2px 8px", borderRadius: "999px", fontWeight: 600 }}>
+              v{currentVersionNumber}
+            </span>
           </div>
-          <div style={{ display: "flex", gap: "16px", fontSize: "0.8rem", color: "#6b7280", marginTop: "4px" }}>
-            <span>Versión actual: v{latestVersion.versionNumber}</span>
-            <span>Última edición: {latestVersion.createdAt.toLocaleDateString()}</span>
-          </div>
+
+          {draftProps.saveStatus !== "idle" && (
+            <span style={{ fontSize: "0.75rem", color: "#6b7280", background: "#f3f4f6", padding: "3px 8px", borderRadius: "4px", whiteSpace: "nowrap" }}>
+              {draftProps.saveStatus === "saving" ? "Guardando local..." : `Borrador local: ${new Date(draftProps.lastSavedAt || 0).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`}
+            </span>
+          )}
         </div>
         
-        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
           <div className={styles.viewModeContainer}>
             <button className={`${styles.viewModeButton} ${viewMode === "editor" ? styles.active : ""}`} onClick={() => setViewMode("editor")} title="Solo Editor">
               Editor
@@ -326,7 +436,7 @@ export function EditBlogForm({
             </button>
           </div>
           
-          <Link href={`/dashboard/blogs/${blog.id}/preview`} target="_blank" className={styles.actionButton} style={{ display: "inline-flex", alignItems: "center", height: "34px", padding: "0 12px", margin: 0 }}>
+          <Link href={`/dashboard/blogs/${blog.id}/preview`} target="_blank" className={styles.actionButton} style={{ display: "inline-flex", alignItems: "center", height: "34px", padding: "0 10px", margin: 0 }} title="Abrir vista previa en nueva pestaña">
             Abrir ↗
           </Link>
           
@@ -335,14 +445,28 @@ export function EditBlogForm({
           <div style={{ width: "1px", height: "24px", background: "#e5e7eb" }}></div>
           
           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-            <Link href="/dashboard/blogs" className={styles.actionButton} style={{ padding: "8px 16px", margin: 0 }}>
-              Volver
-            </Link>
-            <button type="submit" form="edit-blog-form" formAction={formAction} disabled={isAnyPending} className={styles.submitButton} style={{ margin: 0, padding: "8px 16px", backgroundColor: "#f3f4f6", color: "#1f2937", border: "1px solid #d1d5db" }}>
-              {isPending ? "Guardando..." : "Guardar Borrador"}
+            <button 
+              type="submit" 
+              form="edit-blog-form" 
+              formAction={formAction} 
+              disabled={isAnyPending} 
+              className={styles.submitButton} 
+              style={{ margin: 0, padding: "8px 14px", backgroundColor: "#f3f4f6", color: "#1f2937", border: "1px solid #d1d5db", display: "inline-flex", alignItems: "center", gap: "6px" }}
+              title="Guardar borrador en el servidor (Ctrl + S)"
+            >
+              {isPending ? "Guardando..." : "💾 Guardar Borrador"}
+              <span style={{ fontSize: "0.7rem", color: "#6b7280", background: "#e5e7eb", padding: "1px 5px", borderRadius: "3px" }}>Ctrl+S</span>
             </button>
-            <button type="submit" form="edit-blog-form" formAction={formActionPublish} disabled={isAnyPending} className={styles.submitButton} style={{ margin: 0, padding: "8px 16px", backgroundColor: "#10b981" }}>
-              {isPendingPublish ? "Publicando..." : "Guardar y Publicar"}
+            <button 
+              type="submit" 
+              form="edit-blog-form" 
+              formAction={formActionPublish} 
+              disabled={isAnyPending} 
+              className={styles.submitButton} 
+              style={{ margin: 0, padding: "8px 14px", backgroundColor: "#10b981", color: "#ffffff", border: "none" }}
+              title="Guardar y publicar de inmediato"
+            >
+              {isPendingPublish ? "Publicando..." : "🚀 Guardar y Publicar"}
             </button>
           </div>
         </div>
@@ -366,7 +490,7 @@ export function EditBlogForm({
       )}
 
       {/* FORM AND METADATA */}
-      <form id="edit-blog-form" style={{ display: "flex", flexDirection: "column", flex: 1, paddingBottom: "24px" }}>
+      <form id="edit-blog-form" ref={formRef} style={{ display: "flex", flexDirection: "column", flex: 1, paddingBottom: "24px" }}>
         {activeState?.error && (
           <div className={styles.errorMessage} role="alert">
             {activeState.error}
@@ -380,27 +504,16 @@ export function EditBlogForm({
         )}
 
         <input type="hidden" name="blogId" value={blog.id} />
-        <input type="hidden" name="baseVersionId" value={latestVersion.id} />
-        
-        {state?.error && (
-          <div className={styles.errorMessage} role="alert">
-            {state.error}
-          </div>
-        )}
-        
-        {state?.success && (
-          <div className={styles.successMessage} role="alert">
-            {state.success}
-          </div>
-        )}
+        {/* Dynamic baseVersionId state avoids optimistic concurrency errors on multiple saves */}
+        <input type="hidden" name="baseVersionId" value={baseVersionId} />
 
         {coverMediaId && <input type="hidden" name="coverMediaAssetId" value={coverMediaId} />}
         {coverAltText && <input type="hidden" name="coverAltText" value={coverAltText} />}
 
-        {/* METADATA FIELDS (Moved to the top) */}
-        <div style={{ marginBottom: "24px" }}>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", marginBottom: "16px" }}>
-            <div style={{ flex: "1 1 300px" }}>
+        {/* METADATA FIELDS */}
+        <div style={{ marginBottom: "20px", backgroundColor: "#ffffff", padding: "16px", borderRadius: "12px", border: "1px solid #e5e7eb" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", marginBottom: "16px", alignItems: "flex-start" }}>
+            <div style={{ flex: "1 1 320px" }}>
               <input
                 id="title"
                 name="title"
@@ -408,7 +521,7 @@ export function EditBlogForm({
                 required
                 maxLength={200}
                 className={styles.modernInput}
-                style={{ fontSize: "2rem", fontWeight: 700 }}
+                style={{ fontSize: "1.8rem", fontWeight: 700 }}
                 placeholder="Título del artículo"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -417,9 +530,9 @@ export function EditBlogForm({
             
             <div style={{ flex: "0 0 auto", minWidth: "200px" }}>
               {selectedCover ? (
-                <div style={{ display: "flex", gap: "12px", alignItems: "center", border: "1px solid #e5e7eb", borderRadius: "8px", padding: "8px" }}>
+                <div style={{ display: "flex", gap: "12px", alignItems: "center", border: "1px solid #e5e7eb", borderRadius: "8px", padding: "8px", backgroundColor: "#f9fafb" }}>
                   <div style={{ position: "relative", width: "60px", height: "40px", backgroundColor: "#f1f2f4", borderRadius: "4px", overflow: "hidden" }}>
-                    <Image src={selectedCover.thumbnailUrl} alt={coverAltText} fill style={{ objectFit: "cover" }} unoptimized />
+                    <Image src={selectedCover.thumbnailUrl} alt={coverAltText || "Portada"} fill style={{ objectFit: "cover" }} unoptimized />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: "0.75rem", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{selectedCover.originalFilename}</div>
@@ -436,13 +549,14 @@ export function EditBlogForm({
               ) : (
                 <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
                   <MediaPicker 
-                    mediaList={mediaList} 
+                    mediaList={currentMediaList} 
                     requireAltText={true} 
-                    buttonLabel="Añadir portada" 
+                    buttonLabel="🖼️ Añadir portada" 
                     onSelect={(id, alt) => {
                       setCoverMediaId(id);
                       setCoverAltText(alt);
-                    }} 
+                    }}
+                    onMediaUploaded={handleMediaUploaded}
                   />
                 </div>
               )}
@@ -456,19 +570,19 @@ export function EditBlogForm({
             required
             maxLength={500}
             className={styles.modernInput}
-            style={{ marginBottom: "16px" }}
+            style={{ marginBottom: "16px", fontSize: "1rem" }}
             placeholder="Escribe un breve resumen de lo que trata el artículo..."
             value={summary}
             onChange={(e) => setSummary(e.target.value)}
           />
 
-          <div style={{ display: "flex", gap: "16px" }}>
-            <div style={{ flex: 1 }}>
+          <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center" }}>
+            <div style={{ flex: "1 1 200px" }}>
               <select
                 id="categoryId"
                 name="categoryId"
                 className={styles.modernInput}
-                style={{ fontSize: "0.9rem", color: categoryId ? "#121419" : "#9ca3af" }}
+                style={{ fontSize: "0.9rem", color: categoryId ? "#121419" : "#9ca3af", padding: "6px 0" }}
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
               >
@@ -480,8 +594,23 @@ export function EditBlogForm({
                 ))}
               </select>
             </div>
-            <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
-               <span style={{ fontSize: "0.9rem", color: "#6b7280" }}>Slug: /{blog.slug}</span>
+
+            <div style={{ flex: "1 1 280px" }}>
+              <input
+                id="changeSummary"
+                name="changeSummary"
+                type="text"
+                maxLength={500}
+                className={styles.modernInput}
+                style={{ fontSize: "0.9rem", padding: "6px 10px", border: "1px solid #d1d5db", borderRadius: "6px", backgroundColor: "#ffffff" }}
+                placeholder="Resumen del cambio (Ej: Modifiqué sección técnica)"
+                value={changeSummary}
+                onChange={(e) => setChangeSummary(e.target.value)}
+              />
+            </div>
+
+            <div style={{ flex: "0 0 auto", display: "flex", alignItems: "center" }}>
+               <span style={{ fontSize: "0.85rem", color: "#6b7280" }}>Slug: /{blog.slug}</span>
             </div>
           </div>
         </div>

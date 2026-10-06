@@ -7,6 +7,8 @@ import { getDeliveryUrlClient } from "@/lib/cloudinary-client";
 
 import { defaultUrlTransform } from "react-markdown";
 
+import { MermaidDiagram } from "./mermaid-diagram";
+
 interface MediaMapItem {
   id: string;
   publicId: string;
@@ -159,6 +161,13 @@ export function MarkdownRenderer({ content, mediaMap = new Map(), allowMedia = t
         code(props) {
           const { children, className } = props;
           const isInline = !className;
+          const match = /language-(\w+)/.exec(className || "");
+          const lang = match ? match[1] : "";
+
+          if (!isInline && lang.toLowerCase() === "mermaid") {
+            return <MermaidDiagram chart={String(children)} />;
+          }
+
           return isInline ? (
             <code style={{ backgroundColor: "#f3f4f6", padding: "0.2rem 0.4rem", borderRadius: "4px", fontFamily: "'IBM Plex Mono', Consolas, monospace", fontSize: "0.9em", color: "#d93025" }}>
               {children}
