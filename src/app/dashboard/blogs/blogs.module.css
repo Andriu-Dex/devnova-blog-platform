@@ -341,3 +341,680 @@
   color: #111827;
 }
 
+/* ──────────────── IMPROVED IN-PAGE BLOG EDITOR (POSITIONED LIKE BEFORE, ELEVATED AESTHETICS) ──────────────── */
+.editorPageContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* ─── TOP ACTION BAR ─── */
+.editorTopBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.editorTopBarLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.editorPageTitle {
+  font-family: 'Space Grotesk', -apple-system, sans-serif;
+  font-size: 1.65rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.draftStatusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  color: #64748b;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 500;
+}
+
+.draftStatusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #10b981;
+  display: inline-block;
+}
+
+.editorTopBarRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* View Mode Pills */
+.viewModePills {
+  display: inline-flex;
+  background-color: #f1f5f9;
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.viewModePillBtn {
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-family: 'Space Grotesk', -apple-system, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.viewModePillBtn:hover {
+  color: #0f172a;
+}
+
+.viewModePillBtn.active {
+  background-color: #ffffff;
+  color: #0f172a;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.topBarDivider {
+  width: 1px;
+  height: 22px;
+  background-color: #e2e8f0;
+  margin: 0 4px;
+}
+
+/* Buttons in top bar */
+.btnGhost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #64748b;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btnGhost:hover {
+  background-color: #f8fafc;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1e293b;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.btnSecondary:hover:not(:disabled) {
+  background-color: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.btnSecondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnPrimaryPublish {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: #059669;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(5, 150, 105, 0.25);
+}
+
+.btnPrimaryPublish:hover:not(:disabled) {
+  background-color: #047857;
+  box-shadow: 0 2px 6px rgba(5, 150, 105, 0.35);
+}
+
+.btnPrimaryPublish:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.kbdTag {
+  font-family: 'IBM Plex Mono', Consolas, monospace;
+  font-size: 0.68rem;
+  padding: 1px 5px;
+  background-color: #e2e8f0;
+  color: #475569;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+/* ─── METADATA CARD (TITLE, COVER, SUMMARY, SLUG, CATEGORY) ─── */
+.metadataCard {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-x: hidden;
+}
+
+.titleRow {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.titleInputWrapper {
+  flex: 1 1 340px;
+}
+
+.titleInputElevated {
+  width: 100%;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 6px 0;
+  font-family: 'Space Grotesk', -apple-system, sans-serif;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #0f172a;
+  background: transparent;
+  transition: border-color 0.2s ease;
+  outline: none;
+}
+
+.titleInputElevated::placeholder {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.titleInputElevated:focus {
+  border-bottom-color: #2563eb;
+}
+
+.coverActionWrapper {
+  flex-shrink: 0;
+}
+
+.btnCoverAdd {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.btnCoverAdd:hover {
+  background-color: #dbeafe;
+  border-color: #93c5fd;
+  color: #1e40af;
+}
+
+.coverCardMini {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.coverCardMiniThumb {
+  position: relative;
+  width: 56px;
+  height: 38px;
+  border-radius: 5px;
+  overflow: hidden;
+  background-color: #e2e8f0;
+  flex-shrink: 0;
+}
+
+.coverCardMiniDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.coverCardMiniName {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+.coverCardMiniActions {
+  display: flex;
+  gap: 8px;
+}
+
+.summaryInputElevated {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem;
+  color: #334155;
+  background-color: #f8fafc;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.summaryInputElevated:focus {
+  background-color: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.summaryInputElevated::placeholder {
+  color: #94a3b8;
+}
+
+.bottomRow {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.slugInputGroup {
+  flex: 1 1 260px;
+  display: flex;
+  align-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background-color: #f8fafc;
+  overflow: hidden;
+  transition: all 0.15s ease;
+}
+
+.slugInputGroup:focus-within {
+  background-color: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.slugPrefix {
+  padding: 8px 10px 8px 12px;
+  font-family: 'IBM Plex Mono', Consolas, monospace;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  background-color: transparent;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.slugInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 8px 12px 8px 0;
+  font-family: 'IBM Plex Mono', Consolas, monospace;
+  font-size: 0.85rem;
+  color: #334155;
+  outline: none;
+}
+
+.categorySelectElevated {
+  flex: 0 1 220px;
+  padding: 8px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background-color: #f8fafc;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
+  color: #334155;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.categorySelectElevated:focus {
+  background-color: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.changeSummaryInput {
+  flex: 1 1 260px;
+  padding: 8px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background-color: #f8fafc;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
+  color: #334155;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.changeSummaryInput:focus {
+  background-color: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* ─── WORKSPACE (RESIZABLE SPLIT VIEW) ─── */
+.workspaceWrapper {
+  height: calc(100vh - 280px);
+  min-height: 580px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+}
+
+.editorPaneElevated {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background-color: #ffffff;
+}
+
+.editorToolbarElevated {
+  min-height: 42px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  overflow-x: hidden; /* NO HORIZONTAL SCROLLBAR */
+  flex-shrink: 0;
+}
+
+.editorToolbarGroup {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+
+.editorToolbarSep {
+  width: 1px;
+  height: 18px;
+  background-color: #e2e8f0;
+  margin: 0 3px;
+}
+
+.editorTextareaElevated {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 20px 24px;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: 'IBM Plex Mono', Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.7;
+  color: #1e293b;
+  background-color: #ffffff;
+  overflow-y: auto;
+  overflow-x: hidden !important; /* NO HORIZONTAL SLIDER */
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.editorTextareaElevated::placeholder {
+  color: #94a3b8;
+}
+
+.previewPaneElevated {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background-color: #eaedf1;
+}
+
+.previewHeaderElevated {
+  height: 44px;
+  min-height: 44px;
+  background-color: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.previewHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.previewDocIcon {
+  font-size: 0.95rem;
+}
+
+.previewTitleText {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #475569;
+  font-family: 'IBM Plex Mono', Consolas, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.previewLivePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.68rem;
+  color: #10b981;
+  background-color: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.previewLiveDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #10b981;
+  animation: previewPulse 2s infinite ease-in-out;
+}
+
+@keyframes previewPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.previewHeaderRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Overleaf-style Zoom Bar */
+.overleafZoomControls {
+  display: flex;
+  align-items: center;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  overflow: hidden;
+  height: 28px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.overleafZoomBtn {
+  background: transparent;
+  border: none;
+  padding: 0 9px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #475569;
+  cursor: pointer;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.overleafZoomBtn:hover:not(:disabled) {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.overleafZoomBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.overleafZoomPill {
+  background: transparent;
+  border: none;
+  border-left: 1px solid #e2e8f0;
+  border-right: 1px solid #e2e8f0;
+  padding: 0 9px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  height: 100%;
+  font-family: 'IBM Plex Mono', Consolas, monospace;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.overleafZoomPill:hover {
+  background-color: #f8fafc;
+  color: #0284c7;
+}
+
+/* Overleaf Fit-Width / Paper Toggle */
+.overleafFitBtn {
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.overleafFitBtn:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+.overleafFitBtnActive {
+  background-color: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border-color: #93c5fd !important;
+}
+
+.previewScrollAreaElevated {
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden !important; /* NO HORIZONTAL SLIDER */
+  padding: 24px 20px 80px;
+  background-color: #eaedf1;
+}
+
+.previewCanvasElevated {
+  width: 100%;
+  margin: 0 auto;
+}
+
+

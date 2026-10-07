@@ -1,32 +1,33 @@
 "use client";
 
-import { useActionState, useRef, useState, useEffect } from "react";
-import { createBlogAction, createAndPublishBlogAction } from "../actions";
-import styles from "../blogs.module.css";
+import { useState, useActionState, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { MediaPicker, MediaItem } from "@/components/media/media-picker";
 import Image from "next/image";
-import { useLocalBlogDraft } from "@/components/blogs/hooks/use-local-blog-draft";
-import { ImportMarkdownButton } from "@/components/blogs/import-markdown-button";
-import type { BlogCategoryItem } from "@/server/blogs/category-service";
+import { useRouter } from "next/navigation";
+import { createBlogAction, createAndPublishBlogAction } from "../actions";
+import { MediaPicker, MediaItem } from "@/components/media/media-picker";
 import { BlogPreviewClient } from "@/components/blogs/blog-preview-client";
 import { ResizableSplitView, SplitViewMode } from "@/components/ui/resizable-split-view";
+import { ImportMarkdownButton } from "@/components/blogs/import-markdown-button";
+import { useLocalBlogDraft } from "@/components/blogs/hooks/use-local-blog-draft";
+import styles from "../blogs.module.css";
 
-export function NewBlogForm({ 
-  mediaList, 
-  categories 
-}: { 
-  mediaList: MediaItem[]; 
-  categories: BlogCategoryItem[];
-}) {
+interface CategoryOption {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+interface NewBlogFormProps {
+  mediaList: MediaItem[];
+  categories: CategoryOption[];
+}
+
+export function NewBlogForm({ mediaList, categories }: NewBlogFormProps) {
   const [state, formAction, isPending] = useActionState(createBlogAction, null);
   const [statePublish, formActionPublish, isPendingPublish] = useActionState(createAndPublishBlogAction, null);
   const isAnyPending = isPending || isPendingPublish;
-  const activeState = state || statePublish;
-
-  // Reactive media list so newly uploaded/pasted images are instantly usable in preview and picker
-  const [currentMediaList, setCurrentMediaList] = useState<MediaItem[]>(mediaList);
+  const activeState = statePublish || state;
 
   const [title, setTitle] = useState("");
   const [slug, setSlug] = useState("");
@@ -36,8 +37,10 @@ export function NewBlogForm({
   const [coverMediaId, setCoverMediaId] = useState<string | null>(null);
   const [coverAltText, setCoverAltText] = useState<string>("");
   const [viewMode, setViewMode] = useState<SplitViewMode>("split");
-  
+  const [previewZoom, setPreviewZoom] = useState<number>(100);
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const previewScrollRef = useRef<HTMLDivElement>(null);
 
   const currentData = {
     title,
@@ -53,7 +56,7 @@ export function NewBlogForm({
   const draftProps = useLocalBlogDraft({ draftKey, currentData });
   const router = useRouter();
 
-  // Listen to state changes to clear draft if success
+  // Clear draft on successful creation
   useEffect(() => {
     if (statePublish?.success) {
       draftProps.clearDraftOnSuccess();
@@ -64,7 +67,7 @@ export function NewBlogForm({
     }
   }, [state, statePublish, draftProps, router]);
 
-  // Keyboard shortcut Ctrl+S / Cmd+S to submit
+  // Keyboard shortcut Ctrl+S / Cmd+S to submit draft
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
@@ -81,11 +84,13 @@ export function NewBlogForm({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isAnyPending]);
 
+  const [currentMediaList, setCurrentMediaList] = useState<MediaItem[]>(mediaList);
+
   const handleMediaUploaded = (newMedia: MediaItem) => {
     setCurrentMediaList((prev) => [newMedia, ...prev.filter((m) => m.id !== newMedia.id)]);
   };
 
-  const selectedCover = coverMediaId ? currentMediaList.find(m => m.id === coverMediaId) : null;
+  const selectedCover = coverMediaId ? currentMediaList.find((m) => m.id === coverMediaId) : null;
 
   const insertIntoMarkdown = (mediaId: string, altText: string) => {
     if (!textareaRef.current) return;
@@ -102,10 +107,10 @@ export function NewBlogForm({
     textarea.focus();
   };
 
-  const insertMultipleIntoMarkdown = (items: { id: string, alt: string }[]) => {
+  const insertMultipleIntoMarkdown = (items: { id: string; alt: string }[]) => {
     if (!textareaRef.current) return;
     const textarea = textareaRef.current;
-    const insertText = items.map(item => `![${item.alt || "imagen"}](media://${item.id})`).join("\n\n");
+    const insertText = items.map((item) => `![${item.alt || "imagen"}](media://${item.id})`).join("\n\n");
     
     textarea.setRangeText(
       insertText,
@@ -123,7 +128,7 @@ export function NewBlogForm({
     if (!textareaRef.current) return;
     const textarea = textareaRef.current;
     
-    const placeholder = `![Subiendo imagen...]()`;
+    const placeholder = `![Subiendo ${file.name}...]()`;
     textarea.setRangeText(
       placeholder,
       textarea.selectionStart,
@@ -132,43 +137,38 @@ export function NewBlogForm({
     );
     setContentMarkdown(textarea.value);
     
-    try {
-      const { uploadFileDirectly } = await import("@/components/media/direct-uploader");
-      const { mediaAssetId, mediaItem } = await uploadFileDirectly(file);
-      
-      if (mediaItem) {
-        handleMediaUploaded(mediaItem);
-      }
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("altText", file.name.replace(/\.[^/.]+$/, ""));
 
-      const newTextareaValue = textarea.value.replace(placeholder, `![${file.name}](media://${mediaAssetId})`);
-      setContentMarkdown(newTextareaValue);
-      setTimeout(() => {
-        if (textareaRef.current) {
-          textareaRef.current.value = newTextareaValue;
-        }
-      }, 0);
-    } catch (err) {
-      console.error("Error uploading pasted/dropped image", err);
-      const newTextareaValue = textarea.value.replace(placeholder, `![Error al subir imagen]()`);
-      setContentMarkdown(newTextareaValue);
-      setTimeout(() => {
-        if (textareaRef.current) {
-          textareaRef.current.value = newTextareaValue;
-        }
-      }, 0);
+    try {
+      const res = await fetch("/api/media/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      
+      if (res.ok && data.success && data.media) {
+        handleMediaUploaded(data.media);
+        setContentMarkdown((prev) => 
+          prev.replace(placeholder, `![${data.media.originalFilename}](media://${data.media.id})`)
+        );
+      } else {
+        setContentMarkdown((prev) => prev.replace(placeholder, ""));
+        alert(data.error || "Error al subir la imagen");
+      }
+    } catch {
+      setContentMarkdown((prev) => prev.replace(placeholder, ""));
+      alert("Error al procesar la subida");
     }
   };
 
   const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-    const items = e.clipboardData.items;
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].type.indexOf("image") !== -1) {
-        const file = items[i].getAsFile();
-        if (file) {
-          e.preventDefault();
-          handleFileUpload(file);
-          break;
-        }
+    if (e.clipboardData.files && e.clipboardData.files.length > 0) {
+      const file = e.clipboardData.files[0];
+      if (file.type.startsWith("image/")) {
+        e.preventDefault();
+        handleFileUpload(file);
       }
     }
   };
@@ -181,11 +181,10 @@ export function NewBlogForm({
     }
   };
 
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTitle = e.target.value;
+  const handleTitleChange = (newTitle: string) => {
     setTitle(newTitle);
     
-    // Auto-generate slug if user hasn't explicitly customized slug much
+    // Auto-generate slug
     const generatedSlug = newTitle
       .toLowerCase()
       .normalize("NFD")
@@ -210,17 +209,8 @@ export function NewBlogForm({
     textarea.focus();
   };
 
-  const handleImport = (data: { title?: string, summary?: string, contentMarkdown: string }) => {
-    if (data.title) {
-      setTitle(data.title);
-      const generatedSlug = data.title
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)+/g, "");
-      setSlug(generatedSlug);
-    }
+  const handleImport = (data: { title?: string; summary?: string; contentMarkdown: string }) => {
+    if (data.title) handleTitleChange(data.title);
     if (data.summary) setSummary(data.summary);
     setContentMarkdown(data.contentMarkdown);
   };
@@ -237,46 +227,78 @@ export function NewBlogForm({
     }
   };
 
+  // Word and reading stats
+  const { wordCount, charCount, readingTime } = useMemo(() => {
+    const trimmed = contentMarkdown.trim();
+    const words = trimmed ? trimmed.split(/\s+/).length : 0;
+    const chars = contentMarkdown.length;
+    const time = Math.max(1, Math.ceil(words / 200));
+    return { wordCount: words, charCount: chars, readingTime: time };
+  }, [contentMarkdown]);
+
+  const hasUnsavedContent = Boolean(title || summary || contentMarkdown);
+
+  const handleBackClick = (e: React.MouseEvent) => {
+    if (hasUnsavedContent) {
+      if (!confirm("Tienes cambios sin guardar. ¿Deseas salir del editor?")) {
+        e.preventDefault();
+      }
+    }
+  };
+
+  /* ──────────────── EDITOR PANE (LEFT) ──────────────── */
   const EditorComponent = (
-    <div style={{ paddingRight: viewMode === "split" ? "12px" : "0", display: "flex", flexDirection: "column", height: "100%" }}>
-      <div className={styles.editorToolbar} style={{ position: "sticky", top: "72px", zIndex: 10, backgroundColor: "#ffffff" }}>
-        <button type="button" onClick={() => insertFormatting("**")} className={styles.toolbarBtn} title="Negrita"><b>B</b></button>
-        <button type="button" onClick={() => insertFormatting("*")} className={styles.toolbarBtn} title="Cursiva"><i>I</i></button>
-        <div style={{ width: "1px", height: "20px", background: "#e5e7eb", margin: "0 4px", alignSelf: "center" }} />
-        <button type="button" onClick={() => insertFormatting("### ", "")} className={styles.toolbarBtn}>H3</button>
-        <button type="button" onClick={() => insertFormatting("#### ", "")} className={styles.toolbarBtn}>H4</button>
-        <div style={{ width: "1px", height: "20px", background: "#e5e7eb", margin: "0 4px", alignSelf: "center" }} />
-        <button type="button" onClick={() => insertFormatting("[", "](url)")} className={styles.toolbarBtn}>Enlace</button>
-        <button type="button" onClick={() => insertFormatting("`")} className={styles.toolbarBtn}>Código</button>
-        <button type="button" onClick={() => insertFormatting("```\n", "\n```")} className={styles.toolbarBtn}>Bloque</button>
-        <button 
-          type="button" 
-          onClick={() => insertFormatting("```mermaid\ngraph TD\n  A[Inicio] --> B[Proceso]\n  B --> C[Fin]\n```\n", "")} 
-          className={styles.toolbarBtn}
-          title="Insertar diagrama Mermaid"
-          style={{ display: "inline-flex", alignItems: "center", gap: "4px", backgroundColor: "#f0fdf4", color: "#166534", border: "1px solid #bbf7d0", fontWeight: 600 }}
-        >
-          📊 Mermaid
-        </button>
-        <button type="button" onClick={() => insertFormatting("> ", "")} className={styles.toolbarBtn}>Cita</button>
-        <button type="button" onClick={() => insertFormatting("- ", "")} className={styles.toolbarBtn}>Lista</button>
-        <div style={{ width: "1px", height: "20px", background: "#e5e7eb", margin: "0 4px", alignSelf: "center" }} />
-        <MediaPicker 
-          mediaList={currentMediaList} 
-          requireAltText={true} 
-          buttonLabel="📸 Insertar imagen" 
-          onSelect={insertIntoMarkdown}
-          onSelectMultiple={insertMultipleIntoMarkdown}
-          onMediaUploaded={handleMediaUploaded}
-        />
+    <div className={styles.editorPaneElevated}>
+      {/* TOOLBAR */}
+      <div className={styles.editorToolbarElevated}>
+        <div className={styles.editorToolbarGroup}>
+          <button type="button" onClick={() => insertFormatting("**")} className={styles.toolbarBtn} title="Negrita (Ctrl+B)"><b>B</b></button>
+          <button type="button" onClick={() => insertFormatting("*")} className={styles.toolbarBtn} title="Cursiva (Ctrl+I)"><i>I</i></button>
+          <div className={styles.editorToolbarSep} />
+          <button type="button" onClick={() => insertFormatting("## ", "")} className={styles.toolbarBtn} title="Título H2">H2</button>
+          <button type="button" onClick={() => insertFormatting("### ", "")} className={styles.toolbarBtn} title="Título H3">H3</button>
+          <div className={styles.editorToolbarSep} />
+          <button type="button" onClick={() => insertFormatting("[", "](url)")} className={styles.toolbarBtn} title="Insertar enlace">Enlace</button>
+          <button type="button" onClick={() => insertFormatting("`")} className={styles.toolbarBtn} title="Código en línea">Código</button>
+          <button type="button" onClick={() => insertFormatting("```\n", "\n```")} className={styles.toolbarBtn} title="Bloque de código">Bloque</button>
+          <button 
+            type="button" 
+            onClick={() => insertFormatting("```mermaid\ngraph TD\n  A[Inicio] --> B[Proceso]\n  B --> C[Fin]\n```\n", "")} 
+            className={styles.toolbarBtn}
+            title="Insertar diagrama Mermaid"
+            style={{ color: "#0284c7", fontWeight: 600 }}
+          >
+            📊 Mermaid
+          </button>
+          <button type="button" onClick={() => insertFormatting("> ", "")} className={styles.toolbarBtn} title="Cita">Cita</button>
+          <button type="button" onClick={() => insertFormatting("- ", "")} className={styles.toolbarBtn} title="Lista">Lista</button>
+          <div className={styles.editorToolbarSep} />
+          <MediaPicker 
+            mediaList={currentMediaList} 
+            requireAltText={true} 
+            buttonLabel="📸 Imagen" 
+            className={styles.toolbarBtn}
+            onSelect={insertIntoMarkdown}
+            onSelectMultiple={insertMultipleIntoMarkdown}
+            onMediaUploaded={handleMediaUploaded}
+          />
+        </div>
+
+        {/* STATS */}
+        <div style={{ fontSize: "0.75rem", color: "#94a3b8", display: "flex", gap: "10px", alignItems: "center", whiteSpace: "nowrap" }}>
+          <span>{wordCount} palabras ({charCount} car.)</span>
+          <span>•</span>
+          <span>~{readingTime} min</span>
+        </div>
       </div>
+
+      {/* TEXTAREA — scrolls independently, NO horizontal slider */}
       <textarea
         id="contentMarkdown"
         name="contentMarkdown"
         ref={textareaRef}
         required
-        className={styles.modernTextarea}
-        style={{ minHeight: "800px" }}
+        className={styles.editorTextareaElevated}
         placeholder="Comienza a escribir tu contenido aquí en Markdown..."
         value={contentMarkdown}
         onChange={(e) => setContentMarkdown(e.target.value)}
@@ -287,243 +309,312 @@ export function NewBlogForm({
     </div>
   );
 
+  /* ──────────────── PREVIEW PANE (RIGHT) ──────────────── */
   const PreviewComponent = (
-    <div style={{ paddingLeft: viewMode === "split" ? "12px" : "0", height: "100%", alignSelf: "flex-start", position: "sticky", top: "72px" }}>
-      <div style={{ border: "1px solid #e5e7eb", borderRadius: "12px", backgroundColor: "#ffffff" }}>
-        <BlogPreviewClient 
-          blog={{
-            title: title || "Sin título",
-            summary: summary || "Sin resumen",
-            slug: slug || "sin-slug",
-            contentMarkdown: contentMarkdown || "*No hay contenido aún*",
-            coverMediaAssetId: coverMediaId,
-            coverAltText,
-            categoryName: categories.find(c => c.id === categoryId)?.name,
-            categorySlug: categories.find(c => c.id === categoryId)?.slug,
+    <div className={styles.previewPaneElevated}>
+      <div className={styles.previewHeaderElevated}>
+        <div className={styles.previewHeaderLeft}>
+          <span className={styles.previewDocIcon}>📄</span>
+          <span className={styles.previewTitleText}>Vista previa en vivo</span>
+          <span className={styles.previewLivePill}>
+            <span className={styles.previewLiveDot} />
+            en tiempo real
+          </span>
+        </div>
+
+        <div className={styles.previewHeaderRight}>
+          <div className={styles.overleafZoomControls} title="Ajustar escala (Zoom estilo Overleaf)">
+            <button
+              type="button"
+              className={styles.overleafZoomBtn}
+              onClick={() => setPreviewZoom((z) => Math.max(60, z - 10))}
+              title="Alejar (Zoom Out)"
+              disabled={previewZoom <= 60}
+            >
+              −
+            </button>
+            <button
+              type="button"
+              className={styles.overleafZoomPill}
+              onClick={() => setPreviewZoom(100)}
+              title="Restablecer escala al 100%"
+            >
+              {previewZoom}%
+            </button>
+            <button
+              type="button"
+              className={styles.overleafZoomBtn}
+              onClick={() => setPreviewZoom((z) => Math.min(150, z + 10))}
+              title="Acercar (Zoom In)"
+              disabled={previewZoom >= 150}
+            >
+              +
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Scrolls independently — no sync, NO horizontal slider */}
+      <div
+        ref={previewScrollRef}
+        className={styles.previewScrollAreaElevated}
+      >
+        <div 
+          className={styles.previewCanvasElevated}
+          style={{
+            zoom: previewZoom !== 100 ? `${previewZoom}%` : undefined,
           }}
-          mediaMap={new Map(currentMediaList.map(m => [m.id, { id: m.id, publicId: m.publicId, width: m.width, height: m.height }]))}
-        />
+        >
+          <BlogPreviewClient 
+            blog={{
+              title: title || "Sin título",
+              summary: summary || "Sin resumen",
+              slug: slug || "sin-slug",
+              contentMarkdown: contentMarkdown || "*Comienza a escribir en el editor para previsualizar aquí...*",
+              coverMediaAssetId: coverMediaId,
+              coverAltText,
+              categoryName: categories.find((c) => c.id === categoryId)?.name,
+              categorySlug: categories.find((c) => c.id === categoryId)?.slug,
+            }}
+            mediaMap={new Map(currentMediaList.map((m) => [m.id, { id: m.id, publicId: m.publicId, width: m.width, height: m.height }]))}
+            isEditorPreview={true}
+          />
+        </div>
       </div>
     </div>
   );
 
-  const containerStyle = viewMode === "split" 
-    ? { width: "100vw", marginLeft: "calc(50% - 50vw)", padding: "0 40px" }
-    : { maxWidth: "950px", margin: "0 auto" };
-
   return (
-    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", ...containerStyle }}>
+    <div className={styles.editorPageContainer}>
       
-      {/* STICKY HEADER / BARRA DE ACCIONES SUPERIOR */}
-      <div 
-        style={{ 
-          position: "sticky",
-          top: 0,
-          zIndex: 35,
-          backgroundColor: "rgba(255, 255, 255, 0.95)",
-          backdropFilter: "blur(12px)",
-          borderBottom: "1px solid #e5e7eb",
-          padding: "12px 16px",
-          marginBottom: "16px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "16px",
-          flexWrap: "wrap",
-          borderRadius: "0 0 12px 12px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.03)"
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-          <Link href="/dashboard/blogs" className={styles.actionButton} style={{ padding: "6px 12px", margin: 0 }}>
-            ← Volver
-          </Link>
-          <h2 className={styles.title} style={{ fontSize: "1.25rem", margin: 0 }}>Nuevo borrador</h2>
+      {/* ── TOP ACTION BAR ─────────────────────────────────────────────── */}
+      <div className={styles.editorTopBar}>
+        <div className={styles.editorTopBarLeft}>
+          <h1 className={styles.editorPageTitle}>Nuevo borrador</h1>
           {draftProps.saveStatus !== "idle" && (
-            <span style={{ fontSize: "0.75rem", color: "#6b7280", background: "#f3f4f6", padding: "3px 8px", borderRadius: "4px" }}>
-              {draftProps.saveStatus === "saving" ? "Guardando local..." : `Borrador local: ${new Date(draftProps.lastSavedAt || 0).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`}
+            <span className={styles.draftStatusBadge}>
+              <span className={styles.draftStatusDot} />
+              {draftProps.saveStatus === "saving"
+                ? "Guardando…"
+                : `Guardado a las ${new Date(draftProps.lastSavedAt || 0).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
             </span>
           )}
         </div>
-        
-        <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
-          <div className={styles.viewModeContainer}>
-            <button className={`${styles.viewModeButton} ${viewMode === "editor" ? styles.active : ""}`} onClick={() => setViewMode("editor")} title="Solo Editor">
+
+        <div className={styles.editorTopBarRight}>
+          {/* View mode switcher */}
+          <div className={styles.viewModePills}>
+            <button
+              type="button"
+              className={`${styles.viewModePillBtn} ${viewMode === "editor" ? styles.active : ""}`}
+              onClick={() => setViewMode("editor")}
+            >
               Editor
             </button>
-            <button className={`${styles.viewModeButton} ${viewMode === "split" ? styles.active : ""}`} onClick={() => setViewMode("split")} title="Vista Dividida">
+            <button
+              type="button"
+              className={`${styles.viewModePillBtn} ${viewMode === "split" ? styles.active : ""}`}
+              onClick={() => setViewMode("split")}
+            >
               Dividido
             </button>
-            <button className={`${styles.viewModeButton} ${viewMode === "preview" ? styles.active : ""}`} onClick={() => setViewMode("preview")} title="Pantalla Completa">
+            <button
+              type="button"
+              className={`${styles.viewModePillBtn} ${viewMode === "preview" ? styles.active : ""}`}
+              onClick={() => setViewMode("preview")}
+            >
               Vista Previa
             </button>
           </div>
-          
-          <div style={{ width: "1px", height: "24px", background: "#e5e7eb" }}></div>
-          
-          <ImportMarkdownButton onImport={handleImport} hasExistingContent={Boolean(title || summary || contentMarkdown)} />
-          
-          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-            <Link href="/dashboard/blogs" className={styles.actionButton} style={{ padding: "8px 14px", margin: 0 }}>
-              Cancelar
-            </Link>
-            <button 
-              type="submit" 
-              form="blog-form" 
-              formAction={formAction} 
-              disabled={isAnyPending} 
-              className={styles.submitButton} 
-              style={{ margin: 0, padding: "8px 14px", backgroundColor: "#f3f4f6", color: "#1f2937", border: "1px solid #d1d5db", display: "inline-flex", alignItems: "center", gap: "6px" }}
-              title="Crear borrador (Ctrl + S)"
-            >
-              {isPending ? "Guardando..." : "💾 Crear Borrador"}
-              <span style={{ fontSize: "0.7rem", color: "#6b7280", background: "#e5e7eb", padding: "1px 5px", borderRadius: "3px" }}>Ctrl+S</span>
-            </button>
-            <button 
-              type="submit" 
-              form="blog-form" 
-              formAction={formActionPublish} 
-              disabled={isAnyPending} 
-              className={styles.submitButton} 
-              style={{ margin: 0, padding: "8px 14px", backgroundColor: "#10b981", color: "#ffffff", border: "none" }}
-            >
-              {isPendingPublish ? "Publicando..." : "🚀 Crear y Publicar"}
-            </button>
-          </div>
+
+          <div className={styles.topBarDivider} />
+
+          <ImportMarkdownButton
+            onImport={handleImport}
+            hasExistingContent={hasUnsavedContent}
+            className={styles.btnSecondary}
+            buttonLabel="📥 Importar Markdown"
+          />
+
+          <Link href="/dashboard/blogs" onClick={handleBackClick} className={styles.btnGhost}>
+            Cancelar
+          </Link>
+
+          <button
+            type="submit"
+            form="blog-form"
+            formAction={formAction}
+            disabled={isAnyPending}
+            className={styles.btnSecondary}
+            title="Crear borrador (Ctrl + S)"
+          >
+            {isPending ? "Guardando…" : "💾 Crear Borrador"}
+            <kbd className={styles.kbdTag}>Ctrl+S</kbd>
+          </button>
+
+          <button
+            type="submit"
+            form="blog-form"
+            formAction={formActionPublish}
+            disabled={isAnyPending}
+            className={styles.btnPrimaryPublish}
+          >
+            {isPendingPublish ? "Publicando…" : "🚀 Crear y Publicar"}
+          </button>
         </div>
       </div>
-      
+
+      {/* ── RESTORE DRAFT BANNER ────────────────────────────────────────── */}
       {draftProps.hasDraft && (
-        <div style={{ backgroundColor: "#f0f9ff", border: "1px solid #bae6fd", padding: "12px 16px", borderRadius: "8px", marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }} role="status">
-          <div>
-            <p style={{ margin: "0 0 2px 0", fontWeight: 600, color: "#0369a1", fontSize: "0.9rem" }}>Borrador recuperado</p>
-            <p style={{ margin: 0, color: "#0ea5e9", fontSize: "0.8rem" }}>Tienes un progreso no guardado.</p>
+        <div style={{ backgroundColor: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "8px", padding: "10px 16px", marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }} role="status">
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#0369a1" }}>Borrador local recuperado</span>
+            <span style={{ fontSize: "0.8rem", color: "#0284c7" }}>Tienes cambios previos almacenados en tu navegador.</span>
           </div>
-          <div style={{ display: "flex", gap: "12px" }}>
+          <div style={{ display: "flex", gap: "10px" }}>
             <button type="button" onClick={draftProps.discardDraft} style={{ background: "none", border: "none", color: "#0369a1", fontSize: "0.8rem", cursor: "pointer", textDecoration: "underline" }}>Descartar</button>
-            <button type="button" onClick={restoreDraft} style={{ backgroundColor: "#0284c7", color: "white", border: "none", borderRadius: "4px", padding: "4px 10px", fontSize: "0.8rem", cursor: "pointer", fontWeight: 600 }}>Cargar</button>
+            <button type="button" onClick={restoreDraft} style={{ backgroundColor: "#0284c7", color: "white", border: "none", borderRadius: "6px", padding: "4px 12px", fontSize: "0.8rem", cursor: "pointer", fontWeight: 600 }}>Cargar</button>
           </div>
         </div>
       )}
 
-      {/* FORM AND METADATA */}
-      <form id="blog-form" style={{ display: "flex", flexDirection: "column", flex: 1, paddingBottom: "24px" }}>
-        {activeState?.error && (
-          <div className={styles.errorMessage} role="alert">
-            {activeState.error}
-          </div>
-        )}
+      {/* ── ERROR MESSAGE BAR ─────────────────────────────────────────── */}
+      {activeState?.error && (
+        <div style={{ backgroundColor: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", padding: "10px 16px", color: "#991b1b", fontSize: "0.85rem", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }} role="alert">
+          <span>⚠️</span>
+          <span>{activeState.error}</span>
+        </div>
+      )}
 
+      {/* ── FORM ──────────────────────────────────────────────────────── */}
+      <form id="blog-form" style={{ display: "flex", flexDirection: "column" }}>
         {coverMediaId && <input type="hidden" name="coverMediaAssetId" value={coverMediaId} />}
         {coverAltText && <input type="hidden" name="coverAltText" value={coverAltText} />}
 
-        {/* METADATA FIELDS */}
-        <div style={{ marginBottom: "20px", backgroundColor: "#ffffff", padding: "16px", borderRadius: "12px", border: "1px solid #e5e7eb" }}>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "16px", marginBottom: "16px", alignItems: "flex-start" }}>
-            <div style={{ flex: "1 1 320px" }}>
+        {/* ── METADATA CARD (POSITIONED EXACTLY LIKE BEFORE) ──────────── */}
+        <div className={styles.metadataCard}>
+          {/* Row 1: Title & Cover Button */}
+          <div className={styles.titleRow}>
+            <div className={styles.titleInputWrapper}>
               <input
                 id="title"
                 name="title"
                 type="text"
                 required
                 maxLength={200}
-                className={styles.modernInput}
-                style={{ fontSize: "1.8rem", fontWeight: 700 }}
+                className={styles.titleInputElevated}
                 placeholder="Título del artículo"
                 value={title}
-                onChange={handleTitleChange}
+                onChange={(e) => handleTitleChange(e.target.value)}
               />
             </div>
-            
-            <div style={{ flex: "0 0 auto", minWidth: "200px" }}>
+
+            <div className={styles.coverActionWrapper}>
               {selectedCover ? (
-                <div style={{ display: "flex", gap: "12px", alignItems: "center", border: "1px solid #e5e7eb", borderRadius: "8px", padding: "8px", backgroundColor: "#f9fafb" }}>
-                  <div style={{ position: "relative", width: "60px", height: "40px", backgroundColor: "#f1f2f4", borderRadius: "4px", overflow: "hidden" }}>
+                <div className={styles.coverCardMini}>
+                  <div className={styles.coverCardMiniThumb}>
                     <Image src={selectedCover.thumbnailUrl} alt={coverAltText || "Portada"} fill style={{ objectFit: "cover" }} unoptimized />
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: "0.75rem", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{selectedCover.originalFilename}</div>
-                    <button type="button" onClick={() => { setCoverMediaId(null); setCoverAltText(""); }} style={{ color: "#d93025", background: "none", border: "none", cursor: "pointer", fontSize: "0.75rem", padding: 0 }}>Eliminar</button>
+                  <div className={styles.coverCardMiniDetails}>
+                    <span className={styles.coverCardMiniName}>{selectedCover.originalFilename}</span>
+                    <div className={styles.coverCardMiniActions}>
+                      <MediaPicker 
+                        mediaList={currentMediaList} 
+                        requireAltText={true} 
+                        buttonLabel="Cambiar" 
+                        className={styles.btnGhost}
+                        onSelect={(id, alt) => {
+                          setCoverMediaId(id);
+                          setCoverAltText(alt);
+                        }}
+                        onMediaUploaded={handleMediaUploaded}
+                      />
+                      <button 
+                        type="button" 
+                        onClick={() => { setCoverMediaId(null); setCoverAltText(""); }} 
+                        style={{ color: "#dc2626", background: "none", border: "none", cursor: "pointer", fontSize: "0.75rem", padding: 0 }}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
                   </div>
                 </div>
               ) : (
-                <div style={{ height: "100%", display: "flex", alignItems: "center" }}>
-                  <MediaPicker 
-                    mediaList={currentMediaList} 
-                    requireAltText={true} 
-                    buttonLabel="🖼️ Añadir portada" 
-                    onSelect={(id, alt) => {
-                      setCoverMediaId(id);
-                      setCoverAltText(alt);
-                    }}
-                    onMediaUploaded={handleMediaUploaded}
-                  />
-                </div>
+                <MediaPicker 
+                  mediaList={currentMediaList} 
+                  requireAltText={true} 
+                  buttonLabel="🖼️ Añadir portada" 
+                  className={styles.btnCoverAdd}
+                  onSelect={(id, alt) => {
+                    setCoverMediaId(id);
+                    setCoverAltText(alt);
+                  }}
+                  onMediaUploaded={handleMediaUploaded}
+                />
               )}
             </div>
           </div>
 
-          <div style={{ marginBottom: "16px" }}>
+          {/* Row 2: Summary */}
+          <div>
             <input
-              id="slug"
-              name="slug"
+              id="summary"
+              name="summary"
               type="text"
               required
-              maxLength={200}
-              className={styles.modernInput}
-              style={{ fontSize: "0.95rem", color: "#4b5563" }}
-              placeholder="url-amigable-del-articulo"
-              value={slug}
-              onChange={(e) => setSlug(e.target.value)}
+              maxLength={500}
+              className={styles.summaryInputElevated}
+              placeholder="Escribe un breve resumen de lo que trata el artículo..."
+              value={summary}
+              onChange={(e) => setSummary(e.target.value)}
             />
           </div>
 
-          <input
-            id="summary"
-            name="summary"
-            type="text"
-            required
-            maxLength={500}
-            className={styles.modernInput}
-            style={{ marginBottom: "16px", fontSize: "1rem" }}
-            placeholder="Escribe un breve resumen de lo que trata el artículo..."
-            value={summary}
-            onChange={(e) => setSummary(e.target.value)}
-          />
+          {/* Row 3: Slug and Category */}
+          <div className={styles.bottomRow}>
+            <div className={styles.slugInputGroup}>
+              <span className={styles.slugPrefix}>/blogs/</span>
+              <input
+                id="slug"
+                name="slug"
+                type="text"
+                required
+                maxLength={200}
+                className={styles.slugInput}
+                placeholder="slug-opcional"
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+              />
+            </div>
 
-          <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-            <div style={{ flex: "1 1 200px" }}>
-              <select
-                id="categoryId"
-                name="categoryId"
-                className={styles.modernInput}
-                style={{ fontSize: "0.9rem", color: categoryId ? "#121419" : "#9ca3af", padding: "6px 0" }}
-                value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-              >
-                <option value="">Sin categoría</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div style={{ flex: "1 1 auto", display: "flex", alignItems: "center" }}>
-               <span style={{ fontSize: "0.85rem", color: "#6b7280" }}>Ruta pública: /blogs/{slug || "slug-del-blog"}</span>
-            </div>
+            <select
+              id="categoryId"
+              name="categoryId"
+              className={styles.categorySelectElevated}
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+            >
+              <option value="">Sin categoría</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
-        {/* SPLIT VIEW WITH MARKDOWN EDITOR AND PREVIEW */}
-        <ResizableSplitView
-          mode={viewMode}
-          editor={EditorComponent}
-          preview={PreviewComponent}
-          initialEditorWidth={50}
-        />
-        
+        {/* ── WORKSPACE (SPLIT VIEW WITH OVERLEAF INDEPENDENT SCROLL) ──── */}
+        <div className={styles.workspaceWrapper}>
+          <ResizableSplitView
+            mode={viewMode}
+            editor={EditorComponent}
+            preview={PreviewComponent}
+            initialEditorWidth={50}
+          />
+        </div>
       </form>
+
     </div>
   );
 }

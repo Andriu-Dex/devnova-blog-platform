@@ -122,3 +122,89 @@ img { max-width: 100%; height: auto; display: block; }
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ─── Mermaid Rendering Protection ────────────────────────────────────────── */
+/* Prevent any temporary calculation elements created by Mermaid or KaTeX
+   from ever flashing in the viewport or in the bottom-left corner */
+body > [id^="dmermaid-"],
+body > [id^="mermaid-"],
+body > div[id*="mermaid"],
+[id^="sandbox-mermaid-"],
+#katex-temp {
+  position: fixed !important;
+  top: -99999px !important;
+  left: -99999px !important;
+  width: 1200px !important;
+  height: 800px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  overflow: hidden !important;
+  z-index: -99999 !important;
+}
+
+/* ─── Mermaid Diagram Card Styling ────────────────────────────────────────── */
+.mermaid-diagram-container {
+  background-color: #f6f8fa !important;
+  border: 1px solid #e1e4e8 !important;
+}
+
+.mermaid-diagram-container svg {
+  background-color: transparent !important;
+}
+
+/* Ensure no markdown/prose styles (e.g. inline code backgrounds, margins) leak into Mermaid diagram SVG labels */
+.mermaid-diagram-container code,
+.mermaid-diagram-container pre,
+.mermaid-diagram-container svg code,
+.mermaid-diagram-container svg pre,
+.mermaid-diagram-container .nodeLabel code,
+.mermaid-diagram-container .label code {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: inherit !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+.mermaid-diagram-container p,
+.mermaid-diagram-container svg p {
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: inherit !important;
+}
+
+/* ─── Global Code Block Protection ────────────────────────────────────────── */
+pre code,
+pre > code {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #f8fafc !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+pre::-webkit-scrollbar {
+  height: 6px;
+}
+pre::-webkit-scrollbar-track {
+  background: #181b20;
+  border-radius: 4px;
+}
+pre::-webkit-scrollbar-thumb {
+  background: #3f444e;
+  border-radius: 4px;
+}
+pre::-webkit-scrollbar-thumb:hover {
+  background: #646a78;
+}
+
+

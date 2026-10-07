@@ -12,9 +12,16 @@ interface ImportedMetadata {
 interface ImportMarkdownButtonProps {
   onImport: (data: ImportedMetadata) => void;
   hasExistingContent?: boolean;
+  className?: string;
+  buttonLabel?: string;
 }
 
-export function ImportMarkdownButton({ onImport, hasExistingContent = false }: ImportMarkdownButtonProps) {
+export function ImportMarkdownButton({
+  onImport,
+  hasExistingContent = false,
+  className,
+  buttonLabel,
+}: ImportMarkdownButtonProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -90,8 +97,8 @@ export function ImportMarkdownButton({ onImport, hasExistingContent = false }: I
         id="import-markdown-input"
         aria-label="Importar archivo Markdown"
       />
-      <label htmlFor="import-markdown-input" className={styles.button}>
-        Importar Markdown
+      <label htmlFor="import-markdown-input" className={className || styles.button}>
+        {buttonLabel || "Importar Markdown"}
       </label>
       {error && <span className={styles.error}>{error}</span>}
     </div>

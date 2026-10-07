@@ -146,18 +146,38 @@ export function MarkdownRenderer({ content, mediaMap = new Map(), allowMedia = t
             </Link>
           );
         },
-        h1: ({ children }) => <h2 style={{ fontSize: "2rem", marginTop: "2rem", marginBottom: "1rem", color: "#121419" }}>{children}</h2>,
-        h2: ({ children }) => <h3 style={{ fontSize: "1.75rem", marginTop: "1.75rem", marginBottom: "1rem", color: "#121419" }}>{children}</h3>,
-        h3: ({ children }) => <h4 style={{ fontSize: "1.5rem", marginTop: "1.5rem", marginBottom: "0.75rem", color: "#121419" }}>{children}</h4>,
-        p: ({ children }) => <p style={{ fontSize: "1.1rem", lineHeight: 1.8, marginBottom: "1.25rem", color: "#374151" }}>{children}</p>,
-        ul: ({ children }) => <ul style={{ fontSize: "1.1rem", lineHeight: 1.8, marginBottom: "1.25rem", color: "#374151", paddingLeft: "1.5rem" }}>{children}</ul>,
-        ol: ({ children }) => <ol style={{ fontSize: "1.1rem", lineHeight: 1.8, marginBottom: "1.25rem", color: "#374151", paddingLeft: "1.5rem" }}>{children}</ol>,
-        li: ({ children }) => <li style={{ marginBottom: "0.5rem" }}>{children}</li>,
+        h1: ({ children }) => <h2 style={{ fontSize: "1.55em", marginTop: "1.4em", marginBottom: "0.5em", color: "#0f172a", fontWeight: 700, letterSpacing: "-0.02em" }}>{children}</h2>,
+        h2: ({ children }) => <h3 style={{ fontSize: "1.35em", marginTop: "1.25em", marginBottom: "0.5em", color: "#0f172a", fontWeight: 700, letterSpacing: "-0.02em" }}>{children}</h3>,
+        h3: ({ children }) => <h4 style={{ fontSize: "1.18em", marginTop: "1.1em", marginBottom: "0.4em", color: "#0f172a", fontWeight: 600 }}>{children}</h4>,
+        p: ({ children }) => <p style={{ fontSize: "1em", lineHeight: 1.7, marginBottom: "1.1em", color: "#1e293b" }}>{children}</p>,
+        ul: ({ children }) => <ul style={{ fontSize: "1em", lineHeight: 1.7, marginBottom: "1.1em", color: "#1e293b", paddingLeft: "1.4em" }}>{children}</ul>,
+        ol: ({ children }) => <ol style={{ fontSize: "1em", lineHeight: 1.7, marginBottom: "1.1em", color: "#1e293b", paddingLeft: "1.4em" }}>{children}</ol>,
+        li: ({ children }) => <li style={{ marginBottom: "0.35em", color: "#1e293b" }}>{children}</li>,
+        strong: ({ children }) => <strong style={{ color: "#0f172a", fontWeight: 700 }}>{children}</strong>,
         blockquote: ({ children }) => (
-          <blockquote style={{ borderLeft: "4px solid #1655f8", paddingLeft: "1rem", color: "#4b5563", fontStyle: "italic", margin: "1.5rem 0", backgroundColor: "#f9fafb", padding: "1rem" }}>
+          <blockquote style={{ borderLeft: "4px solid #155eef", paddingLeft: "1.2rem", paddingRight: "1rem", paddingTop: "0.75rem", paddingBottom: "0.75rem", color: "#334155", fontStyle: "italic", margin: "1.5rem 0", backgroundColor: "#f8fafc", borderRadius: "0 8px 8px 0" }}>
             {children}
           </blockquote>
         ),
+        table: ({ children }) => (
+          <div style={{ overflowX: "auto", margin: "1.75rem 0" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.95em", textAlign: "left" }}>
+              {children}
+            </table>
+          </div>
+        ),
+        th: ({ children }) => (
+          <th style={{ border: "1px solid #e2e8f0", padding: "10px 14px", backgroundColor: "#f8fafc", color: "#0f172a", fontWeight: 600 }}>
+            {children}
+          </th>
+        ),
+        td: ({ children }) => (
+          <td style={{ border: "1px solid #e2e8f0", padding: "10px 14px", color: "#334155" }}>
+            {children}
+          </td>
+        ),
+        hr: () => <hr style={{ border: "none", borderTop: "1px solid #e2e8f0", margin: "2rem 0" }} />,
+        pre: ({ children }) => <>{children}</>,
         code(props) {
           const { children, className } = props;
           const isInline = !className;
@@ -169,12 +189,54 @@ export function MarkdownRenderer({ content, mediaMap = new Map(), allowMedia = t
           }
 
           return isInline ? (
-            <code style={{ backgroundColor: "#f3f4f6", padding: "0.2rem 0.4rem", borderRadius: "4px", fontFamily: "'IBM Plex Mono', Consolas, monospace", fontSize: "0.9em", color: "#d93025" }}>
+            <code
+              style={{
+                backgroundColor: "#f1f5f9",
+                color: "#0f172a",
+                padding: "0.2rem 0.45rem",
+                borderRadius: "5px",
+                fontFamily: "'IBM Plex Mono', Consolas, monospace",
+                fontSize: "0.88em",
+                border: "1px solid #e2e8f0",
+                fontWeight: 500,
+              }}
+            >
               {children}
             </code>
           ) : (
-            <pre style={{ backgroundColor: "#1e1e1e", color: "#d4d4d4", padding: "1rem", borderRadius: "8px", overflowX: "auto", fontFamily: "'IBM Plex Mono', Consolas, monospace", fontSize: "0.95em", margin: "1.5rem 0" }}>
-              <code>{children}</code>
+            <pre
+              style={{
+                backgroundColor: "#121419",
+                color: "#f8fafc",
+                padding: "1.25rem 1.5rem",
+                borderRadius: "10px",
+                overflowX: "auto",
+                fontFamily: "'IBM Plex Mono', Consolas, monospace",
+                fontSize: "0.92em",
+                lineHeight: 1.6,
+                margin: "1.75rem 0",
+                border: "1px solid #262930",
+                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.15)",
+              }}
+            >
+              <code
+                style={{
+                  background: "transparent",
+                  backgroundColor: "transparent",
+                  color: "#f8fafc",
+                  padding: 0,
+                  margin: 0,
+                  border: "none",
+                  borderRadius: 0,
+                  boxShadow: "none",
+                  fontFamily: "inherit",
+                  fontSize: "inherit",
+                  display: "block",
+                  whiteSpace: "pre",
+                }}
+              >
+                {children}
+              </code>
             </pre>
           );
         }

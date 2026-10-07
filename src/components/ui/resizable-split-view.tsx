@@ -25,16 +25,13 @@ export function ResizableSplitView({
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Stop dragging if mouse leaves window or button released
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDragging || !containerRef.current) return;
       
       const containerRect = containerRef.current.getBoundingClientRect();
-      // Calculate new percentage based on mouse position relative to container
       let newWidthPercent = ((e.clientX - containerRect.left) / containerRect.width) * 100;
       
-      // Clamp to min/max
       newWidthPercent = Math.max(minEditorWidth, Math.min(maxEditorWidth, newWidthPercent));
       setEditorWidth(newWidthPercent);
     };
@@ -46,7 +43,6 @@ export function ResizableSplitView({
     if (isDragging) {
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
-      // Change cursor on whole document while dragging to avoid losing it if mouse moves fast
       document.body.style.cursor = "col-resize";
       document.body.style.userSelect = "none";
     } else {
@@ -68,8 +64,12 @@ export function ResizableSplitView({
       style={{ 
         display: "flex", 
         width: "100%", 
+        height: "100%",
+        flex: 1,
+        minHeight: 0,
         alignItems: "stretch",
         position: "relative",
+        overflow: "hidden",
       }}
     >
       {/* EDITOR PANEL */}
@@ -77,8 +77,12 @@ export function ResizableSplitView({
         <div style={{ 
           width: mode === "split" ? `${editorWidth}%` : "100%",
           flexShrink: 0,
-          transition: isDragging ? "none" : "width 0.3s ease",
+          transition: isDragging ? "none" : "width 0.2s ease",
           height: "100%",
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
         }}>
           {editor}
         </div>
@@ -89,25 +93,24 @@ export function ResizableSplitView({
         <div 
           onMouseDown={() => setIsDragging(true)}
           style={{
-            width: "12px",
-            margin: "0 -6px", // To overlap and increase hit area
+            width: "10px",
+            margin: "0 -5px",
             cursor: "col-resize",
             backgroundColor: "transparent",
-            zIndex: 10,
+            zIndex: 20,
             display: "flex",
             justifyContent: "center",
-            alignItems: "center",
+            alignItems: "stretch",
             position: "relative",
+            userSelect: "none",
           }}
-          className="split-divider"
+          title="Arrastra para cambiar el tamaño"
         >
-          {/* Visual line inside the hit area */}
           <div style={{
-            width: "4px",
+            width: isDragging ? "3px" : "1px",
             height: "100%",
-            borderRadius: "2px",
-            backgroundColor: isDragging ? "var(--color-cyan, #28c7e8)" : "#e5e7eb",
-            transition: "background-color 0.2s ease"
+            backgroundColor: isDragging ? "#155eef" : "#e5e7eb",
+            transition: "all 0.15s ease",
           }} />
         </div>
       )}
@@ -117,8 +120,12 @@ export function ResizableSplitView({
         <div style={{ 
           width: mode === "split" ? `${100 - editorWidth}%` : "100%",
           flexShrink: 0,
-          transition: isDragging ? "none" : "width 0.3s ease",
+          transition: isDragging ? "none" : "width 0.2s ease",
           height: "100%",
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
         }}>
           {preview}
         </div>

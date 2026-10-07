@@ -27,9 +27,16 @@ interface BlogPreviewClientProps {
     contentMarkdown: string;
   };
   mediaMap?: Map<string, { id: string; publicId: string; width: number; height: number }>;
+  hideHero?: boolean;
+  isEditorPreview?: boolean;
 }
 
-export function BlogPreviewClient({ blog, mediaMap }: BlogPreviewClientProps) {
+export function BlogPreviewClient({
+  blog,
+  mediaMap,
+  hideHero = false,
+  isEditorPreview = true,
+}: BlogPreviewClientProps) {
   const coverUrl = blog.coverMediaAssetId ? getDeliveryUrlClient(blog.coverMediaAssetId, 1200) : null;
   const slug = blog.slug || "borrador";
   
@@ -40,62 +47,64 @@ export function BlogPreviewClient({ blog, mediaMap }: BlogPreviewClientProps) {
   }).format(blog.publishedAt || new Date());
 
   return (
-    <div className={styles.page} style={{ backgroundColor: "#faf9f6" }}>
+    <div className={`${styles.page} ${isEditorPreview ? styles.editorPreviewPage : ""}`} style={{ backgroundColor: "#faf9f6" }}>
       <main>
         {/* ── 1. SECCIÓN AZUL HERO (siempre arriba, con o sin imagen) ── */}
-        <section className={styles.seccionAzul} aria-label="Cabecera del blog">
-          <div className={`${styles.contenedor} ${styles.entradaHeroGrid}`}>
-            {/* Texto */}
-            <div className={styles.entradaHeroTexto}>
-              {/* Breadcrumb */}
-              <nav className={styles.breadcrumb} aria-label="Ruta de navegación">
-                <Link href="#" onClick={(e) => e.preventDefault()}>devnova</Link>
-                <span>/</span>
-                <Link href="#" onClick={(e) => e.preventDefault()}>blogs</Link>
-                <span>/</span>
-                <span className={styles.breadcrumbActive}>{slug}.md</span>
-              </nav>
+        {!hideHero && (
+          <section className={`${styles.seccionAzul} ${isEditorPreview ? styles.editorPreviewHero : ""}`} aria-label="Cabecera del blog">
+            <div className={`${styles.contenedor} ${styles.entradaHeroGrid} ${isEditorPreview ? styles.editorPreviewHeroGrid : ""}`}>
+              {/* Texto */}
+              <div className={styles.entradaHeroTexto}>
+                {/* Breadcrumb */}
+                <nav className={`${styles.breadcrumb} ${isEditorPreview ? styles.editorPreviewBreadcrumb : ""}`} aria-label="Ruta de navegación">
+                  <Link href="#" onClick={(e) => e.preventDefault()}>devnova</Link>
+                  <span>/</span>
+                  <Link href="#" onClick={(e) => e.preventDefault()}>blogs</Link>
+                  <span>/</span>
+                  <span className={styles.breadcrumbActive}>{slug}.md</span>
+                </nav>
 
-              <div className={styles.entradaHeroEtiquetas}>
-                <EtiquetaTipo tipo={blog.categoryColorClass || blog.categorySlug || "blog"} label={blog.categoryName || "Sin categoría"} />
-                <EstadoEntrega estado="entregado" />
+                <div className={styles.entradaHeroEtiquetas}>
+                  <EtiquetaTipo tipo={blog.categoryColorClass || blog.categorySlug || "blog"} label={blog.categoryName || "Sin categoría"} />
+                  <EstadoEntrega estado="entregado" />
+                </div>
+                <h1>{blog.title || "Título del blog"}</h1>
+                <p className={styles.entradaHeroResumen}>{blog.summary || "Escribe un resumen para ver cómo luce aquí."}</p>
               </div>
-              <h1>{blog.title || "Título del blog"}</h1>
-              <p className={styles.entradaHeroResumen}>{blog.summary || "Escribe un resumen para ver cómo luce aquí."}</p>
-            </div>
 
-            {/* Media */}
-            <div className={styles.entradaHeroMedia}>
-              {coverUrl ? (
-                <div className={styles.entradaHeroCover}>
-                  <Image
-                    src={coverUrl}
-                    alt={blog.coverAltText || blog.title}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 560px"
-                    style={{ objectFit: "cover" }}
-                    unoptimized
-                    priority
-                  />
-                </div>
-              ) : (
-                <div className={styles.entradaHeroPlaceholder}>
-                  <IconoTerminal />
-                  <span>Sin portada</span>
-                </div>
-              )}
+              {/* Media */}
+              <div className={`${styles.entradaHeroMedia} ${isEditorPreview ? styles.editorPreviewMedia : ""}`}>
+                {coverUrl ? (
+                  <div className={styles.entradaHeroCover}>
+                    <Image
+                      src={coverUrl}
+                      alt={blog.coverAltText || blog.title}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 560px"
+                      style={{ objectFit: "cover" }}
+                      unoptimized
+                      priority
+                    />
+                  </div>
+                ) : (
+                  <div className={styles.entradaHeroPlaceholder}>
+                    <IconoTerminal />
+                    <span>Sin portada</span>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
-        {/* ── 3. LECTURA EDITORIAL (PROSA) ─────────────────────────── */}
-        <section className={`${styles.contenedor} ${styles.entradaLectura}`}>
-          <div className={styles.entradaLecturaRuta}>
+        {/* ── 2. LECTURA EDITORIAL (PROSA) ── */}
+        <section className={`${styles.contenedor} ${styles.entradaLectura} ${isEditorPreview ? styles.editorPreviewLectura : ""}`}>
+          <div className={`${styles.entradaLecturaRuta} ${isEditorPreview ? styles.editorPreviewLecturaRuta : ""}`}>
             <span className={styles.meta}>devnova / contenido / lectura</span>
           </div>
 
-          <div className={styles.entradaLecturaCuerpo}>
-            <div className={styles.prosa}>
+          <div className={`${styles.entradaLecturaCuerpo} ${isEditorPreview ? styles.editorPreviewLecturaCuerpo : ""}`}>
+            <div className={`${styles.prosa} ${isEditorPreview ? styles.editorPreviewProsa : ""}`}>
               <MarkdownRenderer content={blog.contentMarkdown || "*El contenido de tu blog aparecerá aquí.*"} mediaMap={mediaMap} />
             </div>
           </div>

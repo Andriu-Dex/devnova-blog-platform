@@ -275,27 +275,117 @@
   text-decoration-thickness: 3px;
 }
 
-.prosa code {
+/* Inline code styles - ONLY for inline code, NEVER inside pre or mermaid */
+.prosa p > code,
+.prosa li > code,
+.prosa blockquote > code,
+.prosa td > code,
+.prosa th > code,
+.prosa > code {
   font-family: var(--font-mono, monospace);
-  font-size: 0.9em;
-  padding: 0.2em 0.4em;
-  background-color: var(--color-cyan-soft, #cff6fc);
+  font-size: 0.88em;
+  padding: 0.2em 0.45em;
+  background-color: #f1f5f9;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
   border-radius: 5px;
+  font-weight: 500;
 }
 
 .prosa pre {
-  background-color: var(--color-carbon, #121419);
-  color: var(--color-paper, #fffcf4);
-  padding: 24px;
+  background-color: #121419 !important;
+  color: #f8fafc !important;
+  padding: 20px 24px;
   border-radius: 12px;
   overflow-x: auto;
   margin-block: 2em;
+  border: 1px solid #262930;
 }
 
-.prosa pre code {
-  background: transparent;
-  padding: 0;
-  color: inherit;
+/* Ensure code inside pre NEVER inherits any inline background, border or blue color */
+.prosa pre code,
+.prosa pre > code {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #f8fafc !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-size: 0.92em;
+  line-height: 1.6;
+}
+
+/* Sleek dark scrollbar for code blocks */
+.prosa pre::-webkit-scrollbar {
+  height: 6px;
+}
+.prosa pre::-webkit-scrollbar-track {
+  background: #181b20;
+  border-radius: 4px;
+}
+.prosa pre::-webkit-scrollbar-thumb {
+  background: #3f444e;
+  border-radius: 4px;
+}
+.prosa pre::-webkit-scrollbar-thumb:hover {
+  background: #646a78;
+}
+
+/* Markdown tables */
+.prosa table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-block: 2em;
+  font-size: 0.95em;
+}
+
+.prosa th,
+.prosa td {
+  border: 1px solid #e2e8f0;
+  padding: 10px 14px;
+  text-align: left;
+}
+
+.prosa th {
+  background-color: #f8fafc;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.prosa td {
+  color: #334155;
+}
+
+.prosa :global(.mermaid-diagram-container) {
+  background-color: #f6f8fa !important;
+  color: #1e293b !important;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  margin-block: 2em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+/* Isolate Mermaid diagram labels so code, pre, span, etc. never clash with node fills */
+.prosa :global(.mermaid-diagram-container) code,
+.prosa :global(.mermaid-diagram-container) pre,
+.prosa :global(.mermaid-diagram-container) svg code,
+.prosa :global(.mermaid-diagram-container) svg pre {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: inherit !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  font-family: inherit !important;
+  font-size: inherit !important;
 }
 
 .prosa img {
@@ -306,9 +396,12 @@
 .prosa blockquote {
   margin-left: 0;
   margin-right: 0;
-  padding-left: 20px;
-  border-left: 4px solid var(--color-cyan, #28c7e8);
-  color: var(--color-carbon-muted, #51545a);
+  padding: 14px 20px;
+  border-left: 4px solid var(--color-primary, #155eef);
+  background-color: #f8fafc;
+  color: #334155;
+  border-radius: 0 8px 8px 0;
+  margin-block: 1.75em;
   font-style: italic;
 }
 
@@ -372,3 +465,103 @@
     text-align: left;
   }
 }
+
+/* ── Variaciones específicas para la vista previa del editor (DevNova mejorado) ── */
+.editorPreviewPage {
+  min-height: 100%;
+  width: 100%;
+  background-color: #faf9f6;
+}
+
+/* 1. Hero Azul (2 columnas lado a lado, tal como en el diseño original) */
+.editorPreviewHero {
+  padding-block: clamp(28px, 4vw, 44px) !important;
+}
+
+.editorPreviewHeroGrid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.3fr) minmax(180px, 0.7fr) !important;
+  gap: clamp(20px, 3.5vw, 48px) !important;
+  align-items: center !important;
+}
+
+.editorPreviewBreadcrumb {
+  margin-bottom: 16px !important;
+  font-size: 0.82rem !important;
+}
+
+.editorPreviewHeroGrid h1 {
+  font-family: var(--font-sans, "Space Grotesk", sans-serif) !important;
+  font-size: clamp(1.8rem, 3.5vw, 2.75rem) !important;
+  font-weight: 700 !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.03em !important;
+  color: #ffffff !important;
+  margin: 0 !important;
+  word-break: break-word !important;
+}
+
+.editorPreviewHeroGrid .entradaHeroResumen {
+  margin-top: 12px !important;
+  font-size: 0.96rem !important;
+  line-height: 1.55 !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  max-width: 100% !important;
+}
+
+.editorPreviewMedia {
+  width: 100% !important;
+  max-width: 380px !important;
+}
+
+/* 2. Lectura Editorial (Prosa) con columna lateral izquierda (Línea + devnova/contenido/lectura) y texto a la derecha */
+.editorPreviewLectura {
+  display: grid !important;
+  grid-template-columns: clamp(90px, 14%, 125px) minmax(0, 1fr) !important;
+  gap: clamp(20px, 3.5vw, 40px) !important;
+  padding-block: 36px 64px !important;
+}
+
+.editorPreviewLecturaRuta {
+  display: block !important;
+  color: var(--color-carbon-muted, #51545a) !important;
+  border-top: 1.5px solid var(--color-carbon, #121419) !important;
+  padding-top: 14px !important;
+  font-family: var(--font-mono, monospace) !important;
+  font-size: 0.76rem !important;
+  line-height: 1.45 !important;
+  word-break: break-word !important;
+}
+
+.editorPreviewLecturaCuerpo {
+  padding-top: 4px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+.editorPreviewProsa {
+  max-width: 100% !important;
+  width: 100% !important;
+  font-size: 0.94rem !important;
+  line-height: 1.68 !important;
+  color: var(--color-carbon, #121419) !important;
+}
+
+.editorPreviewProsa p {
+  font-size: 1em !important;
+  line-height: 1.68 !important;
+  margin-bottom: 1.05em !important;
+}
+
+@media (max-width: 600px) {
+  .editorPreviewHeroGrid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+  .editorPreviewLectura {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+}
+

@@ -28,9 +28,10 @@ interface MediaPickerProps {
   onMediaUploaded?: (item: MediaItem) => void;
   requireAltText: boolean;
   buttonLabel: string;
+  className?: string;
 }
 
-export function MediaPicker({ mediaList, onSelect, onSelectMultiple, onMediaUploaded, requireAltText, buttonLabel }: MediaPickerProps) {
+export function MediaPicker({ mediaList, onSelect, onSelectMultiple, onMediaUploaded, requireAltText, buttonLabel, className }: MediaPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const isMounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -143,7 +144,7 @@ export function MediaPicker({ mediaList, onSelect, onSelectMultiple, onMediaUplo
       <button
         type="button"
         onClick={handleOpen}
-        className={styles.triggerButton}
+        className={className || styles.triggerButton}
       >
         {buttonLabel}
       </button>
